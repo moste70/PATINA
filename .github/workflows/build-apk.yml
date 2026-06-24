@@ -46,7 +46,7 @@ jobs:
 
       - name: Build APK (debug)
         working-directory: app
-        run: flutter build apk --debug --no-shrink
+        run: flutter build apk --debug --verbose
 
       - name: Upload APK debug
         uses: actions/upload-artifact@v4
@@ -57,7 +57,7 @@ jobs:
 
       - name: Build APK (release unsigned)
         working-directory: app
-        run: flutter build apk --release --no-shrink
+        run: flutter build apk --release --verbose
 
       - name: Upload APK release
         uses: actions/upload-artifact@v4
