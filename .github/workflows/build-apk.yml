@@ -32,6 +32,12 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create local.properties
+        working-directory: app/android
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" >> local.properties
+
       - name: Get dependencies
         working-directory: app
         run: flutter pub get
@@ -47,6 +53,11 @@ jobs:
       - name: Build APK (debug)
         working-directory: app
         run: flutter build apk --debug --verbose
+
+      - name: Find APK (diagnostic)
+        if: always()
+        working-directory: app
+        run: find . -name "*.apk" -type f 2>/dev/null || echo "No APKs found"
 
       - name: Upload APK debug
         uses: actions/upload-artifact@v4
