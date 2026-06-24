@@ -48,7 +48,7 @@ dev_dependencies:
   # Codegen Drift + Riverpod
   build_runner: ^2.4.11
   drift_dev: ^2.18.0
-  riverpod_generator: ^2.4.3
+  riverpod_generator: ^2.4.0
 
 flutter:
   uses-material-design: true
