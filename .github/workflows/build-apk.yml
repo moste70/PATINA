@@ -47,6 +47,9 @@ jobs:
         working-directory: app
         run: dart run flutter_launcher_icons
 
+      - name: Remove adaptive-icon XML from mipmap-anydpi-v21
+        run: rm -f app/android/app/src/main/res/mipmap-anydpi-v21/ic_launcher.xml app/android/app/src/main/res/mipmap-anydpi-v21/ic_launcher_round.xml
+
       - name: Generate code (Drift + Riverpod)
         working-directory: app
         run: dart run build_runner build --delete-conflicting-outputs
