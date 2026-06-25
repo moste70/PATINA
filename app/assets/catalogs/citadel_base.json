@@ -1,0 +1,27 @@
+{
+  "brand": "citadel",
+  "line": "base",
+  "version": "2024.1",
+  "paints": [
+    { "code": "BASE-001", "name": "Abaddon Black", "hex": "#231F20" },
+    { "code": "BASE-002", "name": "Celestra Grey", "hex": "#8F9E99" },
+    { "code": "BASE-003", "name": "Corax White", "hex": "#E8E8E8" },
+    { "code": "BASE-004", "name": "Macragge Blue", "hex": "#1D3D6B" },
+    { "code": "BASE-005", "name": "Kantor Blue", "hex": "#152747" },
+    { "code": "BASE-006", "name": "Caledor Sky", "hex": "#3A6EA8" },
+    { "code": "BASE-007", "name": "Altdorf Guard Blue", "hex": "#1E4B82" },
+    { "code": "BASE-008", "name": "Caliban Green", "hex": "#1A4A28" },
+    { "code": "BASE-009", "name": "Waaagh! Flesh", "hex": "#2E5A32" },
+    { "code": "BASE-010", "name": "Mephiston Red", "hex": "#9E1A1A" },
+    { "code": "BASE-011", "name": "Khorne Red", "hex": "#6A1010" },
+    { "code": "BASE-012", "name": "Averland Sunset", "hex": "#E8A020" },
+    { "code": "BASE-013", "name": "Jokaero Orange", "hex": "#C84A10" },
+    { "code": "BASE-014", "name": "Rakarth Flesh", "hex": "#B89A7A" },
+    { "code": "BASE-015", "name": "Zandri Dust", "hex": "#A89060" },
+    { "code": "BASE-016", "name": "Rhinox Hide", "hex": "#4A2818" },
+    { "code": "BASE-017", "name": "Dryad Bark", "hex": "#3A2818" },
+    { "code": "BASE-018", "name": "Bugman's Glow", "hex": "#8A4838" },
+    { "code": "BASE-019", "name": "Screamer Pink", "hex": "#A03060" },
+    { "code": "BASE-020", "name": "Naggaroth Night", "hex": "#382848" }
+  ]
+}
