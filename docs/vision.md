@@ -34,22 +34,25 @@ Età target: 16–60 anni. Appassionati di aerei, carri armati, figure, diorami.
 Ogni modello è un progetto con la sua storia: foto, fasi di lavorazione, stato di
 avanzamento, note e materiali utilizzati. Tutto in un unico posto.
 
+Le **categorie** supportate sono: carro armato, aereo, figura, nave, diorama, altro.
+Gli **stati** del progetto seguono il flusso reale di lavorazione: Idea → In costruzione
+→ In pittura → Completato (con possibilità di mettere In pausa in qualsiasi momento).
+
 ### Gestione delle Vernici
 - **Inventario personale** — tieni traccia di ogni vernice che possiedi, marca, codice,
-  quantità rimasta
-- **Cataloghi delle marche** — database integrato di Vallejo, Citadel, Tamiya (Fase 1)
-  con espansione ad altre marche in Fase 2
+  quantità rimasta (Piena / Metà / Quasi finita / Finita)
+- **Cataloghi offline** — database integrato di Vallejo Model Color, Citadel Base,
+  Tamiya XF (Fase 1), espandibile in Fase 2
 - **Gestione ricette** — crea e salva le tue miscele con proporzioni esatte e foto
   del risultato ottenuto
-- **Assistenza alla miscelazione** — algoritmi interni per operazioni semplici,
-  intelligenza artificiale (Claude) per ricette complesse e abbinamenti sofisticati
-- **Ricerca da foto** — trova una vernice o una ricetta partendo da una fotografia
-  (Fase 2)
+- **Assistenza alla miscelazione** — algoritmo interno per operazioni semplici;
+  intelligenza artificiale (Claude API) per ricette complesse in Fase 2
+- **Ricerca da foto** — trova una vernice o una ricetta partendo da una fotografia (Fase 2)
 
 ### Lavorazione del Modello con Pin su Foto
 Carica una foto del tuo modello e apponi dei **pin interattivi** direttamente
 sull'immagine per indicare:
-- Quale colore è stato applicato in un determinato punto
+- Quale colore o ricetta è stato applicato in un determinato punto
 - Quale tecnica di lavorazione è stata usata in quell'area
 
 Un modo visivo e immediato per documentare il lavoro e non perdere mai il filo.
@@ -71,5 +74,6 @@ e ricette con la community.
 
 | Fase | Contenuto | Stato |
 |------|-----------|-------|
-| **Fase 1** | Archivio progetti, inventario vernici (Vallejo/Citadel/Tamiya), ricette manuali, pin su foto, dati locali | Pianificazione |
-| **Fase 2** | Ricerca colore da foto (AI), miscelazione AI avanzata, sync cloud, espansione cataloghi | Futuro |
+| **Fase 0** | Struttura Flutter, database, cataloghi, design system, navigazione | Completato |
+| **Fase 1** | Archivio progetti, inventario vernici, ricette manuali, pin su foto, backup | In corso |
+| **Fase 2** | Miscelazione AI, ricerca da foto (Claude Vision), sync cloud, espansione cataloghi | Futuro |
