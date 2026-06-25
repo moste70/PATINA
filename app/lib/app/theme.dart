@@ -4,6 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ─────────────────────────────────────────────────────────────────────────
+// PATINA Design System v1.0 — tema "Ottone".
+// Dark-first. Accent Ottone (#D99B3E), superfici grafite a undertone caldo,
+// tipografia JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo).
+// Drop-in replacement di lib/app/theme.dart: stessa struttura di classi,
+// provider e nomi pubblici — cambiano solo i valori dei token.
+// ─────────────────────────────────────────────────────────────────────────
+
 final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
   (ref) => ThemeModeNotifier(),
 );
@@ -26,48 +34,64 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
+/// Token colore PATINA (nomi-pigmento). I commenti riportano il nome del sistema.
 class PatinaColors {
-  static const darkBackground   = Color(0xFF12121A);
-  static const darkSurface      = Color(0xFF1C1C26);
-  static const darkSurfaceVar   = Color(0xFF26263A);
-  static const darkAccent       = Color(0xFF7CB87C);
-  static const darkAccentAlt    = Color(0xFFB87C3E);
-  static const darkOnBg         = Color(0xFFE8E8F0);
-  static const darkOnSurface    = Color(0xFFB0B0C8);
-  static const darkDivider      = Color(0xFF2A2A3A);
+  // ── Dark (default) ──
+  static const darkBackground   = Color(0xFF16171B); // Antracite
+  static const darkSurface      = Color(0xFF1E2025); // Ferro
+  static const darkSurfaceVar   = Color(0xFF282B31); // Lastra
+  static const darkAccent       = Color(0xFFD99B3E); // Ottone  ★
+  static const darkAccentAlt    = Color(0xFF3FA8A0); // Verderame (secondario)
+  static const darkOnBg         = Color(0xFFECEAE4); // Calce
+  static const darkOnSurface    = Color(0xFF9A9CA3); // Calce smorzato
+  static const darkDivider      = Color(0xFF3A3E46); // Limatura
 
-  static const lightBackground  = Color(0xFFF5F4F0);
-  static const lightSurface     = Color(0xFFFFFFFF);
-  static const lightSurfaceVar  = Color(0xFFEEEDE8);
-  static const lightAccent      = Color(0xFF4A7A4A);
-  static const lightAccentAlt   = Color(0xFF8A5A20);
-  static const lightOnBg        = Color(0xFF1A1A1F);
-  static const lightOnSurface   = Color(0xFF3A3A45);
-  static const lightDivider     = Color(0xFFE0DED8);
+  // ── Light ──
+  static const lightBackground  = Color(0xFFF4F2EC); // Gesso
+  static const lightSurface     = Color(0xFFFFFFFF); // Carta
+  static const lightSurfaceVar  = Color(0xFFEAE7DF); // Gesso scuro
+  static const lightAccent      = Color(0xFFB07C24); // Ottone Light
+  static const lightAccentAlt   = Color(0xFF2E7D77); // Verderame scuro
+  static const lightOnBg        = Color(0xFF1C1A16); // Inchiostro
+  static const lightOnSurface   = Color(0xFF57534A); // Inchiostro smorzato
+  static const lightDivider     = Color(0xFFDBD6CB); // Hairline chiaro
+
+  // ── Accent extra / semantici (nomi-pigmento) ──
+  static const ottoneScuro      = Color(0xFF9E6E22);
+  static const ottoneChiaro     = Color(0xFFECC079);
+  static const verderame        = Color(0xFF3FA8A0);
+  static const successo         = Color(0xFF2F8F57); // Verde Cromo
+  static const warning          = Color(0xFFE0B84A); // Giallo Napoli
+  static const errore           = Color(0xFFC8503B); // Minio
 }
 
-// Inter — corpo UI, label, numeri
-// DM Serif Display — titoli sezione, heading scheda progetto
+// JetBrains Mono — display, titoli, dati/codici vernice, label.
+// IBM Plex Sans — corpo, descrizioni, liste.
 class PatinaFonts {
   static TextTheme textTheme(ColorScheme scheme) {
-    final body = GoogleFonts.interTextTheme().copyWith(
-      bodyLarge:  GoogleFonts.inter(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w400, height: 1.5),
-      bodyMedium: GoogleFonts.inter(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w400, height: 1.5),
-      bodySmall:  GoogleFonts.inter(color: scheme.onSurface,    fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
-      labelLarge: GoogleFonts.inter(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
-      labelMedium:GoogleFonts.inter(color: scheme.onSurface,    fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.2),
-      labelSmall: GoogleFonts.inter(color: scheme.onSurface,    fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.3),
+    // Corpo in IBM Plex Sans.
+    final body = GoogleFonts.ibmPlexSansTextTheme().copyWith(
+      bodyLarge:  GoogleFonts.ibmPlexSans(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w400, height: 1.5),
+      bodyMedium: GoogleFonts.ibmPlexSans(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w400, height: 1.5),
+      bodySmall:  GoogleFonts.ibmPlexSans(color: scheme.onSurface,    fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
+      // Label in JetBrains Mono, tracking ampio (carattere "tecnico").
+      labelLarge: GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 0.6),
+      labelMedium:GoogleFonts.jetBrainsMono(color: scheme.onSurface,    fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 1.0),
+      labelSmall: GoogleFonts.jetBrainsMono(color: scheme.onSurface,    fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1.2),
     );
     return body.copyWith(
-      displayLarge:  GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 36, fontWeight: FontWeight.w400, height: 1.2),
-      displayMedium: GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 28, fontWeight: FontWeight.w400, height: 1.25),
-      displaySmall:  GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 22, fontWeight: FontWeight.w400, height: 1.3),
-      headlineLarge: GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 20, fontWeight: FontWeight.w400, height: 1.3),
-      headlineMedium:GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 18, fontWeight: FontWeight.w400, height: 1.35),
-      headlineSmall: GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
-      titleLarge:    GoogleFonts.inter(color: scheme.onBackground, fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: 0.2),
-      titleMedium:   GoogleFonts.inter(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.15),
-      titleSmall:    GoogleFonts.inter(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
+      // Display & H1/H2 in JetBrains Mono (800 → 700).
+      displayLarge:  GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 36, fontWeight: FontWeight.w800, height: 1.15, letterSpacing: -0.5),
+      displayMedium: GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 28, fontWeight: FontWeight.w800, height: 1.2,  letterSpacing: -0.3),
+      displaySmall:  GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 22, fontWeight: FontWeight.w700, height: 1.25),
+      headlineLarge: GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 20, fontWeight: FontWeight.w700, height: 1.3),
+      // H3 → IBM Plex Sans semibold (più leggibile nel corpo).
+      headlineMedium:GoogleFonts.ibmPlexSans(color: scheme.onBackground, fontSize: 18, fontWeight: FontWeight.w600, height: 1.35),
+      headlineSmall: GoogleFonts.ibmPlexSans(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w600, height: 1.4),
+      // Titoli/dati in JetBrains Mono.
+      titleLarge:    GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.2),
+      titleMedium:   GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.2),
+      titleSmall:    GoogleFonts.jetBrainsMono(color: scheme.onBackground, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 0.3),
     );
   }
 }
@@ -82,7 +106,8 @@ class PatinaTheme {
       secondary: PatinaColors.darkAccentAlt,
       onBackground: PatinaColors.darkOnBg,
       onSurface: PatinaColors.darkOnSurface,
-      onPrimary: Colors.black,
+      onPrimary: const Color(0xFF16171B), // testo scuro sull'Ottone
+      error: PatinaColors.errore,
       outline: PatinaColors.darkDivider,
     );
     return _build(scheme, Brightness.dark);
@@ -98,6 +123,7 @@ class PatinaTheme {
       onBackground: PatinaColors.lightOnBg,
       onSurface: PatinaColors.lightOnSurface,
       onPrimary: Colors.white,
+      error: PatinaColors.errore,
       outline: PatinaColors.lightDivider,
     );
     return _build(scheme, Brightness.light);
@@ -123,16 +149,16 @@ class PatinaTheme {
           statusBarIconBrightness:
               brightness == Brightness.dark ? Brightness.light : Brightness.dark,
         ),
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: GoogleFonts.jetBrainsMono(
           color: scheme.onBackground,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
           letterSpacing: 0.2,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
-        shadowColor: Colors.black26,
+        shadowColor: Colors.black38,
         elevation: 8,
         height: 64,
         indicatorColor: scheme.primary.withOpacity(0.15),
@@ -141,21 +167,22 @@ class PatinaTheme {
           if (states.contains(MaterialState.selected)) {
             return IconThemeData(color: scheme.primary, size: 24);
           }
-          return IconThemeData(color: scheme.onSurface.withOpacity(0.5), size: 24);
+          return IconThemeData(color: scheme.onSurface.withOpacity(0.55), size: 24);
         }),
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) {
-            return GoogleFonts.inter(
+            return GoogleFonts.jetBrainsMono(
               color: scheme.primary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
+              letterSpacing: 0.6,
             );
           }
-          return GoogleFonts.inter(
-            color: scheme.onSurface.withOpacity(0.5),
+          return GoogleFonts.jetBrainsMono(
+            color: scheme.onSurface.withOpacity(0.55),
             fontSize: 11,
             fontWeight: FontWeight.w400,
+            letterSpacing: 0.6,
           );
         }),
       ),
@@ -185,18 +212,18 @@ class PatinaTheme {
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: GoogleFonts.inter(color: scheme.onSurface.withOpacity(0.4), fontSize: 14),
+        hintStyle: GoogleFonts.ibmPlexSans(color: scheme.onSurface.withOpacity(0.45), fontSize: 14),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
-        foregroundColor: Colors.black,
+        foregroundColor: const Color(0xFF16171B),
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.surfaceVariant,
         selectedColor: scheme.primary.withOpacity(0.2),
-        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+        labelStyle: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.3),
         side: BorderSide(color: scheme.outline),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
