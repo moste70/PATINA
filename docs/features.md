@@ -176,6 +176,25 @@ Documenta la tecnica applicata in un punto specifico del modello.
 
 ---
 
+## Aree da Progettare (Buchi)
+
+Funzionalità necessarie ma non ancora specificate. Richiedono design prima
+di poter essere inserite nella roadmap.
+
+| Area | Note |
+|------|------|
+| **Profilo / Impostazioni** | Schermata `/settings` attualmente placeholder — da definire contenuto (tema, lingua, backup, info app) |
+| **Paywall** | Modello di monetizzazione per Fase 2: acquisto crediti, subscription o one-time — da decidere |
+| **Editor Ricetta** | UX dettagliata per la creazione/modifica ricetta con ingredienti e proporzioni |
+| **Creazione Pin Lavorazione** | Flusso di inserimento pin tecnica: selezione tipo, prodotto, collegamento a fase |
+| **Visualizzatore Foto** | Viewer full-screen con zoom, pan, overlay pin e controlli — da specificare le interazioni |
+| **Light Mode** | Adattamenti UI per il tema chiaro (palette definita, da verificare su tutti i componenti) |
+| **Autenticazione** | Necessaria per Fase 2 (sync cloud) — provider, flusso login/registrazione, gestione token |
+| **Stati di Sistema** | Loading, empty state, errori di rete, permessi negati — pattern da definire e applicare uniformemente |
+| **Notifiche** | Promemoria lavorazione, aggiornamenti catalogo — da decidere se e quando implementare |
+
+---
+
 ## Fase 2 — Funzionalità Avanzate
 
 > Pianificate in dettaglio al completamento della Fase 1.
