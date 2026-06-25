@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
@@ -45,6 +46,32 @@ class PatinaColors {
   static const lightDivider     = Color(0xFFE0DED8);
 }
 
+// Inter — corpo UI, label, numeri
+// DM Serif Display — titoli sezione, heading scheda progetto
+class PatinaFonts {
+  static TextTheme textTheme(ColorScheme scheme) {
+    final body = GoogleFonts.interTextTheme().copyWith(
+      bodyLarge:  GoogleFonts.inter(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w400, height: 1.5),
+      bodyMedium: GoogleFonts.inter(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w400, height: 1.5),
+      bodySmall:  GoogleFonts.inter(color: scheme.onSurface,    fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
+      labelLarge: GoogleFonts.inter(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
+      labelMedium:GoogleFonts.inter(color: scheme.onSurface,    fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.2),
+      labelSmall: GoogleFonts.inter(color: scheme.onSurface,    fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.3),
+    );
+    return body.copyWith(
+      displayLarge:  GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 36, fontWeight: FontWeight.w400, height: 1.2),
+      displayMedium: GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 28, fontWeight: FontWeight.w400, height: 1.25),
+      displaySmall:  GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 22, fontWeight: FontWeight.w400, height: 1.3),
+      headlineLarge: GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 20, fontWeight: FontWeight.w400, height: 1.3),
+      headlineMedium:GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 18, fontWeight: FontWeight.w400, height: 1.35),
+      headlineSmall: GoogleFonts.dmSerifDisplay(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
+      titleLarge:    GoogleFonts.inter(color: scheme.onBackground, fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: 0.2),
+      titleMedium:   GoogleFonts.inter(color: scheme.onBackground, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.15),
+      titleSmall:    GoogleFonts.inter(color: scheme.onBackground, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
+    );
+  }
+}
+
 class PatinaTheme {
   static ThemeData dark() {
     final scheme = ColorScheme.dark(
@@ -77,10 +104,12 @@ class PatinaTheme {
   }
 
   static ThemeData _build(ColorScheme scheme, Brightness brightness) {
+    final textTheme = PatinaFonts.textTheme(scheme);
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
+      textTheme: textTheme,
       scaffoldBackgroundColor: scheme.background,
       dividerColor: scheme.outline,
       appBarTheme: AppBarTheme(
@@ -94,11 +123,11 @@ class PatinaTheme {
           statusBarIconBrightness:
               brightness == Brightness.dark ? Brightness.light : Brightness.dark,
         ),
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.inter(
           color: scheme.onBackground,
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -107,6 +136,7 @@ class PatinaTheme {
         elevation: 8,
         height: 64,
         indicatorColor: scheme.primary.withOpacity(0.15),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) {
             return IconThemeData(color: scheme.primary, size: 24);
@@ -115,16 +145,17 @@ class PatinaTheme {
         }),
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) {
-            return TextStyle(
+            return GoogleFonts.inter(
               color: scheme.primary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             );
           }
-          return TextStyle(
+          return GoogleFonts.inter(
             color: scheme.onSurface.withOpacity(0.5),
             fontSize: 11,
+            fontWeight: FontWeight.w400,
           );
         }),
       ),
@@ -154,13 +185,20 @@ class PatinaTheme {
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
+        hintStyle: GoogleFonts.inter(color: scheme.onSurface.withOpacity(0.4), fontSize: 14),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
         foregroundColor: Colors.black,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: scheme.surfaceVariant,
+        selectedColor: scheme.primary.withOpacity(0.2),
+        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+        side: BorderSide(color: scheme.outline),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

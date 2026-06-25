@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Esagono verde brand centrato nel safe area (28dp margin per adaptive icon) -->
+    <path
+        android:fillColor="#7CB87C"
+        android:pathData="
+            M54,20
+            L80,35
+            L80,65
+            L54,80
+            L28,65
+            L28,35
+            Z"/>
+
+    <!-- Lettera P in bianco -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M44,38 L44,70
+            L49,70 L49,57
+            L58,57
+            Q66,57 66,47.5
+            Q66,38 58,38
+            Z
+            M49,42 L57,42
+            Q61,42 61,47.5
+            Q61,53 57,53
+            L49,53
+            Z"/>
+</vector>
