@@ -176,6 +176,22 @@ Documenta la tecnica applicata in un punto specifico del modello.
 
 ---
 
+## Stato Implementazione Attuale
+
+> Tutte le schermate sono `PlaceholderScreen` — mostra icona + titolo + "In sviluppo".
+> L'AppBar mostra l'icona brand Patina (esagono custom painter) e un bottone cerca non funzionale.
+> La navigazione tra i 4 tab è funzionante tramite Go Router.
+
+| Schermata | Percorso | Stato |
+|-----------|----------|-------|
+| Archivio Progetti | `/projects` | Placeholder |
+| Scheda Progetto | `/projects/:id` | Placeholder |
+| Vernici / Inventario | `/paints` | Placeholder |
+| Ricette | `/recipes` | Placeholder |
+| Impostazioni | `/settings` | Placeholder |
+
+---
+
 ## Aree da Progettare (Buchi)
 
 Funzionalità necessarie ma non ancora specificate. Richiedono design prima
@@ -183,15 +199,17 @@ di poter essere inserite nella roadmap.
 
 | Area | Note |
 |------|------|
-| **Profilo / Impostazioni** | Schermata `/settings` attualmente placeholder — da definire contenuto (tema, lingua, backup, info app) |
-| **Paywall** | Modello di monetizzazione per Fase 2: acquisto crediti, subscription o one-time — da decidere |
-| **Editor Ricetta** | UX dettagliata per la creazione/modifica ricetta con ingredienti e proporzioni |
-| **Creazione Pin Lavorazione** | Flusso di inserimento pin tecnica: selezione tipo, prodotto, collegamento a fase |
-| **Visualizzatore Foto** | Viewer full-screen con zoom, pan, overlay pin e controlli — da specificare le interazioni |
-| **Light Mode** | Adattamenti UI per il tema chiaro (palette definita, da verificare su tutti i componenti) |
-| **Autenticazione** | Necessaria per Fase 2 (sync cloud) — provider, flusso login/registrazione, gestione token |
-| **Stati di Sistema** | Loading, empty state, errori di rete, permessi negati — pattern da definire e applicare uniformemente |
+| **Profilo / Impostazioni** | `/settings` placeholder — contenuto da definire: tema dark/light toggle, lingua, backup/restore, info app, versione |
+| **Paywall** | Modello monetizzazione Fase 2: crediti, subscription o one-time — da decidere prima dell'implementazione AI |
+| **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |
+| **Creazione Pin Lavorazione** | Flusso inserimento pin tecnica: selezione tipo lavorazione, prodotto usato, collegamento a fase |
+| **Visualizzatore Foto con Pin** | Viewer full-screen: zoom/pan via InteractiveViewer, overlay pin su canvas, controlli visibilità |
+| **Light Mode** | Palette light definita in `PatinaColors` ma da verificare su tutti i componenti — alcuni usano `onBackground` deprecated |
+| **Autenticazione** | Necessaria per Fase 2 — provider OAuth, flusso login/registrazione, gestione token |
+| **Stati di Sistema** | Loading spinner, empty state con CTA, errori di rete, permessi negati — pattern uniforme da definire |
 | **Notifiche** | Promemoria lavorazione, aggiornamenti catalogo — da decidere se e quando implementare |
+| **Wizard Nuovo Progetto** | Flusso multi-step creazione: nome → categoria/scala → foto cover → stato iniziale |
+| **Catalogo Vernici** | Vista sfoglia separata dall'inventario: raggruppamento per marca/linea, chip colore, aggiunta rapida |
 
 ---
 

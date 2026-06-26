@@ -16,6 +16,8 @@
 | 0.8 | Navigazione con Go Router — ShellRoute, 4 tab, placeholder screens | ✅ Completato |
 | 0.9 | CI/CD GitHub Actions — build APK debug e release | ✅ Completato |
 | 0.10 | `AppConstants` — categorie, stati, fasi predefinite, marche, quantità | ✅ Completato |
+| 0.11 | Icona launcher Android (cluster esagoni) + fix NormalTheme AndroidManifest | ✅ Completato |
+| 0.12 | Font Google Fonts: Inter (UI) + DM Serif Display (heading) via `PatinaFonts` | ✅ Completato |
 
 ---
 

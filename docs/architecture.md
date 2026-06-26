@@ -25,36 +25,42 @@ patina/
 │       └── build-apk.yml        # CI: build APK debug + release
 ├── app/                         # Progetto Flutter
 │   ├── android/                 # Configurazione Android nativa
+│   │   └── app/src/main/res/
+│   │       ├── drawable/        # ic_launcher_background.xml, ic_launcher_foreground.xml
+│   │       ├── mipmap-anydpi-v26/  # Adaptive icon (API 26+)
+│   │       └── values/          # colors.xml, styles.xml
 │   ├── assets/
+│   │   ├── icon.png             # Icona app 1024x1024 (cluster esagoni)
 │   │   └── catalogs/            # JSON cataloghi vernici (bundled)
 │   │       ├── vallejo_model_color.json   (30 colori)
 │   │       ├── citadel_base.json          (20 colori)
 │   │       └── tamiya_xf.json             (28 colori)
 │   ├── lib/
-│   │   ├── main.dart
+│   │   ├── main.dart            # Entry point: init DB, catalogs, runApp
 │   │   ├── app/
-│   │   │   ├── router.dart      # Go Router — rotte e AppShell
-│   │   │   └── theme.dart       # Design system: palette, tema dark/light
-│   │   ├── features/            # Un folder per ogni area funzionale
-│   │   │   ├── projects/
-│   │   │   ├── paints/
-│   │   │   ├── recipes/
-│   │   │   └── pins/            # (pin integrati nella scheda progetto)
+│   │   │   ├── router.dart      # Go Router: ShellRoute, 4 tab, AppShell
+│   │   │   └── theme.dart       # PatinaColors, PatinaFonts, PatinaTheme
 │   │   ├── shared/
-│   │   │   ├── widgets/         # Componenti riutilizzabili
-│   │   │   ├── utils/           # Color math, formattatori, helper
+│   │   │   ├── widgets/
+│   │   │   │   └── placeholder_screen.dart  # Schermo placeholder con icona Patina
+│   │   │   ├── utils/
+│   │   │   │   └── permissions.dart         # Gestione permessi camera/storage
 │   │   │   └── constants/
-│   │   │       └── app_constants.dart   # Categorie, stati, fasi, marche
+│   │   │       └── app_constants.dart       # Categorie, stati, fasi, marche, quantità
 │   │   └── database/
-│   │       ├── app_database.dart        # Drift database + initializeCatalogs()
+│   │       ├── app_database.dart            # Drift DB + initializeCatalogs()
+│   │       ├── app_database.g.dart          # Generato da build_runner
 │   │       └── tables/
-│   │           ├── projects.dart        # Projects, ProjectPhotos, ProjectPhases
-│   │           ├── paints.dart          # CatalogPaints, InventoryPaints
-│   │           ├── recipes.dart         # Recipes, RecipeIngredients
-│   │           └── pins.dart            # Pins
+│   │           ├── projects.dart            # Projects, ProjectPhotos, ProjectPhases
+│   │           ├── paints.dart              # CatalogPaints, InventoryPaints
+│   │           ├── recipes.dart             # Recipes, RecipeIngredients
+│   │           └── pins.dart                # Pins
 │   └── pubspec.yaml
 └── docs/                        # Documentazione di progetto
 ```
+
+> **Nota:** La cartella `features/` (projects/, paints/, recipes/, pins/) non esiste ancora.
+> Tutte le schermate sono attualmente `PlaceholderScreen`. Verrà popolata durante la Fase 1.
 
 ---
 
@@ -77,15 +83,21 @@ patina/
 
 L'app usa un `ShellRoute` con `NavigationBar` a 4 voci:
 
-| Tab | Percorso | Icona |
-|-----|----------|-------|
-| Progetti | `/projects` | `view_module` |
-| Vernici | `/paints` | `palette` |
-| Ricette | `/recipes` | `science` |
-| Impostazioni | `/settings` | `settings` |
+| Tab | Percorso | Icona outline | Icona selected |
+|-----|----------|--------------|----------------|
+| Progetti | `/projects` | `view_module_outlined` | `view_module` |
+| Vernici | `/paints` | `palette_outlined` | `palette` |
+| Ricette | `/recipes` | `science_outlined` | `science` |
+| Impostazioni | `/settings` | `settings_outlined` | `settings` |
 
-I pin su foto sono accessibili dalla scheda progetto (`/projects/:id`),
-non tramite tab dedicato.
+Rotta aggiuntiva: `/projects/:id` — scheda progetto (non nel tab, navigata dalla lista).
+I pin su foto sono accessibili dalla scheda progetto, non tramite tab dedicato.
+
+### Icona Patina (in-app)
+
+`PlaceholderScreen` mostra nell'AppBar un'icona custom (`_HexPainter`):
+esagono outline con punto centrale, disegnato via `CustomPainter` in colore `primary`.
+Questa è l'icona di brand usata nell'interfaccia — distinta dall'icona launcher.
 
 ---
 
@@ -126,10 +138,10 @@ id              INTEGER PRIMARY KEY AUTOINCREMENT
 project_id      INTEGER NOT NULL REFERENCES projects(id)
 name            TEXT NOT NULL
 position        INTEGER NOT NULL
-completed       INTEGER DEFAULT 0
+completed       BOOLEAN DEFAULT false
 completed_at    INTEGER
 notes           TEXT
-is_custom       INTEGER DEFAULT 0
+is_custom       BOOLEAN DEFAULT false
 ```
 
 Fasi predefinite (da `AppConstants.defaultPhases`):
@@ -203,13 +215,13 @@ phase_id        INTEGER REFERENCES project_phases(id)
 
 I cataloghi sono bundled come asset JSON e caricati in SQLite al primo avvio.
 
-**Cataloghi inclusi in Fase 1:**
+**Cataloghi inclusi in Fase 1** (verificati, dati reali presenti negli asset):
 
-| File | Marca | Linea | Colori |
-|------|-------|-------|--------|
-| `vallejo_model_color.json` | Vallejo | Model Color | 30 |
-| `citadel_base.json` | Citadel | Base | 20 |
-| `tamiya_xf.json` | Tamiya | XF (opache) | 28 |
+| File | Marca | Linea (`line`) | Colori |
+|------|-------|----------------|--------|
+| `vallejo_model_color.json` | `vallejo` | `model_color` | 30 |
+| `citadel_base.json` | `citadel` | `base` | 20 |
+| `tamiya_xf.json` | `tamiya` | `xf` | 28 |
 
 **Formato JSON:**
 ```json
