@@ -25,15 +25,28 @@
 
 **Obiettivo:** creare, visualizzare e gestire progetti. Prima funzionalità usabile.
 
-| Task | Descrizione | Stato |
-|------|-------------|-------|
-| 1A.1 | Dashboard progetti — lista/griglia con card | ⬜ Da fare |
-| 1A.2 | Creazione nuovo progetto (wizard) | ⬜ Da fare |
-| 1A.3 | Scheda progetto — header, info base, note | ⬜ Da fare |
-| 1A.4 | Galleria foto progetto (camera + galleria) | ⬜ Da fare |
-| 1A.5 | Fasi di lavorazione — lista, spunta, note per fase | ⬜ Da fare |
-| 1A.6 | Modifica e archiviazione progetto | ⬜ Da fare |
-| 1A.7 | Ricerca e filtri nell'archivio | ⬜ Da fare |
+> **Convenzione priorità:** 🔴 Alta — sblocca altre feature · 🟡 Media — necessaria ma non bloccante · 🟢 Bassa — polish/ottimizzazione
+
+### Documentazione (da completare prima dello sviluppo)
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1A-DOC.1 | 🔴 Alta | Riorganizza doc **Scheda Creazione Progetto** — wizard step-by-step, campi obbligatori/opzionali, validazioni, UX flow | ⬜ Da fare |
+| 1A-DOC.2 | 🔴 Alta | Riorganizza doc **Scheda Principale Progetto** — layout sezioni, header, galleria, fasi, vernici usate, azioni | ⬜ Da fare |
+| 1A-DOC.3 | 🟡 Media | Riorganizza doc **Onboarding** — flusso primo avvio, permessi, empty state, call to action | ⬜ Da fare |
+
+### Sviluppo
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ⬜ Da fare |
+| 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ⬜ Da fare |
+| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ⬜ Da fare |
+| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ⬜ Da fare |
+| 1A.5 | 🟡 Media | Fasi di lavorazione — lista ordinata, spunta con data, note per fase, fasi custom | ⬜ Da fare |
+| 1A.6 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ⬜ Da fare |
+| 1A.7 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
+| 1A.8 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) | ⬜ Da fare |
 
 ---
 
@@ -121,6 +134,16 @@
 
 ```
 Fase 0  ██████████  100%  — completata
-Fase 1  ░░░░░░░░░░    0%  — prossima milestone: 1A (Gestione Progetti)
+Fase 1  ░░░░░░░░░░    0%  — in corso: 1A (doc → Creazione Progetto, Scheda Progetto, Onboarding)
 Fase 2  ░░░░░░░░░░    0%
 ```
+
+### Prossimi step immediati (ordine esecuzione)
+
+1. 🔴 `1A-DOC.1` — Spec scheda creazione progetto
+2. 🔴 `1A-DOC.2` — Spec scheda principale progetto
+3. 🟡 `1A-DOC.3` — Spec onboarding
+4. 🔴 `1A.1` — Dev scheda creazione (dipende da DOC.1)
+5. 🔴 `1A.2` — Dev scheda principale (dipende da DOC.2)
+6. 🟡 `1A.3` — Dev dashboard archivio
+7. 🟡 `1A.6` — Dev onboarding (dipende da DOC.3)
