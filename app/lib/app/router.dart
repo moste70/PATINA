@@ -1,14 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/projects/project_detail/project_detail_screen.dart';
 import '../shared/widgets/placeholder_screen.dart';
 
+// Provider che espone se l'onboarding è già stato completato.
+// Caricato una sola volta in main.dart e passato come override.
+final onboardingCompletedProvider = Provider<bool>(
+  (ref) => throw UnimplementedError('override in main'),
+);
+
 final routerProvider = Provider<GoRouter>((ref) {
+  final onboardingDone = ref.watch(onboardingCompletedProvider);
+
   return GoRouter(
-    initialLocation: '/projects',
+    initialLocation: onboardingDone ? '/projects' : '/onboarding',
     routes: [
+      // Onboarding — fuori dallo ShellRoute (no bottom nav)
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [

@@ -43,7 +43,7 @@
 | 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ⬜ Da fare |
 | 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ⬜ Da fare |
 | 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ⬜ Da fare |
-| 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ⬜ Da fare |
+| 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
 | 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
 | 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) | ⬜ Da fare |
 
