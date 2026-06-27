@@ -95,7 +95,6 @@ Projects(
   updatedAt: DateTime.now().millisecondsSinceEpoch,
 )
 ```
-Dopo il salvataggio inizializza le **10 fasi predefinite** da `AppConstants.defaultPhases` con `position` 0–9 e `isCustom = false`.
 
 ##### Validazioni
 - Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
@@ -167,36 +166,7 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 
 ---
 
-##### Sezione 2 — Fasi di Lavorazione
-
-Lista verticale di card compatte, una per fase. Ordine definito da `position`.
-
-**Struttura di ogni card fase:**
-```
-[ ✓ ] Pittura base                    [>]
-      Completata il 12 giu 2026
-      "Prima mano XF-63 diluita 1:1"   ← nota (se presente, max 1 riga)
-```
-
-- Checkbox a sinistra: tap segna/desegna come completata con `completedAt = now()`
-- Freccia `>` a destra: apre il dettaglio fase (bottom sheet)
-- Fase completata: testo barrato + sfondo leggermente evidenziato in `primary` al 8%
-- Fase corrente (prima non completata): bordo sinistro `primary` 3dp
-
-**Bottom sheet dettaglio fase:**
-- Nome fase (editabile inline se `is_custom = true`)
-- Toggle completata + data completamento (editabile)
-- Campo note multiline
-- Sezione foto collegate alla fase (miniature scorrevoli + bottone aggiungi)
-- Bottone "Elimina fase" solo se `is_custom = true`
-
-**Azioni header sezione Fasi:**
-- Contatore "X / 10 completate"
-- Bottone `+` per aggiungere fase personalizzata (in fondo alla lista)
-
----
-
-##### Sezione 3 — Galleria Foto
+##### Sezione 2 — Galleria Foto
 
 Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
 Ultima cella è il bottone `+` con icona fotocamera.
@@ -211,7 +181,7 @@ Ultima cella è il bottone `+` con icona fotocamera.
 - Foto salvata nella cartella privata dell'app (non nella galleria pubblica)
 
 **Long press su miniatura:**
-- Modalità selezione multipla → azioni: elimina, cambia fase associata
+- Modalità selezione multipla → azioni: elimina
 
 ---
 
@@ -259,39 +229,11 @@ Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
 |--------|--------------|
 | Pull to refresh | Ricarica dati dal DB (per futura sync cloud) |
 | Back navigation | Torna all'archivio (`/projects`) |
-| Avanzamento auto | Quando tutte le fasi sono completate → suggerimento di impostare stato a `Completato` (snackbar con azione) |
+| Avanzamento manuale | Aggiornabile da menu `⋮` → "Modifica avanzamento" con slider 0–100 |
 | Empty state foto | Illustrazione + testo "Aggiungi la prima foto del modello" + bottone |
 
 ---
 
-#### 1.3 Fasi di Lavorazione — Dettaglio
-
-Fasi sequenziali create automaticamente alla creazione del progetto
-da `AppConstants.defaultPhases`. Personalizzabili dall'utente.
-
-**Fasi predefinite (10):**
-
-| # | Nome | Descrizione |
-|---|------|-------------|
-| 1 | Preparazione | Pulizia, rimozione canali, controllo parti |
-| 2 | Assemblaggio sub-gruppi | — |
-| 3 | Assemblaggio finale | — |
-| 4 | Stuccatura e correzioni | — |
-| 5 | Primer | — |
-| 6 | Pittura base | — |
-| 7 | Ombreggiatura e luci | Shading e highlighting |
-| 8 | Decalcomanie | — |
-| 9 | Invecchiamento | Weathering |
-| 10 | Finitura | Vernice opaca, lucida o satinata |
-
-**Funzionalità:**
-- Spunta completata con data (timestamp salvato in `completedAt`)
-- Note specifiche per fase (campo `notes` in `project_phases`)
-- Foto collegate a ogni fase (campo `phaseId` in `project_photos`)
-- Aggiunta fasi personalizzate in fondo alla lista (`is_custom = true`)
-- Riordinamento con drag & drop (aggiorna campo `position`)
-
----
 
 ### 2. Gestione Vernici
 
@@ -382,7 +324,6 @@ Documenta quale vernice o ricetta è stata applicata in un punto della foto.
 - Vernice o ricetta associata
 - Note (es. "due mani, diluita al 30%")
 - Tecnica applicata
-- Fase di lavorazione di riferimento
 
 #### 3.2 Pin Lavorazione
 Documenta la tecnica applicata in un punto specifico del modello.
@@ -391,7 +332,7 @@ Documenta la tecnica applicata in un punto specifico del modello.
 - Coordinate X/Y
 - Tipo lavorazione (es. wash, chipping, filter, pigmenti, stucco, incisione)
 - Prodotto usato (testo libero)
-- Note e fase di riferimento
+- Note
 
 **Funzionalità comuni:**
 - Zoom e pan sulla foto per posizionamento preciso

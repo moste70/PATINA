@@ -19,17 +19,5 @@ class ProjectPhotos extends Table {
   IntColumn get projectId => integer().references(Projects, #id)();
   TextColumn get path => text()();
   TextColumn get caption => text().nullable()();
-  IntColumn get phaseId => integer().nullable()();
   IntColumn get takenAt => integer().nullable()();
-}
-
-class ProjectPhases extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  IntColumn get projectId => integer().references(Projects, #id)();
-  TextColumn get name => text()();
-  IntColumn get position => integer()();
-  BoolColumn get completed => boolean().withDefault(const Constant(false))();
-  IntColumn get completedAt => integer().nullable()();
-  TextColumn get notes => text().nullable()();
-  BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
 }

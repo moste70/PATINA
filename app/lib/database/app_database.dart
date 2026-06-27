@@ -13,7 +13,6 @@ part 'app_database.g.dart';
 @DriftDatabase(tables: [
   Projects,
   ProjectPhotos,
-  ProjectPhases,
   CatalogPaints,
   InventoryPaints,
   Recipes,

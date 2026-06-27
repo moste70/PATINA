@@ -46,12 +46,12 @@ patina/
 │   │   │   ├── utils/
 │   │   │   │   └── permissions.dart         # Gestione permessi camera/storage
 │   │   │   └── constants/
-│   │   │       └── app_constants.dart       # Categorie, stati, fasi, marche, quantità
+│   │   │       └── app_constants.dart       # Categorie, stati, marche, quantità
 │   │   └── database/
 │   │       ├── app_database.dart            # Drift DB + initializeCatalogs()
 │   │       ├── app_database.g.dart          # Generato da build_runner
 │   │       └── tables/
-│   │           ├── projects.dart            # Projects, ProjectPhotos, ProjectPhases
+│   │           ├── projects.dart            # Projects, ProjectPhotos
 │   │           ├── paints.dart              # CatalogPaints, InventoryPaints
 │   │           ├── recipes.dart             # Recipes, RecipeIngredients
 │   │           └── pins.dart                # Pins
@@ -128,25 +128,8 @@ id              INTEGER PRIMARY KEY AUTOINCREMENT
 project_id      INTEGER NOT NULL REFERENCES projects(id)
 path            TEXT NOT NULL
 caption         TEXT
-phase_id        INTEGER REFERENCES project_phases(id)
 taken_at        INTEGER
 ```
-
-### `project_phases`
-```
-id              INTEGER PRIMARY KEY AUTOINCREMENT
-project_id      INTEGER NOT NULL REFERENCES projects(id)
-name            TEXT NOT NULL
-position        INTEGER NOT NULL
-completed       BOOLEAN DEFAULT false
-completed_at    INTEGER
-notes           TEXT
-is_custom       BOOLEAN DEFAULT false
-```
-
-Fasi predefinite (da `AppConstants.defaultPhases`):
-Preparazione → Assemblaggio sub-gruppi → Assemblaggio finale → Stuccatura → Primer
-→ Pittura base → Ombreggiatura e luci → Decalcomanie → Invecchiamento → Finitura
 
 ### `catalog_paints`
 ```
@@ -206,7 +189,6 @@ recipe_id       INTEGER REFERENCES recipes(id)
 technique_type  TEXT
 product_used    TEXT
 notes           TEXT
-phase_id        INTEGER REFERENCES project_phases(id)
 ```
 
 ---
