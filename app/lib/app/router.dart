@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/projects/projects_screen.dart';
 import '../shared/widgets/placeholder_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -13,10 +14,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/projects',
             name: 'projects',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Progetti',
-              icon: Icons.view_module_outlined,
-            ),
+            builder: (context, state) => const ProjectsScreen(),
             routes: [
               GoRoute(
                 path: ':id',

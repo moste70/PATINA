@@ -4,15 +4,13 @@ class AppConstants {
   ];
 
   static const List<String> projectStatuses = [
-    'idea', 'building', 'painting', 'completed', 'paused',
+    'todo', 'in_progress', 'completed',
   ];
 
   static const Map<String, String> projectStatusLabels = {
-    'idea': 'Idea',
-    'building': 'In costruzione',
-    'painting': 'In pittura',
+    'todo': 'Da iniziare',
+    'in_progress': 'In corso',
     'completed': 'Completato',
-    'paused': 'In pausa',
   };
 
   static const Map<String, String> categoryLabels = {
@@ -23,19 +21,6 @@ class AppConstants {
     'diorama': 'Diorama',
     'other': 'Altro',
   };
-
-  static const List<Map<String, String>> defaultPhases = [
-    {'name': 'Preparazione', 'desc': 'Pulizia, rimozione canali, controllo parti'},
-    {'name': 'Assemblaggio sub-gruppi', 'desc': ''},
-    {'name': 'Assemblaggio finale', 'desc': ''},
-    {'name': 'Stuccatura e correzioni', 'desc': ''},
-    {'name': 'Primer', 'desc': ''},
-    {'name': 'Pittura base', 'desc': ''},
-    {'name': 'Ombreggiatura e luci', 'desc': 'Shading e highlighting'},
-    {'name': 'Decalcomanie', 'desc': ''},
-    {'name': 'Invecchiamento', 'desc': 'Weathering'},
-    {'name': 'Finitura', 'desc': 'Vernice opaca, lucida o satinata'},
-  ];
 
   static const List<String> paintQuantities = ['full', 'half', 'low', 'empty'];
 

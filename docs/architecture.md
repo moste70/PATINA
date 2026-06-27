@@ -2,135 +2,173 @@
 
 ## Stack Tecnologico
 
-| Layer | Tecnologia | Motivazione |
-|-------|-----------|-------------|
-| Framework | Flutter (Dart) | Cross-platform Android/iOS, UI ricca, ottimo per grafica custom |
-| State Management | Riverpod | Reattivo, testabile, supporto async nativo |
-| Database locale | Drift (SQLite) | Type-safe, query reattive, ottimo per dati relazionali |
-| Navigazione | Go Router | Dichiarativo, deep linking, gestione branch di navigazione |
-| Immagini | `image_picker` + `cached_network_image` | Selezione da galleria/camera, cache efficiente |
-| Manipolazione foto/pin | `InteractiveViewer` + Canvas Flutter | Zoom, pan e overlay pin senza librerie esterne |
+| Layer | Tecnologia | Versione / Note |
+|-------|-----------|-----------------|
+| Framework | Flutter (Dart) | Cross-platform Android/iOS, UI ricca, grafica custom |
+| State Management | Riverpod + riverpod_generator | Reattivo, testabile, supporto async nativo |
+| Database locale | Drift (SQLite) via drift_flutter | Type-safe, query reattive, dati relazionali |
+| Navigazione | Go Router | Dichiarativo, ShellRoute per bottom nav, deep linking |
+| Immagini | image_picker + cached_network_image | Selezione da galleria/camera, cache efficiente |
+| Manipolazione foto/pin | InteractiveViewer + Canvas Flutter | Zoom, pan e overlay pin senza librerie esterne |
+| Preferenze utente | shared_preferences | Persistenza tema dark/light tra sessioni |
 | AI (Fase 2) | Anthropic Claude API | Miscelazione avanzata, riconoscimento colore da foto |
-| HTTP Client | Dio | Intercettori, retry, gestione errori centralizzata |
+| CI/CD | GitHub Actions | Build APK debug e release su ogni push |
 
 ---
 
-## Architettura a Layer
+## Struttura del Progetto
 
 ```
-lib/
-├── main.dart
-├── app/
-│   ├── router.dart              # Go Router — definizione rotte
-│   └── theme.dart               # Design system: colori, tipografia, componenti
-│
-├── features/                    # Un folder per ogni area funzionale
-│   ├── projects/
-│   │   ├── data/                # Repository, DAO, modelli DB
-│   │   ├── domain/              # Entità, use case, interfacce repository
-│   │   └── presentation/        # Schermate, widget, provider
-│   ├── paints/
-│   │   ├── data/
-│   │   ├── domain/
-│   │   └── presentation/
-│   ├── recipes/
-│   │   ├── data/
-│   │   ├── domain/
-│   │   └── presentation/
-│   └── pins/
-│       ├── data/
-│       ├── domain/
-│       └── presentation/
-│
-├── shared/
-│   ├── widgets/                 # Componenti riutilizzabili (HexChip, PinOverlay…)
-│   ├── utils/                   # Color math, formattatori, helper
-│   └── constants/               # Costanti app (marche, categorie, fasi default)
-│
-└── database/
-    ├── app_database.dart        # Definizione Drift database
-    └── tables/                  # Tabelle: projects, paints, recipes, pins…
+patina/
+├── .github/
+│   └── workflows/
+│       └── build-apk.yml        # CI: build APK debug + release
+├── app/                         # Progetto Flutter
+│   ├── android/                 # Configurazione Android nativa
+│   │   └── app/src/main/res/
+│   │       ├── drawable/        # ic_launcher_background.xml, ic_launcher_foreground.xml
+│   │       ├── mipmap-anydpi-v26/  # Adaptive icon (API 26+)
+│   │       └── values/          # colors.xml, styles.xml
+│   ├── assets/
+│   │   ├── icon.png             # Icona app 1024x1024 (cluster esagoni)
+│   │   └── catalogs/            # JSON cataloghi vernici (bundled)
+│   │       ├── vallejo_model_color.json   (30 colori)
+│   │       ├── citadel_base.json          (20 colori)
+│   │       └── tamiya_xf.json             (28 colori)
+│   ├── lib/
+│   │   ├── main.dart            # Entry point: init DB, catalogs, runApp
+│   │   ├── app/
+│   │   │   ├── router.dart      # Go Router: ShellRoute, 4 tab, AppShell
+│   │   │   └── theme.dart       # PatinaColors, PatinaFonts, PatinaTheme
+│   │   ├── shared/
+│   │   │   ├── widgets/
+│   │   │   │   └── placeholder_screen.dart  # Schermo placeholder con icona Patina
+│   │   │   ├── utils/
+│   │   │   │   └── permissions.dart         # Gestione permessi camera/storage
+│   │   │   └── constants/
+│   │   │       └── app_constants.dart       # Categorie, stati, marche, quantità
+│   │   └── database/
+│   │       ├── app_database.dart            # Drift DB + initializeCatalogs()
+│   │       ├── app_database.g.dart          # Generato da build_runner
+│   │       └── tables/
+│   │           ├── projects.dart            # Projects, ProjectPhotos
+│   │           ├── paints.dart              # CatalogPaints, InventoryPaints
+│   │           ├── recipes.dart             # Recipes, RecipeIngredients
+│   │           └── pins.dart                # Pins
+│   └── pubspec.yaml
+└── docs/                        # Documentazione di progetto
 ```
+
+> **Nota:** La cartella `features/` (projects/, paints/, recipes/, pins/) non esiste ancora.
+> Tutte le schermate sono attualmente `PlaceholderScreen`. Verrà popolata durante la Fase 1.
+
+---
+
+## Design System
+
+### Palette Colori (`PatinaColors`)
+
+| Token | Dark | Light | Uso |
+|-------|------|-------|-----|
+| `background` | `#12121A` | `#F5F4F0` | Sfondo app |
+| `surface` | `#1C1C26` | `#FFFFFF` | Card, bottom nav |
+| `surfaceVariant` | `#26263A` | `#EEEDE8` | Input, chip |
+| `primary` (accent) | `#7CB87C` | `#4A7A4A` | CTA, selezioni |
+| `secondary` (accentAlt) | `#B87C3E` | `#8A5A20` | Accento caldo |
+| `onBackground` | `#E8E8F0` | `#1A1A1F` | Testo principale |
+| `onSurface` | `#B0B0C8` | `#3A3A45` | Testo secondario |
+| `outline` | `#2A2A3A` | `#E0DED8` | Divisori, bordi |
+
+### Navigazione
+
+L'app usa un `ShellRoute` con `NavigationBar` a 4 voci:
+
+| Tab | Percorso | Icona outline | Icona selected |
+|-----|----------|--------------|----------------|
+| Progetti | `/projects` | `view_module_outlined` | `view_module` |
+| Vernici | `/paints` | `palette_outlined` | `palette` |
+| Ricette | `/recipes` | `science_outlined` | `science` |
+| Impostazioni | `/settings` | `settings_outlined` | `settings` |
+
+Rotta aggiuntiva: `/projects/:id` — scheda progetto (non nel tab, navigata dalla lista).
+I pin su foto sono accessibili dalla scheda progetto, non tramite tab dedicato.
+
+### Icona Patina (in-app)
+
+`PlaceholderScreen` mostra nell'AppBar un'icona custom (`_HexPainter`):
+esagono outline con punto centrale, disegnato via `CustomPainter` in colore `primary`.
+Questa è l'icona di brand usata nell'interfaccia — distinta dall'icona launcher.
 
 ---
 
 ## Schema Database (Drift/SQLite)
 
-### Tabella: `projects`
+Il database è inizializzato al primo avvio (`schemaVersion: 1`).
+I cataloghi vengono caricati dagli asset JSON una sola volta (`initializeCatalogs()`
+verifica se la tabella è già popolata prima di procedere).
+
+### `projects`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 name            TEXT NOT NULL
 brand           TEXT
 scale           TEXT                        -- es. "1/35"
-category        TEXT                        -- tank, aircraft, figure, ship, diorama, other
-cover_photo     TEXT                        -- path locale immagine
-status          TEXT DEFAULT 'idea'         -- idea, building, painting, completed, paused
+category        TEXT                        -- tank|aircraft|figure|ship|diorama|other
+cover_photo     TEXT                        -- path locale
+status          TEXT DEFAULT 'todo'         -- todo|in_progress|completed
 progress        INTEGER DEFAULT 0           -- 0-100
 notes           TEXT
 created_at      INTEGER NOT NULL            -- timestamp Unix
 updated_at      INTEGER NOT NULL
 ```
 
-### Tabella: `project_photos`
+### `project_photos`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 project_id      INTEGER NOT NULL REFERENCES projects(id)
-path            TEXT NOT NULL               -- path locale immagine
+path            TEXT NOT NULL
 caption         TEXT
-phase_id        INTEGER REFERENCES project_phases(id)
 taken_at        INTEGER
 ```
 
-### Tabella: `project_phases`
+### `catalog_paints`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
-project_id      INTEGER NOT NULL REFERENCES projects(id)
-name            TEXT NOT NULL
-position        INTEGER NOT NULL            -- ordine di visualizzazione
-completed       INTEGER DEFAULT 0           -- 0/1 boolean
-completed_at    INTEGER
-notes           TEXT
-is_custom       INTEGER DEFAULT 0           -- fase predefinita o aggiunta dall'utente
-```
-
-### Tabella: `catalog_paints`
-```
-id              INTEGER PRIMARY KEY AUTOINCREMENT
-brand           TEXT NOT NULL               -- vallejo, citadel, tamiya
-line            TEXT NOT NULL               -- model_color, base, xf, ecc.
+brand           TEXT NOT NULL               -- vallejo|citadel|tamiya
+line            TEXT NOT NULL               -- model_color|base|xf|…
 code            TEXT NOT NULL
 name            TEXT NOT NULL
 hex             TEXT NOT NULL               -- es. "#4A3728"
 ```
 
-### Tabella: `inventory_paints`
+### `inventory_paints`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 catalog_id      INTEGER REFERENCES catalog_paints(id)
-custom_brand    TEXT                        -- per vernici non in catalogo
+custom_brand    TEXT
 custom_code     TEXT
 custom_name     TEXT
 custom_hex      TEXT
-quantity        TEXT DEFAULT 'full'         -- full, half, low, empty
+quantity        TEXT DEFAULT 'full'         -- full|half|low|empty
 notes           TEXT
 purchased_at    INTEGER
 ```
 
-### Tabella: `recipes`
+### `recipes`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 name            TEXT NOT NULL
 photo_path      TEXT
-technique       TEXT                        -- brush, airbrush, sponge
+technique       TEXT                        -- brush|airbrush|sponge
 dilution        TEXT
-surface         TEXT                        -- plastic, metal, resin
+surface         TEXT
 notes           TEXT
-tags            TEXT                        -- JSON array di stringhe
+tags            TEXT                        -- JSON array
 created_at      INTEGER NOT NULL
 updated_at      INTEGER NOT NULL
 ```
 
-### Tabella: `recipe_ingredients`
+### `recipe_ingredients`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 recipe_id       INTEGER NOT NULL REFERENCES recipes(id)
@@ -139,100 +177,82 @@ catalog_id      INTEGER REFERENCES catalog_paints(id)
 percentage      REAL NOT NULL
 ```
 
-### Tabella: `pins`
+### `pins`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 photo_id        INTEGER NOT NULL REFERENCES project_photos(id)
-type            TEXT NOT NULL               -- color, technique
+type            TEXT NOT NULL               -- color|technique
 x               REAL NOT NULL               -- 0.0-1.0 relativo alla foto
 y               REAL NOT NULL               -- 0.0-1.0 relativo alla foto
 paint_id        INTEGER REFERENCES inventory_paints(id)
 recipe_id       INTEGER REFERENCES recipes(id)
-technique_type  TEXT                        -- per pin di tipo technique
+technique_type  TEXT
 product_used    TEXT
 notes           TEXT
-phase_id        INTEGER REFERENCES project_phases(id)
 ```
 
 ---
 
-## Cataloghi Vernici — Strategia di Distribuzione
+## Cataloghi Vernici
 
-I cataloghi delle marche (Vallejo, Citadel, Tamiya) sono distribuiti come
-**asset statici** bundled nell'app in formato JSON e importati nel database
-SQLite al primo avvio.
+I cataloghi sono bundled come asset JSON e caricati in SQLite al primo avvio.
 
-```
-assets/
-└── catalogs/
-    ├── vallejo_model_color.json
-    ├── vallejo_game_color.json
-    ├── vallejo_model_air.json
-    ├── vallejo_mecha_color.json
-    ├── vallejo_panzer_aces.json
-    ├── citadel_base.json
-    ├── citadel_layer.json
-    ├── citadel_shade.json
-    ├── citadel_contrast.json
-    ├── tamiya_xf.json
-    ├── tamiya_x.json
-    └── tamiya_lp.json
-```
+**Cataloghi inclusi in Fase 1** (verificati, dati reali presenti negli asset):
 
-**Formato JSON catalogo:**
+| File | Marca | Linea (`line`) | Colori |
+|------|-------|----------------|--------|
+| `vallejo_model_color.json` | `vallejo` | `model_color` | 30 |
+| `citadel_base.json` | `citadel` | `base` | 20 |
+| `tamiya_xf.json` | `tamiya` | `xf` | 28 |
+
+**Formato JSON:**
 ```json
 {
   "brand": "vallejo",
   "line": "model_color",
   "version": "2024.1",
   "paints": [
-    {
-      "code": "70.950",
-      "name": "Black",
-      "hex": "#1A1A1A"
-    }
+    { "code": "70.950", "name": "Black", "hex": "#1A1A1A" }
   ]
 }
 ```
 
-Aggiornamenti dei cataloghi saranno distribuiti tramite aggiornamenti app.
+Espansione cataloghi (Vallejo Game Color/Air/Panzer Aces, Citadel Layer/Shade/Contrast,
+Tamiya X/LP, AK Interactive, Ammo by Mig, Humbrol, Mr. Color) pianificata in Fase 2.
 
 ---
 
-## Algoritmo Miscelazione Colori (Fase 1)
+## Algoritmo Miscelazione (Fase 1)
 
-L'algoritmo interno lavora nello spazio colore **Lab (CIELAB)** per calcolare
-la distanza percettiva tra colori — più accurato dell'RGB puro.
+Calcolo in spazio colore **CIELAB** per distanza percettiva accurata (Delta-E).
+Implementato in Dart puro, senza dipendenze esterne.
 
 **Flusso:**
-1. Utente inserisce il colore target (HEX o selezione da color picker)
-2. Conversione HEX → Lab
-3. Calcolo distanza Delta-E tra il target e ogni vernice dell'inventario
+1. Utente inserisce colore target (HEX o color picker)
+2. Conversione HEX → Lab per ogni vernice dell'inventario
+3. Calcolo Delta-E tra target e inventario
 4. Selezione delle 5 vernici più vicine
-5. Per ogni coppia/tripletta di vernici vicine: calcolo mix ponderato
-6. Restituzione delle 3 ricette con minor distanza dal target
-
-**Librerie:** calcolo Lab/Delta-E implementato in Dart puro (nessuna dipendenza esterna).
+5. Mix ponderato per coppie/triplette → 3 ricette suggerite con distanza dal target
 
 ---
 
 ## Integrazione Claude API (Fase 2)
 
-Le chiamate AI sono gestite tramite un servizio dedicato con:
-- Gestione crediti lato client (contatore locale)
-- Acquisto crediti via in-app purchase (Google Play Billing)
-- Timeout e retry automatici
-- Cache dei risultati per evitare chiamate duplicate
+| Caso d'uso | Modello |
+|------------|---------|
+| Miscelazione avanzata (testo) | `claude-haiku-4-5-20251001` |
+| Riconoscimento colore da foto | `claude-sonnet-4-6` |
 
-**Modello:** `claude-haiku-4-5-20251001` per risposte rapide ed economiche;
-`claude-sonnet-4-6` per analisi immagini (riconoscimento colore da foto).
+Le chiamate AI saranno gestite da un servizio dedicato con:
+- Crediti acquistabili via Google Play Billing
+- Cache risultati per evitare chiamate duplicate
+- Timeout e retry automatici
 
 ---
 
-## Gestione Dati e Privacy
+## Dati e Privacy
 
-- **Fase 1:** tutti i dati sono **esclusivamente locali** sul dispositivo
-- Nessun account richiesto, nessuna registrazione
-- Le foto rimangono nella memoria interna dell'app (non nella galleria pubblica)
-- Backup manuale tramite export ZIP (da implementare in Fase 1)
+- **Fase 1:** tutti i dati sono locali sul dispositivo, nessun account richiesto
+- Le foto restano nella memoria interna dell'app (non nella galleria pubblica)
+- Backup manuale tramite export ZIP (Fase 1E)
 - **Fase 2:** sync cloud opzionale con account utente

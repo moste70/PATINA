@@ -6,227 +6,492 @@
 
 ### 1. Gestione Progetti
 
-#### 1.1 Archivio Progetti
-L'archivio è la schermata principale dell'app. Mostra tutti i modelli inseriti
-dall'utente con una panoramica visiva immediata dello stato di avanzamento.
+#### 1.0 Creazione Nuovo Progetto — Wizard (`/projects/new`)
 
-**Contenuto di ogni progetto:**
-- Nome del modello
-- Marca e scala (es. Tamiya 1/35, Revell 1/72)
-- Categoria (carro armato, aereo, figura, nave, diorama, altro)
-- Foto di copertina (scattata o importata dalla galleria)
-- Stato: `Idea` · `In costruzione` · `In pittura` · `Completato` · `In pausa`
-- Percentuale di avanzamento (inserita manualmente dall'utente)
-- Data di inizio e ultima modifica
-- Note libere
+> **Spec 1A-DOC.1** — Flusso completo di creazione progetto
 
-**Funzionalità:**
-- Creazione nuovo progetto con wizard guidato
-- Modifica di tutti i campi in qualsiasi momento
-- Archiviazione progetti completati (rimangono consultabili)
-- Eliminazione con conferma
-- Ricerca per nome, categoria o stato
-- Ordinamento per: ultima modifica, data inizio, nome, stato
-- Vista griglia e vista lista (toggle)
+##### Trigger di apertura
+- Bottone FAB `+` nella schermata Archivio Progetti
+- Il wizard si apre come bottom sheet a schermo intero (o pagina modale)
 
-#### 1.2 Scheda Progetto
-Ogni progetto ha una scheda dedicata che raccoglie tutte le informazioni
-e le fasi di lavorazione in un'unica vista scorrevole.
+##### Struttura del Wizard — 3 Step
 
-**Sezioni della scheda:**
-- Header con foto, nome, stato e percentuale avanzamento
-- Galleria foto (più immagini del modello in varie fasi)
-- Fasi di lavorazione (vedi 1.3)
-- Vernici usate in questo progetto (collegate dall'inventario)
-- Ricette usate in questo progetto
-- Note e diario di lavorazione
-- Pin su foto (vedi 1.4)
-
-#### 1.3 Fasi di Lavorazione
-Ogni progetto è suddiviso in fasi sequenziali che l'utente può spuntare
-man mano che procede. Le fasi sono predefinite ma personalizzabili.
-
-**Fasi predefinite:**
-1. Preparazione (pulizia, rimozione canali, controllo parti)
-2. Assemblaggio sub-gruppi
-3. Assemblaggio finale
-4. Stuccatura e correzioni
-5. Primer
-6. Pittura base
-7. Ombreggiatura e luci (shading/highlighting)
-8. Decalcomanie
-9. Invecchiamento (weathering)
-10. Finitura (vernice opaca/lucida/satinata)
-11. Base/diorama (opzionale)
-
-**Funzionalità:**
-- Spunta ogni fase come completata con data
-- Aggiunta di note specifiche per ogni fase
-- Possibilità di aggiungere foto a ogni fase
-- Aggiunta di fasi personalizzate
-- Riordinamento delle fasi tramite drag & drop
+**Indicatore di progresso:** barra lineare in cima con 3 segmenti. Step corrente evidenziato in `primary` (#7CB87C), completati in `primary` solido, futuri in `outline`.
 
 ---
 
+**Step 1 — Il Kit**
+
+Campi:
+
+| Campo | Tipo | Obbligatorio | Note |
+|-------|------|:---:|-------|
+| Nome modello | TextField | ✅ | es. "Tiger I Ausf. E" — max 80 caratteri |
+| Marca kit | TextField | ❌ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
+| Scala | TextField | ❌ | es. "1/35", "1/72" — testo libero con suggerimenti chip: 1/35 · 1/48 · 1/72 · 1/100 · 1/144 · Altra |
+| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Diorama · Altro |
+
+Comportamento:
+- Il campo **Nome** riceve il focus automaticamente all'apertura (tastiera aperta)
+- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo
+- La **categoria** mostra icone + etichette, selezione con tap, chip selezionato in `primary`
+- Bottone **Avanti** attivo solo se Nome e Categoria sono compilati
+
+---
+
+**Step 2 — Stato Iniziale**
+
+Campi:
+
+| Campo | Tipo | Obbligatorio | Note |
+|-------|------|:---:|-------|
+| Stato | Chip selector | ✅ | Default: `Da iniziare`. Opzioni: Da iniziare · In corso · Completato |
+| Avanzamento | Slider 0–100 | ❌ | Visibile solo se stato ≠ `Idea`. Default 0. Label: "X% completato" |
+| Note iniziali | TextField multiline | ❌ | Placeholder: "Aggiungi note, riferimenti, obiettivi…" — max 500 caratteri |
+
+Comportamento:
+- Lo slider appare/scompare con animazione al cambio stato
+- Lo stato `Completato` imposta automaticamente avanzamento a 100
+- Lo stato `Da iniziare` imposta automaticamente avanzamento a 0
+
+---
+
+**Step 3 — Foto Copertina**
+
+| Campo | Tipo | Obbligatorio | Note |
+|-------|------|:---:|-------|
+| Foto copertina | Image picker | ❌ | Da galleria o camera |
+
+Layout:
+- Area centrale 1:1 con bordo tratteggiato `outline`, icona foto + testo "Aggiungi copertina"
+- Dopo selezione: preview dell'immagine con bottone `×` per rimuoverla
+- Due bottoni sotto: `Fotocamera` (icon: `camera_alt`) e `Galleria` (icon: `photo_library`)
+- Testo secondario: "Puoi aggiungere o cambiare la foto in qualsiasi momento"
+
+---
+
+##### Navigazione del Wizard
+
+| Azione | Comportamento |
+|--------|--------------|
+| `Avanti` (step 1 → 2) | Valida Nome + Categoria, poi avanza |
+| `Avanti` (step 2 → 3) | Avanza sempre (step 2 non ha campi obbligatori) |
+| `Crea Progetto` (step 3) | Salva e naviga a `/projects/:id` del nuovo progetto |
+| `Indietro` | Torna allo step precedente, dati preservati |
+| `×` (chiudi) | Dialog conferma se dati inseriti — "Vuoi scartare il progetto?" con azioni Annulla / Scarta |
+| Swipe down | Stessa logica del `×` |
+
+##### Salvataggio (logica Dart)
+```
+Projects(
+  name: nome.trim(),
+  brand: marca.trim() oppure null,
+  scale: scala.trim() oppure null,
+  category: categoriaSelezionata,        // 'tank'|'aircraft'|...
+  coverPhoto: pathFoto oppure null,
+  status: statoSelezionato,              // 'todo'|'in_progress'|'completed'
+  progress: avanzamento,                 // 0-100
+  notes: note.trim() oppure null,
+  createdAt: DateTime.now().millisecondsSinceEpoch,
+  updatedAt: DateTime.now().millisecondsSinceEpoch,
+)
+```
+
+##### Validazioni
+- Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
+- Nome > 80 caratteri → contatore caratteri visibile, input bloccato a 80
+- Foto > 10MB → toast "Immagine troppo grande, scegli un'altra"
+
+##### Stati di errore
+- Permesso camera negato → bottom sheet con spiegazione + link alle impostazioni Android
+- Permesso galleria negato → stessa logica
+- Errore salvataggio DB → snackbar "Errore nel salvataggio, riprova" con retry
+
+---
+
+#### 1.0b Onboarding — Primo Avvio
+
+> **Spec 1A-DOC.3** — Flusso primo avvio, permessi, empty state
+
+##### Trigger
+
+L'onboarding viene mostrato **una sola volta**, al primo avvio dell'app dopo l'installazione.
+Un flag `onboarding_completed` in `shared_preferences` controlla se mostrarlo.
+Se il flag è `true`, l'app apre direttamente l'Archivio Progetti.
+
+---
+
+##### Struttura — 3 Schermate
+
+**Indicatore di progresso:** punti in fondo (•••), quello attivo in `primary`.
+
+---
+
+**Schermata 1 — Benvenuto**
+
+Layout verticale centrato:
+- Icona Patina grande (cluster esagoni, `primary`, 120dp)
+- Titolo: "Benvenuto in Patina" (DM Serif Display, 28sp)
+- Sottotitolo: "Il taccuino digitale per i tuoi modelli in scala." (Inter Regular, 16sp, `onSurface`)
+- Testo descrittivo breve (max 2 righe): "Tieni traccia dei tuoi progetti, delle vernici e delle ricette di miscelazione — tutto offline, tutto tuo."
+- Bottone primario `Inizia` in fondo
+
+---
+
+**Schermata 2 — Permessi**
+
+Richiesta permessi necessari all'app.
+
+| Permesso | Icona | Titolo | Descrizione |
+|----------|-------|--------|-------------|
+| Camera | `camera_alt` | "Fotocamera" | "Scatta foto dei tuoi modelli durante la lavorazione" |
+| Galleria / Storage | `photo_library` | "Foto e file" | "Importa immagini dalla galleria e salva i tuoi lavori" |
+
+Layout:
+- Titolo sezione: "Patina ha bisogno di accedere a:" (Inter 600, 18sp)
+- Lista card con icona + titolo + descrizione per ciascun permesso
+- Sotto ogni card: stato del permesso (`Concesso ✓` in `primary` · `In attesa` in `onSurface`)
+- Bottone `Concedi permessi` — al tap richiede entrambi i permessi in sequenza
+- Link testo sotto: "Salta per ora — puoi concederli nelle impostazioni"
+
+Comportamento:
+- Se entrambi i permessi sono già concessi (reinstallazione), la schermata mostra tutto come `Concesso ✓` e il bottone diventa `Continua`
+- Se l'utente nega un permesso: la card mostra `Negato` in `#C87A20` (arancio) + testo piccolo "Puoi abilitarlo in Impostazioni → App → Patina"
+- La schermata non è bloccante: si può proseguire anche senza permessi
+
+---
+
+**Schermata 3 — Pronto**
+
+Layout verticale centrato:
+- Illustrazione o icona grande (✓ in cerchio `primary`, 100dp)
+- Titolo: "Sei pronto!" (DM Serif Display, 28sp)
+- Testo: "Crea il tuo primo progetto e inizia a documentare il tuo lavoro."
+- Bottone primario `Crea il primo progetto` → apre il wizard (`/projects/new`) e segna onboarding completato
+- Link testo sotto: "Esplora l'app" → va a `/projects` e segna onboarding completato
+
+---
+
+##### Navigazione
+
+| Azione | Comportamento |
+|--------|--------------|
+| `Inizia` (schermata 1) | Avanza alla schermata 2 |
+| `Concedi permessi` / `Continua` (schermata 2) | Avanza alla schermata 3 |
+| `Salta per ora` (schermata 2) | Avanza alla schermata 3 senza richiedere permessi |
+| `Crea il primo progetto` (schermata 3) | Segna flag, naviga a `/projects/new` |
+| `Esplora l'app` (schermata 3) | Segna flag, naviga a `/projects` |
+| Swipe orizzontale | Naviga avanti/indietro tra le schermate |
+| Back (schermata 1) | Nessun effetto (non si può tornare indietro dall'onboarding) |
+
+Dopo aver impostato `onboarding_completed = true`, non viene mai più mostrato.
+
+---
+
+##### Empty State Archivio Progetti
+
+Quando l'onboarding è completato ma non ci sono progetti, l'Archivio Progetti mostra un empty state invece della lista vuota:
+
+- Illustrazione centrale (icona categoria `other`, tratteggiata, 80dp, `onSurface` dimmed)
+- Testo: "Nessun progetto ancora" (Inter 600, 18sp)
+- Sottotesto: "Inizia aggiungendo il tuo primo modello in scala."
+- Bottone `+ Nuovo progetto` (primario, stesso effetto del FAB)
+
+Il FAB `+` è sempre visibile anche sull'empty state.
+
+---
+
+#### 1.1 Archivio Progetti (`/projects`)
+Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
+
+**Contenuto di ogni card progetto:**
+- Foto di copertina (o placeholder con icona categoria)
+- Nome del modello
+- Categoria + scala (es. "Carro Armato · 1/35")
+- Chip stato colorato (`Da iniziare` grigio · `In corso` arancio · `Completato` verde)
+- Barra avanzamento 0–100%
+- Data ultima modifica (es. "3 giorni fa")
+
+**Funzionalità:**
+- FAB `+` per aprire il wizard creazione
+- Modifica di tutti i campi dalla scheda progetto
+- Archiviazione progetti completati (rimangono consultabili)
+- Eliminazione con dialog di conferma
+- Ricerca per nome, categoria o stato
+- Ordinamento per: ultima modifica, data inizio, nome, stato
+- Toggle vista griglia (2 colonne) / lista
+
+#### 1.2 Scheda Principale Progetto (`/projects/:id`)
+
+> **Spec 1A-DOC.2** — Layout completo e comportamenti della scheda progetto
+
+##### Struttura generale
+Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il basso la foto di copertina si riduce fino a diventare AppBar compatta con nome progetto e azioni.
+
+---
+
+##### Sezione 1 — Header (SliverAppBar)
+
+**Espanso** (foto visibile, altezza ~260dp):
+- Foto di copertina a schermo pieno con gradiente scuro in basso
+- In overlay sul gradiente: chip stato colorato (in alto a sinistra) + menu `⋮` (in alto a destra)
+- In basso sull'overlay: nome progetto (DM Serif Display, 24sp), marca + scala in grigio
+- Barra avanzamento lineare sottile con percentuale a destra (`X%`)
+
+**Collassato** (solo AppBar, altezza standard):
+- Back arrow + nome progetto (Inter 600, troncato) + menu `⋮`
+- La foto scompare, sfondo `surface`
+
+**Chip stato — colori:**
+| Stato | Colore sfondo | Testo |
+|-------|--------------|-------|
+| Da iniziare | `outline` (grigio) | `onSurface` |
+| In corso | `#C87A20` (arancio) | bianco |
+| Completato | `primary` (#7CB87C) | nero |
+
+**Menu `⋮` azioni:**
+- Modifica progetto → apre wizard in modalità edit (campi pre-compilati)
+- Modifica avanzamento → bottom sheet con slider 0–100
+- Archivia / Riattiva
+- Elimina → dialog conferma "Elimina progetto? L'azione è irreversibile."
+
+---
+
+##### Sezione 2 — Galleria Foto
+
+Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
+Ultima cella è il bottone `+` con icona fotocamera.
+
+**Tap su miniatura:**
+- Apre viewer foto a schermo intero (InteractiveViewer, zoom/pan)
+- Se la foto ha pin → mostra overlay pin
+- Swipe orizzontale per navigare tra le foto del progetto
+
+**Tap su `+`:**
+- Bottom sheet: Fotocamera · Galleria · Annulla
+- Foto salvata nella cartella privata dell'app (non nella galleria pubblica)
+
+**Long press su miniatura:**
+- Modalità selezione multipla → azioni: elimina
+
+---
+
+##### Sezione 4 — Vernici Usate
+
+Lista compatta delle vernici dell'inventario collegate a questo progetto
+(tramite i pin di tipo `color` sulla foto).
+
+**Struttura riga:**
+```
+[chip hex esagonale] Vallejo 70.950 · Black           [→ pin]
+```
+- Chip esagonale con colore reale
+- Marca + codice + nome
+- Contatore pin che usano questa vernice (`→ 3 pin`)
+- Tap: apre scheda vernice nell'inventario
+
+**Empty state:** "Nessuna vernice collegata — aggiungi pin colore alle foto"
+
+---
+
+##### Sezione 5 — Note Progetto
+
+Campo testo espandibile. In visualizzazione mostra max 4 righe con bottone "Mostra tutto".
+Tap attiva editing inline (diventa TextField multiline con autofocus).
+Salvataggio automatico on blur (nessun bottone Salva esplicito).
+
+Placeholder: "Aggiungi note, riferimenti, obiettivi del progetto…"
+
+---
+
+##### Sezione 6 — Info Progetto
+
+Row compatta con metadati:
+
+```
+Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
+```
+
+---
+
+##### Comportamenti globali
+
+| Evento | Comportamento |
+|--------|--------------|
+| Pull to refresh | Ricarica dati dal DB (per futura sync cloud) |
+| Back navigation | Torna all'archivio (`/projects`) |
+| Avanzamento manuale | Aggiornabile da menu `⋮` → "Modifica avanzamento" con slider 0–100 |
+| Empty state foto | Illustrazione + testo "Aggiungi la prima foto del modello" + bottone |
+
+---
+
+
 ### 2. Gestione Vernici
 
-#### 2.1 Inventario Personale
-L'inventario raccoglie tutte le vernici che l'utente possiede fisicamente.
+#### 2.1 Inventario Personale (`/paints`)
+Raccoglie tutte le vernici che l'utente possiede fisicamente.
 
 **Dati di ogni vernice:**
-- Marca (Vallejo, Citadel, Tamiya — Fase 1)
-- Linea/serie (es. Vallejo Model Color, Citadel Base, Tamiya XF)
+- Marca (Vallejo / Citadel / Tamiya — Fase 1)
+- Linea/serie (es. Model Color, Base, XF)
 - Codice colore (es. 70.950, XF-1)
 - Nome colore (es. Black, Flat Black)
-- Colore HEX reale (recuperato dal catalogo)
-- Chip colore esagonale visualizzato nell'app
-- Quantità stimata rimanente: `Piena` · `Metà` · `Quasi finita` · `Finita`
-- Note personali (es. "tende a seccarsi, aggiungere ritardante")
+- HEX reale da catalogo + chip esagonale visualizzato
+- Quantità: `Piena` · `Metà` · `Quasi finita` · `Finita`
+- Note personali
 - Data acquisto (opzionale)
 
 **Funzionalità:**
-- Aggiunta vernice cercando nel catalogo per codice o nome
+- Aggiunta da catalogo (cerca per codice o nome)
 - Aggiunta manuale per vernici non in catalogo
 - Filtro per marca, linea, quantità
-- Ricerca per codice o nome
-- Vista come griglia di chip esagonali colorati
-- Vista come lista con dettagli
+- Vista griglia chip esagonali / vista lista dettagliata (toggle)
 - Modifica quantità con tap rapido
-- Lista della spesa automatica (vernici finite o quasi finite)
+- Lista della spesa automatica (vernici `low` o `empty`)
 
 #### 2.2 Cataloghi Marche
-Database integrato e precaricato nell'app (offline) con i colori ufficiali
-delle marche supportate in Fase 1.
+Database offline integrato, caricato in SQLite al primo avvio.
 
-**Marche Fase 1:**
-- **Vallejo** — Model Color (~200 colori), Game Color (~100), Mecha Color (~60),
-  Model Air (~200), Panzer Aces (~60)
-- **Citadel (Games Workshop)** — Base, Layer, Shade, Dry, Technical, Contrast
-- **Tamiya** — XF (opache), X (lucide), LP (lacche), AS (aerografo)
+**Cataloghi Fase 1:**
 
-**Contenuto per ogni colore del catalogo:**
-- Codice ufficiale
-- Nome ufficiale
-- Colore HEX approssimato
-- Linea di appartenenza
-- Colori equivalenti nelle altre marche (quando disponibile)
+| Marca | Linea | Colori |
+|-------|-------|--------|
+| Vallejo | Model Color | 30 |
+| Citadel | Base | 20 |
+| Tamiya | XF (opache) | 28 |
 
 **Funzionalità:**
-- Sfoglia catalogo per marca e linea
+- Sfoglia per marca e linea
 - Ricerca per codice o nome
-- Visualizzazione chip esagonale con colore reale
-- Aggiunta diretta all'inventario personale
-- Visualizzazione colori equivalenti tra marche diverse
+- Chip esagonale con colore reale
+- Aggiunta diretta all'inventario
+- Equivalenze tra marche (quando disponibile)
 
-#### 2.3 Gestione Ricette
-Le ricette sono miscele personalizzate create dall'utente, salvate con
-proporzioni esatte per poterle replicare in futuro.
+#### 2.3 Gestione Ricette (`/recipes`)
+Miscele personalizzate salvate con proporzioni esatte.
 
 **Dati di ogni ricetta:**
-- Nome ricetta (es. "Grigio Panzer invecchiato", "Ruggine base")
-- Foto del risultato ottenuto
-- Lista ingredienti: ogni voce contiene vernice + percentuale
-- Tecnica di applicazione (pennello, aerografo, spugnatura)
+- Nome (es. "Grigio Panzer invecchiato")
+- Foto del risultato
+- Lista ingredienti: vernice + percentuale
+- Tecnica: `Pennello` · `Aerografo` · `Spugnatura`
 - Diluizione consigliata
-- Superficie di applicazione (plastica, metallo, resina)
-- Note aggiuntive
-- Tag liberi (es. "invecchiamento", "tedesco WWII", "NMM")
+- Superficie: plastica, metallo, resina
+- Note e tag liberi
 - Collegamento ai progetti in cui è stata usata
 
 **Funzionalità:**
-- Creazione ricetta con selezione vernici dall'inventario o dal catalogo
-- Inserimento proporzioni con slider o valore numerico
-- Foto del risultato (scattata o dalla galleria)
+- Creazione con selezione vernici da inventario o catalogo
+- Proporzioni via slider o valore numerico
+- Foto dalla camera o galleria
 - Ricerca per nome o tag
 - Duplica ricetta come base per varianti
-- Scala automatica delle quantità (es. "raddoppia la ricetta")
+- Scala automatica delle quantità
 
-#### 2.4 Assistenza alla Miscelazione (Algoritmo Interno)
-Funzionalità di supporto per trovare miscele partendo da un colore target.
+#### 2.4 Assistenza alla Miscelazione
 
-**Funzionalità algoritmo interno (Fase 1 — gratuito):**
-- Inserisci il codice HEX del colore desiderato
-- L'app suggerisce quali vernici del tuo inventario mescolare
-  per avvicinarsi a quel colore
-- Calcolo basato su valori RGB delle vernici nel catalogo
-- Risultato: lista di 2-3 ricette suggerite con proporzioni approssimative
-- Indicatore di "distanza" dal colore target (quanto è precisa la miscela)
+**Algoritmo interno Fase 1 (gratuito):**
+- Input: HEX del colore target
+- Output: 2–3 ricette suggerite con proporzioni e indicatore di distanza Delta-E
+- Lavora sulle vernici dell'inventario personale
+- Calcolo in spazio CIELAB, implementato in Dart puro
 
-**Funzionalità AI con Claude (Fase 2 — a crediti):**
+**AI con Claude Fase 2 (a crediti):**
 - Descrizione in linguaggio naturale del colore voluto
-- Suggerimento ricette complesse con più ingredienti
-- Considerazione della tecnica (aerografo vs pennello cambia la miscela)
+- Ricette complesse con considerazione di tecnica e materiale
 - Abbinamenti cromatici per ombreggiature e luci
 
 ---
 
 ### 3. Pin su Foto
 
+I pin sono accessibili dalla scheda progetto, selezionando una foto dalla galleria.
+
 #### 3.1 Pin Colore
-Permette di documentare visivamente quale colore è stato applicato
-in ogni area del modello, direttamente su una foto.
+Documenta quale vernice o ricetta è stata applicata in un punto della foto.
 
-**Come funziona:**
-1. Seleziona una foto del modello dalla scheda progetto
-2. Tocca un punto sulla foto per aggiungere un pin
-3. Scegli la vernice o la ricetta usata in quel punto
-4. Il pin mostra il chip esagonale con il colore reale
-5. Tocca un pin esistente per vedere i dettagli o modificarlo
-
-**Dati di ogni pin colore:**
-- Posizione (coordinate X/Y sull'immagine)
+**Dati:**
+- Coordinate X/Y (valori 0.0–1.0 relativi alla foto)
 - Vernice o ricetta associata
-- Note aggiuntive (es. "due mani, diluita al 30%")
+- Note (es. "due mani, diluita al 30%")
 - Tecnica applicata
 
 #### 3.2 Pin Lavorazione
-Come i pin colore, ma documentano la tecnica di lavorazione applicata
-in un determinato punto del modello.
+Documenta la tecnica applicata in un punto specifico del modello.
 
-**Dati di ogni pin lavorazione:**
-- Posizione (coordinate X/Y sull'immagine)
-- Tipo di lavorazione (es. "stucco epossidico", "incisione", "rivettatrice",
-  "filter", "wash", "chipping", "pigmenti")
+**Dati:**
+- Coordinate X/Y
+- Tipo lavorazione (es. wash, chipping, filter, pigmenti, stucco, incisione)
 - Prodotto usato (testo libero)
-- Note aggiuntive
-- Fase di lavorazione a cui appartiene
+- Note
 
-**Funzionalità comuni ai pin:**
-- Zoom sulla foto per posizionamento preciso
+**Funzionalità comuni:**
+- Zoom e pan sulla foto per posizionamento preciso
 - Spostamento pin con drag
 - Eliminazione pin
-- Toggle visibilità pin (mostra/nascondi tutti)
-- Filtro: mostra solo pin colore o solo pin lavorazione
+- Toggle visibilità (mostra/nascondi tutti)
+- Filtro per tipo: solo colore / solo lavorazione
 - Vista lista di tutti i pin di una foto
+
+---
+
+## Stato Implementazione Attuale
+
+> Tutte le schermate sono `PlaceholderScreen` — mostra icona + titolo + "In sviluppo".
+> L'AppBar mostra l'icona brand Patina (esagono custom painter) e un bottone cerca non funzionale.
+> La navigazione tra i 4 tab è funzionante tramite Go Router.
+
+| Schermata | Percorso | Stato |
+|-----------|----------|-------|
+| Archivio Progetti | `/projects` | Placeholder |
+| Scheda Progetto | `/projects/:id` | Placeholder |
+| Vernici / Inventario | `/paints` | Placeholder |
+| Ricette | `/recipes` | Placeholder |
+| Impostazioni | `/settings` | Placeholder |
+
+---
+
+## Aree da Progettare (Buchi)
+
+Funzionalità necessarie ma non ancora specificate. Richiedono design prima
+di poter essere inserite nella roadmap.
+
+| Area | Note |
+|------|------|
+| **Profilo / Impostazioni** | `/settings` placeholder — contenuto da definire: tema dark/light toggle, lingua, backup/restore, info app, versione |
+| **Paywall** | Modello monetizzazione Fase 2: crediti, subscription o one-time — da decidere prima dell'implementazione AI |
+| **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |
+| **Creazione Pin Lavorazione** | Flusso inserimento pin tecnica: selezione tipo lavorazione, prodotto usato, collegamento a fase |
+| **Visualizzatore Foto con Pin** | Viewer full-screen: zoom/pan via InteractiveViewer, overlay pin su canvas, controlli visibilità |
+| **Light Mode** | Palette light definita in `PatinaColors` ma da verificare su tutti i componenti — alcuni usano `onBackground` deprecated |
+| **Autenticazione** | Necessaria per Fase 2 — provider OAuth, flusso login/registrazione, gestione token |
+| **Stati di Sistema** | Loading spinner, empty state con CTA, errori di rete, permessi negati — pattern uniforme da definire |
+| **Notifiche** | Promemoria lavorazione, aggiornamenti catalogo — da decidere se e quando implementare |
+| **Wizard Nuovo Progetto** | Flusso multi-step creazione: nome → categoria/scala → foto cover → stato iniziale |
+| **Catalogo Vernici** | Vista sfoglia separata dall'inventario: raggruppamento per marca/linea, chip colore, aggiunta rapida |
 
 ---
 
 ## Fase 2 — Funzionalità Avanzate
 
-> Le funzionalità di Fase 2 saranno pianificate in dettaglio al termine della Fase 1.
-> Sono riportate qui come riferimento per le decisioni architetturali.
+> Pianificate in dettaglio al completamento della Fase 1.
 
 ### 4. Ricerca da Foto (AI)
-- Scatta o importa una foto di un colore reale (un modello, un veicolo,
-  una texture naturale)
-- L'app analizza il colore usando Claude Vision
-- Suggerisce le vernici più vicine nel catalogo e possibili ricette
+- Scatta o importa una foto di un colore reale
+- Claude Vision analizza e suggerisce vernici dal catalogo e possibili ricette
 - Funzionalità a crediti
 
 ### 5. Miscelazione AI Avanzata
-- Descrizione del colore in linguaggio naturale
-- Considerazione di materiale, luce ambiente, tecnica applicativa
-- Suggerimento di più opzioni con spiegazione delle differenze
+- Input in linguaggio naturale
+- Suggerimento con più opzioni e spiegazione delle differenze
+- Considera materiale, luce ambiente, tecnica applicativa
 - Funzionalità a crediti
 
 ### 6. Espansione Cataloghi
-- AK Interactive
-- Ammo by Mig Jimenez
-- Humbrol
-- Mr. Color (GSI Creos)
-- Altri su richiesta della community
+Vallejo Game Color / Air / Panzer Aces, Citadel Layer / Shade / Contrast,
+Tamiya X / LP, AK Interactive, Ammo by Mig Jimenez, Humbrol, Mr. Color (GSI Creos)
 
 ### 7. Sincronizzazione Cloud
-- Backup automatico dei dati su cloud
+- Backup automatico con account utente
 - Accesso da più dispositivi
-- Condivisione opzionale di ricette con la community
+- Condivisione ricette con la community
