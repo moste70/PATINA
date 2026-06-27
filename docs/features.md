@@ -6,28 +6,128 @@
 
 ### 1. Gestione Progetti
 
-#### 1.1 Archivio Progetti
-Schermata principale dell'app (`/projects`). Mostra tutti i modelli con
-una panoramica visiva dello stato di avanzamento.
+#### 1.0 Creazione Nuovo Progetto — Wizard (`/projects/new`)
 
-**Contenuto di ogni progetto:**
+> **Spec 1A-DOC.1** — Flusso completo di creazione progetto
+
+##### Trigger di apertura
+- Bottone FAB `+` nella schermata Archivio Progetti
+- Il wizard si apre come bottom sheet a schermo intero (o pagina modale)
+
+##### Struttura del Wizard — 3 Step
+
+**Indicatore di progresso:** barra lineare in cima con 3 segmenti. Step corrente evidenziato in `primary` (#7CB87C), completati in `primary` solido, futuri in `outline`.
+
+---
+
+**Step 1 — Il Kit**
+
+Campi:
+
+| Campo | Tipo | Obbligatorio | Note |
+|-------|------|:---:|-------|
+| Nome modello | TextField | ✅ | es. "Tiger I Ausf. E" — max 80 caratteri |
+| Marca kit | TextField | ❌ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
+| Scala | TextField | ❌ | es. "1/35", "1/72" — testo libero con suggerimenti chip: 1/35 · 1/48 · 1/72 · 1/100 · 1/144 · Altra |
+| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Diorama · Altro |
+
+Comportamento:
+- Il campo **Nome** riceve il focus automaticamente all'apertura (tastiera aperta)
+- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo
+- La **categoria** mostra icone + etichette, selezione con tap, chip selezionato in `primary`
+- Bottone **Avanti** attivo solo se Nome e Categoria sono compilati
+
+---
+
+**Step 2 — Stato Iniziale**
+
+Campi:
+
+| Campo | Tipo | Obbligatorio | Note |
+|-------|------|:---:|-------|
+| Stato | Chip selector | ✅ | Default: `Idea`. Opzioni: Idea · In costruzione · In pittura · Completato · In pausa |
+| Avanzamento | Slider 0–100 | ❌ | Visibile solo se stato ≠ `Idea`. Default 0. Label: "X% completato" |
+| Note iniziali | TextField multiline | ❌ | Placeholder: "Aggiungi note, riferimenti, obiettivi…" — max 500 caratteri |
+
+Comportamento:
+- Lo slider appare/scompare con animazione al cambio stato
+- Lo stato `Completato` imposta automaticamente avanzamento a 100
+
+---
+
+**Step 3 — Foto Copertina**
+
+| Campo | Tipo | Obbligatorio | Note |
+|-------|------|:---:|-------|
+| Foto copertina | Image picker | ❌ | Da galleria o camera |
+
+Layout:
+- Area centrale 1:1 con bordo tratteggiato `outline`, icona foto + testo "Aggiungi copertina"
+- Dopo selezione: preview dell'immagine con bottone `×` per rimuoverla
+- Due bottoni sotto: `Fotocamera` (icon: `camera_alt`) e `Galleria` (icon: `photo_library`)
+- Testo secondario: "Puoi aggiungere o cambiare la foto in qualsiasi momento"
+
+---
+
+##### Navigazione del Wizard
+
+| Azione | Comportamento |
+|--------|--------------|
+| `Avanti` (step 1 → 2) | Valida Nome + Categoria, poi avanza |
+| `Avanti` (step 2 → 3) | Avanza sempre (step 2 non ha campi obbligatori) |
+| `Crea Progetto` (step 3) | Salva e naviga a `/projects/:id` del nuovo progetto |
+| `Indietro` | Torna allo step precedente, dati preservati |
+| `×` (chiudi) | Dialog conferma se dati inseriti — "Vuoi scartare il progetto?" con azioni Annulla / Scarta |
+| Swipe down | Stessa logica del `×` |
+
+##### Salvataggio (logica Dart)
+```
+Projects(
+  name: nome.trim(),
+  brand: marca.trim() oppure null,
+  scale: scala.trim() oppure null,
+  category: categoriaSelezionata,        // 'tank'|'aircraft'|...
+  coverPhoto: pathFoto oppure null,
+  status: statoSelezionato,              // 'idea'|'building'|...
+  progress: avanzamento,                 // 0-100
+  notes: note.trim() oppure null,
+  createdAt: DateTime.now().millisecondsSinceEpoch,
+  updatedAt: DateTime.now().millisecondsSinceEpoch,
+)
+```
+Dopo il salvataggio inizializza le **10 fasi predefinite** da `AppConstants.defaultPhases` con `position` 0–9 e `isCustom = false`.
+
+##### Validazioni
+- Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
+- Nome > 80 caratteri → contatore caratteri visibile, input bloccato a 80
+- Foto > 10MB → toast "Immagine troppo grande, scegli un'altra"
+
+##### Stati di errore
+- Permesso camera negato → bottom sheet con spiegazione + link alle impostazioni Android
+- Permesso galleria negato → stessa logica
+- Errore salvataggio DB → snackbar "Errore nel salvataggio, riprova" con retry
+
+---
+
+#### 1.1 Archivio Progetti (`/projects`)
+Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
+
+**Contenuto di ogni card progetto:**
+- Foto di copertina (o placeholder con icona categoria)
 - Nome del modello
-- Marca e scala (es. Tamiya 1/35, Revell 1/72)
-- Categoria: Carro Armato · Aereo · Figura · Nave · Diorama · Altro
-- Foto di copertina (scattata o importata dalla galleria)
-- Stato: `Idea` · `In costruzione` · `In pittura` · `Completato` · `In pausa`
-- Percentuale di avanzamento (0–100, inserita manualmente)
-- Data di inizio e ultima modifica
-- Note libere
+- Categoria + scala (es. "Carro Armato · 1/35")
+- Chip stato colorato (`Idea` grigio · `In costruzione` arancio · `In pittura` verde · `Completato` blu · `In pausa` giallo)
+- Barra avanzamento 0–100%
+- Data ultima modifica (es. "3 giorni fa")
 
 **Funzionalità:**
-- Creazione nuovo progetto con wizard guidato
-- Modifica di tutti i campi in qualsiasi momento
+- FAB `+` per aprire il wizard creazione
+- Modifica di tutti i campi dalla scheda progetto
 - Archiviazione progetti completati (rimangono consultabili)
-- Eliminazione con conferma
+- Eliminazione con dialog di conferma
 - Ricerca per nome, categoria o stato
 - Ordinamento per: ultima modifica, data inizio, nome, stato
-- Vista griglia e vista lista (toggle)
+- Toggle vista griglia (2 colonne) / lista
 
 #### 1.2 Scheda Progetto (`/projects/:id`)
 Vista scorrevole che raccoglie tutte le informazioni di un progetto.
