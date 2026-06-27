@@ -45,13 +45,14 @@ Campi:
 
 | Campo | Tipo | Obbligatorio | Note |
 |-------|------|:---:|-------|
-| Stato | Chip selector | ✅ | Default: `Idea`. Opzioni: Idea · In costruzione · In pittura · Completato · In pausa |
+| Stato | Chip selector | ✅ | Default: `Da iniziare`. Opzioni: Da iniziare · In corso · Completato |
 | Avanzamento | Slider 0–100 | ❌ | Visibile solo se stato ≠ `Idea`. Default 0. Label: "X% completato" |
 | Note iniziali | TextField multiline | ❌ | Placeholder: "Aggiungi note, riferimenti, obiettivi…" — max 500 caratteri |
 
 Comportamento:
 - Lo slider appare/scompare con animazione al cambio stato
 - Lo stato `Completato` imposta automaticamente avanzamento a 100
+- Lo stato `Da iniziare` imposta automaticamente avanzamento a 0
 
 ---
 
@@ -88,7 +89,7 @@ Projects(
   scale: scala.trim() oppure null,
   category: categoriaSelezionata,        // 'tank'|'aircraft'|...
   coverPhoto: pathFoto oppure null,
-  status: statoSelezionato,              // 'idea'|'building'|...
+  status: statoSelezionato,              // 'todo'|'in_progress'|'completed'
   progress: avanzamento,                 // 0-100
   notes: note.trim() oppure null,
   createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -115,7 +116,7 @@ Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 - Foto di copertina (o placeholder con icona categoria)
 - Nome del modello
 - Categoria + scala (es. "Carro Armato · 1/35")
-- Chip stato colorato (`Idea` grigio · `In costruzione` arancio · `In pittura` verde · `Completato` blu · `In pausa` giallo)
+- Chip stato colorato (`Da iniziare` grigio · `In corso` arancio · `Completato` verde)
 - Barra avanzamento 0–100%
 - Data ultima modifica (es. "3 giorni fa")
 
@@ -152,11 +153,9 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 **Chip stato — colori:**
 | Stato | Colore sfondo | Testo |
 |-------|--------------|-------|
-| Idea | `outline` (grigio) | `onSurface` |
-| In costruzione | `#C87A20` (arancio) | bianco |
-| In pittura | `primary` (#7CB87C) | nero |
-| Completato | `#3A7ABF` (blu) | bianco |
-| In pausa | `#8A6ABF` (viola) | bianco |
+| Da iniziare | `outline` (grigio) | `onSurface` |
+| In corso | `#C87A20` (arancio) | bianco |
+| Completato | `primary` (#7CB87C) | nero |
 
 **Menu `⋮` azioni:**
 - Modifica progetto → apre wizard in modalità edit (campi pre-compilati)

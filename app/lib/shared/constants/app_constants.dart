@@ -4,15 +4,13 @@ class AppConstants {
   ];
 
   static const List<String> projectStatuses = [
-    'idea', 'building', 'painting', 'completed', 'paused',
+    'todo', 'in_progress', 'completed',
   ];
 
   static const Map<String, String> projectStatusLabels = {
-    'idea': 'Idea',
-    'building': 'In costruzione',
-    'painting': 'In pittura',
+    'todo': 'Da iniziare',
+    'in_progress': 'In corso',
     'completed': 'Completato',
-    'paused': 'In pausa',
   };
 
   static const Map<String, String> categoryLabels = {
