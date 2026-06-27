@@ -129,40 +129,167 @@ Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 - Ordinamento per: ultima modifica, data inizio, nome, stato
 - Toggle vista griglia (2 colonne) / lista
 
-#### 1.2 Scheda Progetto (`/projects/:id`)
-Vista scorrevole che raccoglie tutte le informazioni di un progetto.
+#### 1.2 Scheda Principale Progetto (`/projects/:id`)
 
-**Sezioni:**
-- Header con foto, nome, stato e percentuale avanzamento
-- Galleria foto (più immagini in varie fasi)
-- Fasi di lavorazione (vedi 1.3)
-- Vernici usate nel progetto (collegate dall'inventario)
-- Ricette usate nel progetto
-- Note e diario di lavorazione
-- Pin su foto (vedi sezione 3)
+> **Spec 1A-DOC.2** — Layout completo e comportamenti della scheda progetto
 
-#### 1.3 Fasi di Lavorazione
-Fasi sequenziali che l'utente spunta man mano che procede.
-Predefinite da `AppConstants.defaultPhases`, personalizzabili.
+##### Struttura generale
+Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il basso la foto di copertina si riduce fino a diventare AppBar compatta con nome progetto e azioni.
+
+---
+
+##### Sezione 1 — Header (SliverAppBar)
+
+**Espanso** (foto visibile, altezza ~260dp):
+- Foto di copertina a schermo pieno con gradiente scuro in basso
+- In overlay sul gradiente: chip stato colorato (in alto a sinistra) + menu `⋮` (in alto a destra)
+- In basso sull'overlay: nome progetto (DM Serif Display, 24sp), marca + scala in grigio
+- Barra avanzamento lineare sottile con percentuale a destra (`X%`)
+
+**Collassato** (solo AppBar, altezza standard):
+- Back arrow + nome progetto (Inter 600, troncato) + menu `⋮`
+- La foto scompare, sfondo `surface`
+
+**Chip stato — colori:**
+| Stato | Colore sfondo | Testo |
+|-------|--------------|-------|
+| Idea | `outline` (grigio) | `onSurface` |
+| In costruzione | `#C87A20` (arancio) | bianco |
+| In pittura | `primary` (#7CB87C) | nero |
+| Completato | `#3A7ABF` (blu) | bianco |
+| In pausa | `#8A6ABF` (viola) | bianco |
+
+**Menu `⋮` azioni:**
+- Modifica progetto → apre wizard in modalità edit (campi pre-compilati)
+- Modifica avanzamento → bottom sheet con slider 0–100
+- Archivia / Riattiva
+- Elimina → dialog conferma "Elimina progetto? L'azione è irreversibile."
+
+---
+
+##### Sezione 2 — Fasi di Lavorazione
+
+Lista verticale di card compatte, una per fase. Ordine definito da `position`.
+
+**Struttura di ogni card fase:**
+```
+[ ✓ ] Pittura base                    [>]
+      Completata il 12 giu 2026
+      "Prima mano XF-63 diluita 1:1"   ← nota (se presente, max 1 riga)
+```
+
+- Checkbox a sinistra: tap segna/desegna come completata con `completedAt = now()`
+- Freccia `>` a destra: apre il dettaglio fase (bottom sheet)
+- Fase completata: testo barrato + sfondo leggermente evidenziato in `primary` al 8%
+- Fase corrente (prima non completata): bordo sinistro `primary` 3dp
+
+**Bottom sheet dettaglio fase:**
+- Nome fase (editabile inline se `is_custom = true`)
+- Toggle completata + data completamento (editabile)
+- Campo note multiline
+- Sezione foto collegate alla fase (miniature scorrevoli + bottone aggiungi)
+- Bottone "Elimina fase" solo se `is_custom = true`
+
+**Azioni header sezione Fasi:**
+- Contatore "X / 10 completate"
+- Bottone `+` per aggiungere fase personalizzata (in fondo alla lista)
+
+---
+
+##### Sezione 3 — Galleria Foto
+
+Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
+Ultima cella è il bottone `+` con icona fotocamera.
+
+**Tap su miniatura:**
+- Apre viewer foto a schermo intero (InteractiveViewer, zoom/pan)
+- Se la foto ha pin → mostra overlay pin
+- Swipe orizzontale per navigare tra le foto del progetto
+
+**Tap su `+`:**
+- Bottom sheet: Fotocamera · Galleria · Annulla
+- Foto salvata nella cartella privata dell'app (non nella galleria pubblica)
+
+**Long press su miniatura:**
+- Modalità selezione multipla → azioni: elimina, cambia fase associata
+
+---
+
+##### Sezione 4 — Vernici Usate
+
+Lista compatta delle vernici dell'inventario collegate a questo progetto
+(tramite i pin di tipo `color` sulla foto).
+
+**Struttura riga:**
+```
+[chip hex esagonale] Vallejo 70.950 · Black           [→ pin]
+```
+- Chip esagonale con colore reale
+- Marca + codice + nome
+- Contatore pin che usano questa vernice (`→ 3 pin`)
+- Tap: apre scheda vernice nell'inventario
+
+**Empty state:** "Nessuna vernice collegata — aggiungi pin colore alle foto"
+
+---
+
+##### Sezione 5 — Note Progetto
+
+Campo testo espandibile. In visualizzazione mostra max 4 righe con bottone "Mostra tutto".
+Tap attiva editing inline (diventa TextField multiline con autofocus).
+Salvataggio automatico on blur (nessun bottone Salva esplicito).
+
+Placeholder: "Aggiungi note, riferimenti, obiettivi del progetto…"
+
+---
+
+##### Sezione 6 — Info Progetto
+
+Row compatta con metadati:
+
+```
+Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
+```
+
+---
+
+##### Comportamenti globali
+
+| Evento | Comportamento |
+|--------|--------------|
+| Pull to refresh | Ricarica dati dal DB (per futura sync cloud) |
+| Back navigation | Torna all'archivio (`/projects`) |
+| Avanzamento auto | Quando tutte le fasi sono completate → suggerimento di impostare stato a `Completato` (snackbar con azione) |
+| Empty state foto | Illustrazione + testo "Aggiungi la prima foto del modello" + bottone |
+
+---
+
+#### 1.3 Fasi di Lavorazione — Dettaglio
+
+Fasi sequenziali create automaticamente alla creazione del progetto
+da `AppConstants.defaultPhases`. Personalizzabili dall'utente.
 
 **Fasi predefinite (10):**
-1. Preparazione — pulizia, rimozione canali, controllo parti
-2. Assemblaggio sub-gruppi
-3. Assemblaggio finale
-4. Stuccatura e correzioni
-5. Primer
-6. Pittura base
-7. Ombreggiatura e luci — shading/highlighting
-8. Decalcomanie
-9. Invecchiamento — weathering
-10. Finitura — vernice opaca/lucida/satinata
+
+| # | Nome | Descrizione |
+|---|------|-------------|
+| 1 | Preparazione | Pulizia, rimozione canali, controllo parti |
+| 2 | Assemblaggio sub-gruppi | — |
+| 3 | Assemblaggio finale | — |
+| 4 | Stuccatura e correzioni | — |
+| 5 | Primer | — |
+| 6 | Pittura base | — |
+| 7 | Ombreggiatura e luci | Shading e highlighting |
+| 8 | Decalcomanie | — |
+| 9 | Invecchiamento | Weathering |
+| 10 | Finitura | Vernice opaca, lucida o satinata |
 
 **Funzionalità:**
-- Spunta fase come completata con data
-- Note specifiche per ogni fase
-- Foto collegate a ogni fase
-- Aggiunta fasi personalizzate (`is_custom = 1`)
-- Riordinamento con drag & drop
+- Spunta completata con data (timestamp salvato in `completedAt`)
+- Note specifiche per fase (campo `notes` in `project_phases`)
+- Foto collegate a ogni fase (campo `phaseId` in `project_photos`)
+- Aggiunta fasi personalizzate in fondo alla lista (`is_custom = true`)
+- Riordinamento con drag & drop (aggiorna campo `position`)
 
 ---
 
