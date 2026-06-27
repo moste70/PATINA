@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../shared/constants/app_constants.dart';
 import 'create_project/create_project_wizard.dart';
 import 'project_repository.dart';
 
@@ -30,14 +32,23 @@ class ProjectsScreen extends ConsumerWidget {
             itemCount: projects.length,
             itemBuilder: (context, i) {
               final p = projects[i];
+              final statusLabel =
+                  AppConstants.projectStatusLabels[p.status] ?? p.status;
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   title: Text(p.name),
-                  subtitle: Text(p.category ?? ''),
-                  trailing: Text(p.status),
+                  subtitle: Text(
+                    [
+                      if (p.category != null)
+                        AppConstants.categoryLabels[p.category] ?? p.category!,
+                      if (p.scale != null) p.scale!,
+                    ].join(' · '),
+                  ),
+                  trailing: Text(statusLabel),
+                  onTap: () => context.go('/projects/${p.id}'),
                 ),
               );
             },

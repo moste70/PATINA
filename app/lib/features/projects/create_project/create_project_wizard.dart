@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'wizard_state.dart';
 import 'steps/step1_kit.dart';
 import 'steps/step2_status.dart';
@@ -36,12 +37,7 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
       final id = await ref.read(createProjectProvider.notifier).save();
       if (mounted) {
         Navigator.of(context).pop();
-        // Navigate to the new project detail screen
-        // context.push('/projects/$id');
-        // Uncomment above when project detail screen is implemented (1A.2)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Progetto creato!')),
-        );
+        context.go('/projects/$id');
       }
     } catch (_) {
       if (mounted) {
