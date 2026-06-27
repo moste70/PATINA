@@ -46,13 +46,9 @@ Campi:
 | Campo | Tipo | Obbligatorio | Note |
 |-------|------|:---:|-------|
 | Stato | Chip selector | ✅ | Default: `Da iniziare`. Opzioni: Da iniziare · In corso · Completato |
-| Avanzamento | Slider 0–100 | ❌ | Visibile solo se stato ≠ `Idea`. Default 0. Label: "X% completato" |
 | Note iniziali | TextField multiline | ❌ | Placeholder: "Aggiungi note, riferimenti, obiettivi…" — max 500 caratteri |
 
 Comportamento:
-- Lo slider appare/scompare con animazione al cambio stato
-- Lo stato `Completato` imposta automaticamente avanzamento a 100
-- Lo stato `Da iniziare` imposta automaticamente avanzamento a 0
 
 ---
 
@@ -90,7 +86,6 @@ Projects(
   category: categoriaSelezionata,        // 'tank'|'aircraft'|...
   coverPhoto: pathFoto oppure null,
   status: statoSelezionato,              // 'todo'|'in_progress'|'completed'
-  progress: avanzamento,                 // 0-100
   notes: note.trim() oppure null,
   createdAt: DateTime.now().millisecondsSinceEpoch,
   updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -209,7 +204,6 @@ Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 - Nome del modello
 - Categoria + scala (es. "Carro Armato · 1/35")
 - Chip stato colorato (`Da iniziare` grigio · `In corso` arancio · `Completato` verde)
-- Barra avanzamento 0–100%
 - Data ultima modifica (es. "3 giorni fa")
 
 **Funzionalità:**
@@ -236,7 +230,6 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 - Foto di copertina a schermo pieno con gradiente scuro in basso
 - In overlay sul gradiente: chip stato colorato (in alto a sinistra) + menu `⋮` (in alto a destra)
 - In basso sull'overlay: nome progetto (DM Serif Display, 24sp), marca + scala in grigio
-- Barra avanzamento lineare sottile con percentuale a destra (`X%`)
 
 **Collassato** (solo AppBar, altezza standard):
 - Back arrow + nome progetto (Inter 600, troncato) + menu `⋮`
@@ -251,7 +244,6 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 
 **Menu `⋮` azioni:**
 - Modifica progetto → apre wizard in modalità edit (campi pre-compilati)
-- Modifica avanzamento → bottom sheet con slider 0–100
 - Archivia / Riattiva
 - Elimina → dialog conferma "Elimina progetto? L'azione è irreversibile."
 
@@ -320,7 +312,6 @@ Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
 |--------|--------------|
 | Pull to refresh | Ricarica dati dal DB (per futura sync cloud) |
 | Back navigation | Torna all'archivio (`/projects`) |
-| Avanzamento manuale | Aggiornabile da menu `⋮` → "Modifica avanzamento" con slider 0–100 |
 | Empty state foto | Illustrazione + testo "Aggiungi la prima foto del modello" + bottone |
 
 ---

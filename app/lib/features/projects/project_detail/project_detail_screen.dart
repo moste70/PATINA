@@ -84,25 +84,10 @@ class _ProjectDetailContentState
   }
 
   Future<void> _updateStatus(String status) async {
-    final repo = ref.read(projectRepositoryProvider);
-    int progress = widget.project.progress;
-    if (status == 'completed') progress = 100;
-    if (status == 'todo') progress = 0;
-    await repo.updateProject(
-      widget.project.id,
-      ProjectsCompanion(
-        status: Value(status),
-        progress: Value(progress),
-        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
-      ),
-    );
-  }
-
-  Future<void> _updateProgress(int value) async {
     await ref.read(projectRepositoryProvider).updateProject(
       widget.project.id,
       ProjectsCompanion(
-        progress: Value(value),
+        status: Value(status),
         updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
       ),
     );
@@ -175,53 +160,6 @@ class _ProjectDetailContentState
     }
   }
 
-  void _showProgressSheet() {
-    int current = widget.project.progress;
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Modifica avanzamento',
-                  style: Theme.of(ctx).textTheme.titleMedium),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Avanzamento'),
-                  Text('$current%',
-                      style: TextStyle(
-                          color: Theme.of(ctx).colorScheme.primary,
-                          fontWeight: FontWeight.w600)),
-                ],
-              ),
-              Slider(
-                value: current.toDouble(),
-                min: 0,
-                max: 100,
-                divisions: 20,
-                activeColor: Theme.of(ctx).colorScheme.primary,
-                onChanged: (v) => setLocal(() => current = v.round()),
-              ),
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed: () {
-                  _updateProgress(current);
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Salva'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showStatusSheet() {
     showModalBottomSheet(
       context: context,
@@ -275,16 +213,12 @@ class _ProjectDetailContentState
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
                   if (v == 'status') _showStatusSheet();
-                  if (v == 'progress') _showProgressSheet();
                   if (v == 'cover') _updateCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
                 itemBuilder: (_) => const [
                   PopupMenuItem(
                       value: 'status', child: Text('Cambia stato')),
-                  PopupMenuItem(
-                      value: 'progress',
-                      child: Text('Modifica avanzamento')),
                   PopupMenuItem(
                       value: 'cover',
                       child: Text('Cambia foto copertina')),
@@ -366,27 +300,6 @@ class _ProjectDetailContentState
                         style: tt.bodySmall,
                       ),
                     ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: p.progress / 100,
-                            minHeight: 6,
-                            backgroundColor:
-                                scheme.outline.withOpacity(0.3),
-                            valueColor: AlwaysStoppedAnimation(
-                                scheme.primary),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text('${p.progress}%',
-                          style: tt.labelMedium
-                              ?.copyWith(color: scheme.primary)),
-                    ],
-                  ),
                 ],
               ),
             ),

@@ -9,7 +9,6 @@ class CreateProjectState {
   final String? scale;
   final String? category;
   final String status;
-  final int progress;
   final String? notes;
   final String? coverPhotoPath;
   final int currentStep;
@@ -21,7 +20,6 @@ class CreateProjectState {
     this.scale,
     this.category,
     this.status = 'todo',
-    this.progress = 0,
     this.notes,
     this.coverPhotoPath,
     this.currentStep = 0,
@@ -37,7 +35,6 @@ class CreateProjectState {
     Object? scale = _sentinel,
     Object? category = _sentinel,
     String? status,
-    int? progress,
     Object? notes = _sentinel,
     Object? coverPhotoPath = _sentinel,
     int? currentStep,
@@ -49,7 +46,6 @@ class CreateProjectState {
       scale: scale == _sentinel ? this.scale : scale as String?,
       category: category == _sentinel ? this.category : category as String?,
       status: status ?? this.status,
-      progress: progress ?? this.progress,
       notes: notes == _sentinel ? this.notes : notes as String?,
       coverPhotoPath: coverPhotoPath == _sentinel
           ? this.coverPhotoPath
@@ -73,13 +69,7 @@ class CreateProjectNotifier extends StateNotifier<CreateProjectState> {
   void setScale(String v) =>
       state = state.copyWith(scale: v.trim().isEmpty ? null : v.trim());
   void setCategory(String v) => state = state.copyWith(category: v);
-  void setStatus(String v) {
-    int progress = state.progress;
-    if (v == 'completed') progress = 100;
-    if (v == 'todo') progress = 0;
-    state = state.copyWith(status: v, progress: progress);
-  }
-  void setProgress(int v) => state = state.copyWith(progress: v);
+  void setStatus(String v) => state = state.copyWith(status: v);
   void setNotes(String v) =>
       state = state.copyWith(notes: v.trim().isEmpty ? null : v.trim());
   void setCoverPhoto(String? path) => state = state.copyWith(coverPhotoPath: path);
@@ -98,7 +88,6 @@ class CreateProjectNotifier extends StateNotifier<CreateProjectState> {
           ? Value(state.coverPhotoPath)
           : const Value.absent(),
       status: Value(state.status),
-      progress: Value(state.progress),
       notes: state.notes != null ? Value(state.notes) : const Value.absent(),
       createdAt: Value(now),
       updatedAt: Value(now),

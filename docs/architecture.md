@@ -116,7 +116,6 @@ scale           TEXT                        -- es. "1/35"
 category        TEXT                        -- tank|aircraft|figure|ship|diorama|other
 cover_photo     TEXT                        -- path locale
 status          TEXT DEFAULT 'todo'         -- todo|in_progress|completed
-progress        INTEGER DEFAULT 0           -- 0-100
 notes           TEXT
 created_at      INTEGER NOT NULL            -- timestamp Unix
 updated_at      INTEGER NOT NULL

@@ -8,7 +8,6 @@ class Projects extends Table {
   TextColumn get category => text().nullable()();
   TextColumn get coverPhoto => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('todo'))();
-  IntColumn get progress => integer().withDefault(const Constant(0))();
   TextColumn get notes => text().nullable()();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();

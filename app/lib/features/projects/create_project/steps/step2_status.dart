@@ -60,38 +60,6 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
           }).toList(),
         ),
 
-        AnimatedSize(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeInOut,
-          child: state.status == 'todo'
-              ? const SizedBox.shrink()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Avanzamento', style: tt.titleSmall),
-                        Text('${state.progress}%',
-                            style: tt.labelMedium
-                                ?.copyWith(color: scheme.primary)),
-                      ],
-                    ),
-                    Slider(
-                      value: state.progress.toDouble(),
-                      min: 0,
-                      max: 100,
-                      divisions: 20,
-                      activeColor: scheme.primary,
-                      onChanged: state.status == 'completed'
-                          ? null
-                          : (v) => notifier.setProgress(v.round()),
-                    ),
-                  ],
-                ),
-        ),
-
         const SizedBox(height: 24),
         TextField(
           controller: _notesCtrl,
