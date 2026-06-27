@@ -109,6 +109,98 @@ Projects(
 
 ---
 
+#### 1.0b Onboarding — Primo Avvio
+
+> **Spec 1A-DOC.3** — Flusso primo avvio, permessi, empty state
+
+##### Trigger
+
+L'onboarding viene mostrato **una sola volta**, al primo avvio dell'app dopo l'installazione.
+Un flag `onboarding_completed` in `shared_preferences` controlla se mostrarlo.
+Se il flag è `true`, l'app apre direttamente l'Archivio Progetti.
+
+---
+
+##### Struttura — 3 Schermate
+
+**Indicatore di progresso:** punti in fondo (•••), quello attivo in `primary`.
+
+---
+
+**Schermata 1 — Benvenuto**
+
+Layout verticale centrato:
+- Icona Patina grande (cluster esagoni, `primary`, 120dp)
+- Titolo: "Benvenuto in Patina" (DM Serif Display, 28sp)
+- Sottotitolo: "Il taccuino digitale per i tuoi modelli in scala." (Inter Regular, 16sp, `onSurface`)
+- Testo descrittivo breve (max 2 righe): "Tieni traccia dei tuoi progetti, delle vernici e delle ricette di miscelazione — tutto offline, tutto tuo."
+- Bottone primario `Inizia` in fondo
+
+---
+
+**Schermata 2 — Permessi**
+
+Richiesta permessi necessari all'app.
+
+| Permesso | Icona | Titolo | Descrizione |
+|----------|-------|--------|-------------|
+| Camera | `camera_alt` | "Fotocamera" | "Scatta foto dei tuoi modelli durante la lavorazione" |
+| Galleria / Storage | `photo_library` | "Foto e file" | "Importa immagini dalla galleria e salva i tuoi lavori" |
+
+Layout:
+- Titolo sezione: "Patina ha bisogno di accedere a:" (Inter 600, 18sp)
+- Lista card con icona + titolo + descrizione per ciascun permesso
+- Sotto ogni card: stato del permesso (`Concesso ✓` in `primary` · `In attesa` in `onSurface`)
+- Bottone `Concedi permessi` — al tap richiede entrambi i permessi in sequenza
+- Link testo sotto: "Salta per ora — puoi concederli nelle impostazioni"
+
+Comportamento:
+- Se entrambi i permessi sono già concessi (reinstallazione), la schermata mostra tutto come `Concesso ✓` e il bottone diventa `Continua`
+- Se l'utente nega un permesso: la card mostra `Negato` in `#C87A20` (arancio) + testo piccolo "Puoi abilitarlo in Impostazioni → App → Patina"
+- La schermata non è bloccante: si può proseguire anche senza permessi
+
+---
+
+**Schermata 3 — Pronto**
+
+Layout verticale centrato:
+- Illustrazione o icona grande (✓ in cerchio `primary`, 100dp)
+- Titolo: "Sei pronto!" (DM Serif Display, 28sp)
+- Testo: "Crea il tuo primo progetto e inizia a documentare il tuo lavoro."
+- Bottone primario `Crea il primo progetto` → apre il wizard (`/projects/new`) e segna onboarding completato
+- Link testo sotto: "Esplora l'app" → va a `/projects` e segna onboarding completato
+
+---
+
+##### Navigazione
+
+| Azione | Comportamento |
+|--------|--------------|
+| `Inizia` (schermata 1) | Avanza alla schermata 2 |
+| `Concedi permessi` / `Continua` (schermata 2) | Avanza alla schermata 3 |
+| `Salta per ora` (schermata 2) | Avanza alla schermata 3 senza richiedere permessi |
+| `Crea il primo progetto` (schermata 3) | Segna flag, naviga a `/projects/new` |
+| `Esplora l'app` (schermata 3) | Segna flag, naviga a `/projects` |
+| Swipe orizzontale | Naviga avanti/indietro tra le schermate |
+| Back (schermata 1) | Nessun effetto (non si può tornare indietro dall'onboarding) |
+
+Dopo aver impostato `onboarding_completed = true`, non viene mai più mostrato.
+
+---
+
+##### Empty State Archivio Progetti
+
+Quando l'onboarding è completato ma non ci sono progetti, l'Archivio Progetti mostra un empty state invece della lista vuota:
+
+- Illustrazione centrale (icona categoria `other`, tratteggiata, 80dp, `onSurface` dimmed)
+- Testo: "Nessun progetto ancora" (Inter 600, 18sp)
+- Sottotesto: "Inizia aggiungendo il tuo primo modello in scala."
+- Bottone `+ Nuovo progetto` (primario, stesso effetto del FAB)
+
+Il FAB `+` è sempre visibile anche sull'empty state.
+
+---
+
 #### 1.1 Archivio Progetti (`/projects`)
 Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 
