@@ -88,21 +88,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Expanded(
               child: PageView(
                 controller: _controller,
-                physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (p) => setState(() => _page = p),
                 children: [
                   _Page1Welcome(onNext: () => _goTo(1)),
-                  _Page2Permissions(
+                  _Page2Features(onNext: () => _goTo(2)),
+                  _Page3Permissions(
                     cameraGranted: _cameraGranted,
                     photosGranted: _photosGranted,
                     onRequest: _requestPermissions,
-                    onSkip: () => _goTo(2),
-                    onNext: () => _goTo(2),
+                    onSkip: () => _goTo(3),
+                    onNext: () => _goTo(3),
                   ),
-                  _Page3Ready(
-                    onCreateProject: _finish,
-                    onExplore: _finish,
-                  ),
+                  _Page4Ready(onFinish: _finish),
                 ],
               ),
             ),
@@ -111,7 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.only(bottom: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
+                children: List.generate(4, (i) {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -180,16 +177,131 @@ class _Page1Welcome extends StatelessWidget {
   }
 }
 
-// ── Schermata 2 — Permessi ───────────────────────────────────────────────────
+// ── Schermata 2 — Cosa puoi fare ─────────────────────────────────────────────
 
-class _Page2Permissions extends StatelessWidget {
+class _Page2Features extends StatelessWidget {
+  final VoidCallback onNext;
+  const _Page2Features({required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Cosa puoi fare', style: tt.displayMedium),
+          const SizedBox(height: 8),
+          Text(
+            'Le funzionalità di Patina, pensate per il modellismo statico.',
+            style: tt.bodyMedium
+                ?.copyWith(color: scheme.onSurface.withOpacity(0.6)),
+          ),
+          const SizedBox(height: 28),
+          _FeatureCard(
+            icon: Icons.view_module_outlined,
+            title: 'Progetti',
+            description:
+                'Crea e organizza i tuoi modelli, con foto e stato di avanzamento',
+          ),
+          const SizedBox(height: 12),
+          _FeatureCard(
+            icon: Icons.palette_outlined,
+            title: 'Vernici',
+            description: 'Tieni traccia del tuo inventario di vernici',
+          ),
+          const SizedBox(height: 12),
+          _FeatureCard(
+            icon: Icons.science_outlined,
+            title: 'Ricette',
+            description: 'Salva le tue miscele personalizzate con proporzioni',
+          ),
+          const SizedBox(height: 12),
+          _FeatureCard(
+            icon: Icons.push_pin_outlined,
+            title: 'Pin su foto',
+            description:
+                'Documenta colori e lavorazioni direttamente sulle foto',
+          ),
+          const SizedBox(height: 36),
+          FilledButton(
+            onPressed: onNext,
+            style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52)),
+            child: const Text('Avanti'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: scheme.primary.withOpacity(0.12),
+            ),
+            child: Icon(icon, color: scheme.primary, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: tt.titleSmall),
+                const SizedBox(height: 2),
+                Text(description,
+                    style: tt.bodySmall?.copyWith(
+                        color: scheme.onSurface.withOpacity(0.6))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Schermata 3 — Permessi ───────────────────────────────────────────────────
+
+class _Page3Permissions extends StatelessWidget {
   final bool? cameraGranted;
   final bool? photosGranted;
   final VoidCallback onRequest;
   final VoidCallback onSkip;
   final VoidCallback onNext;
 
-  const _Page2Permissions({
+  const _Page3Permissions({
     required this.cameraGranted,
     required this.photosGranted,
     required this.onRequest,
@@ -319,12 +431,11 @@ class _PermissionTile extends StatelessWidget {
   }
 }
 
-// ── Schermata 3 — Pronto ─────────────────────────────────────────────────────
+// ── Schermata 4 — Pronto ─────────────────────────────────────────────────────
 
-class _Page3Ready extends StatelessWidget {
-  final VoidCallback onCreateProject;
-  final VoidCallback onExplore;
-  const _Page3Ready({required this.onCreateProject, required this.onExplore});
+class _Page4Ready extends StatelessWidget {
+  final VoidCallback onFinish;
+  const _Page4Ready({required this.onFinish});
 
   @override
   Widget build(BuildContext context) {
@@ -356,19 +467,11 @@ class _Page3Ready extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 48),
-          FilledButton.icon(
-            onPressed: onCreateProject,
-            icon: const Icon(Icons.add, size: 20),
-            label: const Text('Crea il primo progetto'),
+          FilledButton(
+            onPressed: onFinish,
             style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52)),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: onExplore,
-            child: Text('Esplora l\'app',
-                style: TextStyle(
-                    color: scheme.onSurface.withOpacity(0.6))),
+            child: const Text('Inizia'),
           ),
         ],
       ),
