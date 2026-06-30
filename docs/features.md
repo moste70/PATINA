@@ -116,54 +116,72 @@ Se il flag è `true`, l'app apre direttamente l'Archivio Progetti.
 
 ---
 
-##### Struttura — 3 Schermate
+##### Struttura — 4 Schermate
 
-**Indicatore di progresso:** punti in fondo (•••), quello attivo in `primary`.
+**Indicatore di progresso:** punti in fondo (••••), quello attivo in `primary`, animazione laterale al cambio pagina. Swipe orizzontale abilitato in avanti e indietro (tranne dalla schermata 1 verso sinistra).
 
 ---
 
 **Schermata 1 — Benvenuto**
 
 Layout verticale centrato:
-- Icona Patina grande (cluster esagoni, `primary`, 120dp)
-- Titolo: "Benvenuto in Patina" (DM Serif Display, 28sp)
-- Sottotitolo: "Il taccuino digitale per i tuoi modelli in scala." (Inter Regular, 16sp, `onSurface`)
-- Testo descrittivo breve (max 2 righe): "Tieni traccia dei tuoi progetti, delle vernici e delle ricette di miscelazione — tutto offline, tutto tuo."
-- Bottone primario `Inizia` in fondo
+- Logo Patina (`PatinaMark`, 120dp, colore `primary`)
+- Titolo: "Benvenuto in Patina" (display, 28sp)
+- Sottotitolo: "Il taccuino digitale per i tuoi modelli in scala." (body, 16sp, `onSurface`)
+- Descrizione: "Tutto offline, tutto tuo." (body, 14sp, `onSurface` dimmed)
+- Bottone primario `Inizia` in fondo (larghezza piena)
 
 ---
 
-**Schermata 2 — Permessi**
+**Schermata 2 — Cosa puoi fare**
+
+Lista verticale di 4 feature card. Ogni card:
+
+| Icona | Titolo | Descrizione |
+|-------|--------|-------------|
+| `view_module` | Progetti | Tieni traccia di ogni modello — stato, foto e note di lavorazione |
+| `palette` | Vernici | Il tuo inventario personale con chip colore esagonali e catalogo offline |
+| `science` | Ricette | Salva le tue miscele con proporzioni esatte e foto del risultato |
+| `push_pin` | Pin su foto | Documenta colori e tecniche direttamente sulle foto del modello |
+
+Layout card: icona in cerchio `primary` (36dp) a sinistra · titolo (label, 600) + descrizione (body small, `onSurface`) a destra. Sfondo `surfaceVariant`, angoli 12dp.
+
+Bottone `Avanti` in fondo (larghezza piena).
+
+---
+
+**Schermata 3 — Permessi**
 
 Richiesta permessi necessari all'app.
 
 | Permesso | Icona | Titolo | Descrizione |
 |----------|-------|--------|-------------|
-| Camera | `camera_alt` | "Fotocamera" | "Scatta foto dei tuoi modelli durante la lavorazione" |
-| Galleria / Storage | `photo_library` | "Foto e file" | "Importa immagini dalla galleria e salva i tuoi lavori" |
+| Camera | `camera_alt` | Fotocamera | Scatta foto dei tuoi modelli durante la lavorazione |
+| Galleria / Storage | `photo_library` | Foto e file | Importa immagini dalla galleria e salva i tuoi lavori |
 
 Layout:
-- Titolo sezione: "Patina ha bisogno di accedere a:" (Inter 600, 18sp)
-- Lista card con icona + titolo + descrizione per ciascun permesso
-- Sotto ogni card: stato del permesso (`Concesso ✓` in `primary` · `In attesa` in `onSurface`)
-- Bottone `Concedi permessi` — al tap richiede entrambi i permessi in sequenza
-- Link testo sotto: "Salta per ora — puoi concederli nelle impostazioni"
+- Titolo: "Patina ha bisogno di accedere a:" (title, 18sp)
+- 2 card con icona `primary` + titolo + descrizione + badge stato a destra
+- Badge stato: `Concesso ✓` (colore `successo` #2F8F57) · `In attesa` (`onSurface` dimmed) · `Negato` (colore `errore` #C8503B)
+- Bottone primario: `Concedi permessi` se almeno uno non concesso · `Continua` se entrambi concessi
+- Link testo: "Salta per ora — puoi abilitarli in Impostazioni → App → Patina"
 
 Comportamento:
-- Se entrambi i permessi sono già concessi (reinstallazione), la schermata mostra tutto come `Concesso ✓` e il bottone diventa `Continua`
-- Se l'utente nega un permesso: la card mostra `Negato` in `#C87A20` (arancio) + testo piccolo "Puoi abilitarlo in Impostazioni → App → Patina"
-- La schermata non è bloccante: si può proseguire anche senza permessi
+- Al tap `Concedi permessi`: richiede camera e galleria in sequenza, aggiorna i badge in tempo reale
+- Se un permesso viene negato: badge `Negato`, la schermata resta mostrando il risultato
+- Non bloccante: si può proseguire con `Salta per ora` anche con permessi negati
+- Se entrambi già concessi (reinstallazione): bottone è `Continua` senza richiedere nulla
 
 ---
 
-**Schermata 3 — Pronto**
+**Schermata 4 — Pronto**
 
 Layout verticale centrato:
-- Illustrazione o icona grande (✓ in cerchio `primary`, 100dp)
-- Titolo: "Sei pronto!" (DM Serif Display, 28sp)
-- Testo: "Crea il tuo primo progetto e inizia a documentare il tuo lavoro."
-- Bottone primario `Crea il primo progetto` → apre il wizard (`/projects/new`) e segna onboarding completato
-- Link testo sotto: "Esplora l'app" → va a `/projects` e segna onboarding completato
+- Icona ✓ in cerchio `primary` (100dp)
+- Titolo: "Sei pronto!" (display, 28sp)
+- Testo: "Crea il tuo primo progetto e inizia a documentare il tuo lavoro." (body, 16sp)
+- Bottone primario `Inizia` (larghezza piena) → segna flag + naviga a `/projects`
+- Nessun link secondario (azione unica)
 
 ---
 
@@ -172,12 +190,14 @@ Layout verticale centrato:
 | Azione | Comportamento |
 |--------|--------------|
 | `Inizia` (schermata 1) | Avanza alla schermata 2 |
-| `Concedi permessi` / `Continua` (schermata 2) | Avanza alla schermata 3 |
-| `Salta per ora` (schermata 2) | Avanza alla schermata 3 senza richiedere permessi |
-| `Crea il primo progetto` (schermata 3) | Segna flag, naviga a `/projects/new` |
-| `Esplora l'app` (schermata 3) | Segna flag, naviga a `/projects` |
-| Swipe orizzontale | Naviga avanti/indietro tra le schermate |
-| Back (schermata 1) | Nessun effetto (non si può tornare indietro dall'onboarding) |
+| `Avanti` (schermata 2) | Avanza alla schermata 3 |
+| `Concedi permessi` / `Continua` (schermata 3) | Richiede permessi poi avanza alla schermata 4 |
+| `Salta per ora` (schermata 3) | Avanza alla schermata 4 senza richiedere permessi |
+| `Inizia` (schermata 4) | Segna `onboarding_completed = true`, naviga a `/projects` |
+| Swipe avanti | Equivale al bottone primario della schermata corrente |
+| Swipe indietro | Torna alla schermata precedente (non dalla 1) |
+| Back Android (schermata 1) | Nessun effetto |
+| Back Android (schermate 2–4) | Torna alla schermata precedente |
 
 Dopo aver impostato `onboarding_completed = true`, non viene mai più mostrato.
 
