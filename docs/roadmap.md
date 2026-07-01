@@ -114,18 +114,35 @@
 
 ---
 
-## Fase 2 — Funzionalità AI e Cloud
+## Fase 2 — Internazionalizzazione
 
-> Da pianificare in dettaglio al completamento della Fase 1.
+**Obiettivo:** rendere l'app accessibile ai mercati internazionali con le maggiori community di modellismo.
+
+> Prerequisito: completamento Fase 1E (release italiana stabile).
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 2.1 | 🔴 Alta | Setup `flutter_localizations` + `intl` — struttura `.arb` files, estrazione tutte le stringhe UI | ⬜ Da fare |
+| 2.2 | 🔴 Alta | Traduzione inglese (EN) — testi UI, onboarding, store listing Google Play | ⬜ Da fare |
+| 2.3 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
+| 2.4 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
+| 2.5 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
+| 2.6 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ⬜ Da fare |
+
+---
+
+## Fase 3 — Funzionalità AI e Cloud
+
+> Da pianificare in dettaglio al completamento della Fase 2.
 
 | Milestone | Descrizione |
 |-----------|-------------|
-| 2.1 | Integrazione Claude API — miscelazione AI avanzata |
-| 2.2 | Riconoscimento colore da foto (Claude Vision) |
-| 2.3 | Sistema crediti in-app (Google Play Billing) |
-| 2.4 | Sincronizzazione cloud opzionale |
-| 2.5 | Espansione cataloghi (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
-| 2.6 | Condivisione ricette con la community |
+| 3.1 | Integrazione Claude API — miscelazione AI avanzata |
+| 3.2 | Riconoscimento colore da foto (Claude Vision) |
+| 3.3 | Sistema crediti in-app (Google Play Billing) |
+| 3.4 | Sincronizzazione cloud opzionale |
+| 3.5 | Espansione cataloghi (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
+| 3.6 | Condivisione ricette con la community |
 
 ---
 
@@ -134,7 +151,8 @@
 ```
 Fase 0  ██████████  100%  — completata
 Fase 1  ░░░░░░░░░░    0%  — in corso: 1A (doc → Creazione Progetto, Scheda Progetto, Onboarding)
-Fase 2  ░░░░░░░░░░    0%
+Fase 2  ░░░░░░░░░░    0%  — Internazionalizzazione (EN + ES + FR)
+Fase 3  ░░░░░░░░░░    0%  — AI e Cloud
 ```
 
 ### Prossimi step immediati (ordine esecuzione)
