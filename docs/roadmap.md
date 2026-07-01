@@ -131,6 +131,51 @@
 
 ---
 
+## Tooling — Patina Catalog Tool (repo separato)
+
+**Obiettivo:** tool desktop interno (Python) per estrarre i colori dai cataloghi ufficiali delle case produttrici e generare i file JSON compatibili con `initializeCatalogs()` di Patina.
+
+> Repository separato: `patina-catalog-tool`. Non fa parte del bundle app.
+> Uso esclusivamente interno — automatizza un lavoro che si potrebbe fare a mano.
+
+### Stack tecnico
+
+| Componente | Libreria |
+|------------|----------|
+| PDF parsing | `pdfplumber` o `PyMuPDF` |
+| Web scraping (siti statici) | `httpx` + `BeautifulSoup` |
+| Web scraping (siti con JS) | `playwright-python` |
+| UI desktop | `Tkinter` (semplice) o `PySide6` |
+| Output | JSON → compatibile con Patina |
+
+### Approccio per casa produttrice
+
+| Casa | Come espone il catalogo | Strategia estrazione |
+|------|------------------------|----------------------|
+| **Vallejo** | PDF scaricabili + sito web strutturato | PDF parsing + scraping HTML |
+| **Citadel (Games Workshop)** | Sito web con JS rendering | Browser headless (Playwright) |
+| **Scale75** | PDF catalogo + shop online | PDF parsing |
+| **Tamiya** | Sito statico + PDF | HTML scraping semplice |
+| **AK Interactive** | PDF catalogo + shop | PDF parsing |
+| **Humbrol** | Sito web + PDF | HTML scraping |
+| **Mr. Color (GSI Creos)** | Sito statico giapponese + PDF | HTML scraping |
+| **Ammo by Mig** | PDF catalogo + shop | PDF parsing |
+
+### Task
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| CT.1 | 🔴 Alta | Setup repo Python + struttura moduli extractor per marca | ⬜ Da fare |
+| CT.2 | 🔴 Alta | Extractor Vallejo Model Color (PDF) — marca principale nei cataloghi attuali | ⬜ Da fare |
+| CT.3 | 🔴 Alta | Extractor Citadel (Playwright) — seconda marca più richiesta dalla community | ⬜ Da fare |
+| CT.4 | 🟡 Media | Extractor Scale75, Tamiya, AK Interactive | ⬜ Da fare |
+| CT.5 | 🟡 Media | Extractor Humbrol, Mr. Color, Ammo by Mig | ⬜ Da fare |
+| CT.6 | 🟡 Media | UI desktop: selezione marca, fonte (URL/PDF), preview tabella colori con HEX | ⬜ Da fare |
+| CT.7 | 🟢 Bassa | Validazione output: controllo duplicati, HEX validi, campi obbligatori | ⬜ Da fare |
+| CT.8 | 🟢 Bassa | Export differenziale — aggiorna solo i colori modificati rispetto alla versione precedente | ⬜ Da fare |
+
+---
+
 ## Fase 3 — Funzionalità AI e Cloud
 
 > Da pianificare in dettaglio al completamento della Fase 2.
@@ -141,7 +186,7 @@
 | 3.2 | Riconoscimento colore da foto (Claude Vision) |
 | 3.3 | Sistema crediti in-app (Google Play Billing) |
 | 3.4 | Sincronizzazione cloud opzionale |
-| 3.5 | Espansione cataloghi (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
+| 3.5 | Espansione cataloghi tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
 | 3.6 | Condivisione ricette con la community |
 
 ---
@@ -149,10 +194,11 @@
 ## Stato Attuale
 
 ```
-Fase 0  ██████████  100%  — completata
-Fase 1  ░░░░░░░░░░    0%  — in corso: 1A (doc → Creazione Progetto, Scheda Progetto, Onboarding)
-Fase 2  ░░░░░░░░░░    0%  — Internazionalizzazione (EN + ES + FR)
-Fase 3  ░░░░░░░░░░    0%  — AI e Cloud
+Fase 0       ██████████  100%  — completata
+Fase 1       ░░░░░░░░░░    0%  — in corso: 1A (doc → Creazione Progetto, Scheda Progetto, Onboarding)
+Fase 2       ░░░░░░░░░░    0%  — Internazionalizzazione (EN + ES + FR)
+Fase 3       ░░░░░░░░░░    0%  — AI e Cloud
+Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
 ```
 
 ### Prossimi step immediati (ordine esecuzione)
