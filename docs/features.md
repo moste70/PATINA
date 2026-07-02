@@ -598,7 +598,61 @@ Il risultato è sempre presentato come suggerimento orientativo. Claude Vision r
 Vallejo Game Color / Air / Panzer Aces, Citadel Layer / Shade / Contrast,
 Tamiya X / LP, AK Interactive, Ammo by Mig Jimenez, Humbrol, Mr. Color (GSI Creos)
 
-### 7. Sincronizzazione Cloud
+### 7. Istruzioni AR — Libretto Colorato (AI)
+
+Il modellista fotografa una pagina del libretto istruzioni in bianco e nero. Claude Vision riconosce i codici colore stampati e sovrappone esagoni colorati reali direttamente sulla foto — trasformando le istruzioni in una guida visiva a colori interattiva.
+
+#### Perché è utile
+
+I libretti istruzioni di Tamiya, Revell, Hasegawa, Italeri riportano codici colore accanto alle zone del modello (es. "XF-63", "70.950", "C-40") ma sono stampati in bianco e nero. Il modellista deve fare continuamente il "ping-pong" tra codice → scatola vernice → parte del modello. Questa feature elimina quel passaggio.
+
+#### Flusso
+
+```
+Utente fotografa la pagina del libretto istruzioni
+        ↓
+Claude Vision legge tutti i codici colore nella pagina
+(OCR contestuale — riconosce formato per marca: XF-xx, 70.xxx, C-xx…)
+        ↓
+Per ogni codice: lookup nel catalogo → HEX reale
+        ↓
+Overlay sulla foto: esagono colorato sovrapposto
+al codice stampato, con marca + nome + codice
+        ↓
+Risultato salvato nel progetto (non rielaborato ogni accesso)
+        ↓
+Tap sull'esagono → scheda vernice · aggiungi a inventario · equivalenze
+```
+
+#### Layout overlay
+
+Ogni codice riconosciuto riceve:
+- **Chip esagonale** con il colore reale del catalogo (24dp)
+- **Tap** → popup con marca · codice · nome · HEX · bottone "Aggiungi a inventario"
+- **Codice non trovato in catalogo** → chip grigio con `?` e codice testuale — utile per marche non ancora in catalogo o codici discontinuati
+
+#### Affidabilità
+
+| Caso | Affidabilità | Note |
+|------|-------------|------|
+| Libretti moderni (marche principali) | Alta | Codici standardizzati, OCR preciso su testo stampato |
+| Libretti anni '80-'90 | Media | Codici diversi, qualità stampa variabile |
+| Marche non in catalogo | Bassa (solo OCR) | Mostra codice riconosciuto senza colore |
+| Foto storta o mossa | Media | Guida l'utente a fotografare piano e in buona luce |
+
+#### Vantaggi rispetto al riconoscimento colore da foto
+
+- **Nessuna ambiguità cromatica** — Claude legge il codice, non "indovina" il colore dall'immagine. Affidabilità quasi del 100% per le marche in catalogo
+- **Una sola chiamata AI per pagina** — il risultato viene cachato e salvato nel progetto
+- **Funziona in bianco e nero** — non dipende dalla qualità cromatica della foto
+
+#### Dipendenze
+
+- Claude API (Claude Vision) — Fase 3
+- Catalogo vernici completo per le marche principali
+- Funzionalità a crediti
+
+### 8. Sincronizzazione Cloud
 - Backup automatico con account utente
 - Accesso da più dispositivi
 - Condivisione ricette con la community
