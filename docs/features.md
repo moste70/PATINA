@@ -495,33 +495,59 @@ di poter essere inserite nella roadmap.
 
 ### 4. Ricerca da Foto (AI)
 
-Scatta o importa una foto di un colore reale — Claude Vision analizza e suggerisce vernici dal catalogo e possibili ricette. Funzionalità a crediti.
+L'utente importa una foto — da internet, da una scatola di montaggio, da una rivista o scattata dal vivo — e seleziona con un mirino l'area esatta da analizzare. Claude Vision identifica il colore nel contesto visivo e suggerisce vernici dal catalogo. Funzionalità a crediti.
 
-#### Affidabilità e limiti del riconoscimento colore da fotocamera
+#### Flusso
 
-La fotocamera di uno smartphone **non misura colori** — cattura luce riflessa. Questo introduce variabili che rendono il risultato orientativo, non definitivo:
+```
+Importa foto (galleria / fotocamera / URL)
+        ↓
+Viewer con zoom e pan (InteractiveViewer)
+        ↓
+Posiziona il mirino (cerchio o rettangolo)
+sull'area di colore da rilevare
+        ↓
+Claude Vision analizza colore + contesto visivo
+(tipo di modello, periodo storico, tecnica)
+        ↓
+Risultato: 3-5 candidati con marca · codice · HEX
+e note contestuali (es. "probabile base coat,
+il top coat potrebbe essere più chiaro")
+        ↓
+Utente sceglie → aggiunge a inventario o ricetta
+```
+
+#### Sorgenti foto e affidabilità
+
+Le due sorgenti principali hanno affidabilità molto diverse:
+
+| Sorgente | Errore Delta-E tipico | Note |
+|----------|----------------------|------|
+| **Foto da internet / box art / riviste** | 3-8 unità | Luce da studio controllata, alta risoluzione, superficie asciutta — risultati buoni |
+| **Foto dal vivo (fotocamera)** | 10-20 unità | Luce ambiente variabile, WB automatico, riflessi — risultati orientativi |
+
+**Fattori che peggiorano la rilevazione da fotocamera:**
 
 | Fattore | Effetto |
 |---------|---------|
-| Illuminazione (calda/fredda/mista) | Sposta la tinta verso giallo/arancio o blu |
+| Illuminazione calda/fredda/mista | Sposta la tinta verso giallo/arancio o blu |
 | White balance automatico | Compensa in modo imprevedibile |
-| Superficie (opaco/lucido/satinato) | Modifica la luce riflessa percepita |
-| Ombre e luci sul modello | Stessa vernice, Delta-E fino a 30-50 tra zona in luce e in ombra |
-| Vernice bagnata vs asciutta | Differenza fino al 15-20% sul valore percepito |
+| Superficie lucida o satinata | Riflessi alterano il colore percepito |
+| Ombre sul modello | Stessa vernice, Delta-E fino a 30-50 tra zona in luce e in ombra |
+| Vernice bagnata | Differenza fino al 15-20% rispetto all'asciutto |
 | Compressione JPEG | Artefatti cromatici sulle tinte piatte |
-
-**Errore tipico** in condizioni normali: 10-20 unità Delta-E. La soglia di percezione umana è ~2-3 unità. Identificare un colore esatto da catalogo in modo affidabile è quindi molto difficile senza condizioni controllate.
 
 #### Come viene gestito in Patina
 
-- Il riconoscimento colore è presentato sempre come **suggerimento orientativo**, mai come risposta definitiva
-- Claude Vision restituisce sempre **3-5 candidati** con indicatore di confidenza, non un singolo risultato
-- Claude ragiona sul **contesto** (es. "grigio Wehrmacht su un Panzer") e sulle vernici già presenti nell'inventario dell'utente, non solo sul campione cromatico isolato
-- L'UI mostra un avviso esplicito sulle condizioni ottimali di scatto:
-  - Luce naturale diffusa (non diretta), niente flash
-  - Superficie asciutta e completamente polimerizzata
+- Il risultato è sempre presentato come **suggerimento orientativo**, mai come risposta definitiva
+- Claude Vision restituisce sempre **3-5 candidati** con indicatore di confidenza
+- Claude ragiona sul **contesto visivo** (tipo di veicolo, periodo storico, schema mimetico) e sulle vernici nell'inventario dell'utente — non solo sul campione cromatico isolato
+- Per foto dal vivo, l'UI mostra un tip con le condizioni ottimali:
+  - Luce naturale diffusa, niente flash
+  - Superficie asciutta e polimerizzata
   - Distanza 10-15 cm, inquadratura perpendicolare
-  - Evitare riflessi speculari su superfici lucide
+  - Evitare zone in ombra o in piena luce diretta
+- Il **mirino di selezione** permette di isolare l'area precisa da analizzare, escludendo ombre, highlight e zone di transizione che altererebbero il risultato
 
 ### 5. Miscelazione AI Avanzata
 - Input in linguaggio naturale
