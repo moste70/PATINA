@@ -75,10 +75,16 @@ class AppDatabase extends _$AppDatabase {
 
     final catalogFiles = [
       'assets/catalogs/vallejo_model_color.json',
+      'assets/catalogs/vallejo_model_air.json',
       'assets/catalogs/citadel_base.json',
       'assets/catalogs/tamiya_xf.json',
+      'assets/catalogs/tamiya_x.json',
       'assets/catalogs/gunze_aqueous.json',
+      'assets/catalogs/gunze_mr_color.json',
       'assets/catalogs/gunze_mr_metal.json',
+      'assets/catalogs/humbrol_enamel.json',
+      'assets/catalogs/lifecolor_ua.json',
+      'assets/catalogs/lifecolor_lc.json',
     ];
 
     await batch((b) async {
