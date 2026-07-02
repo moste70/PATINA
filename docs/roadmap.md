@@ -112,6 +112,48 @@
 | 1E.7 | Preparazione store listing Google Play | ⬜ Da fare |
 | 1E.8 | Release beta (Google Play Internal Testing) | ⬜ Da fare |
 
+### Note pre-lancio — Adempimenti amministrativi
+
+#### Account e pagamenti
+
+- **Google Play Console** — registrazione una tantum $25 USD su [play.google.com/console](https://play.google.com/console)
+- **Profilo pagamenti** — dati fiscali italiani (CF o P.IVA) obbligatori solo se si abilitano acquisti in-app (crediti AI, Fase 3). Per app gratuita in Fase 1 non è necessario.
+- **Commissione Google** — 15% sui ricavi (ridotta dal 30% per i primi 1 M€/anno)
+
+#### Configurazione app (obbligatoria prima del primo upload)
+
+- `applicationId` definitivo in `build.gradle` — es. `com.patina.app`. **Non modificabile** dopo la pubblicazione.
+- `versionCode` incrementale (intero), `versionName` leggibile (es. `1.0.0`)
+- APK/AAB firmato con **keystore di produzione** — conservare in luogo sicuro. Perderlo = impossibile pubblicare aggiornamenti.
+- Target SDK ≥ API 34 (requisito Google dal 2024)
+
+#### Store listing (necessario per la pubblicazione)
+
+- Titolo (max 30 car.), descrizione breve (max 80 car.), descrizione lunga (max 4000 car.)
+- Almeno 2 screenshot per telefono (min 1080×1920 px)
+- Feature graphic 1024×500 px (banner orizzontale)
+- Icona alta risoluzione 512×512 PNG
+- Categoria: **Produttività** o **Stile di vita**
+- Questionario classificazione contenuti (Patina → "Everyone")
+- **Privacy Policy URL** — obbligatoria anche se non si raccolgono dati. Deve dichiarare: dati locali sul dispositivo, nessun invio a server terzi in Fase 1, futuro uso Claude API in Fase 3. Una pagina su GitHub Pages è sufficiente.
+
+#### Marchio
+
+Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl. 1/2/22 — prodotti fisici industriali). Le classi **9** (software) e **42** (servizi IT) sono **libere**.
+
+> Registrare il marchio in classe 9 + 42 **prima** della pubblicazione su Google Play.
+> - Via nazionale UIBM: ~150–300 € → [uibm.gov.it](https://www.uibm.gov.it)
+> - Via comunitaria EUIPO (copertura UE): ~850–1.000 €
+
+#### Strategia di lancio consigliata
+
+1. **Internal Testing** — 5-10 modellisti di fiducia per feedback reali
+2. **Closed Testing (Beta)** — amplia a 50-100 utenti
+3. **Open Testing** — beta pubblica prima del lancio definitivo
+4. **Production** — rilascio graduale (10% → 50% → 100% degli utenti)
+
+> La prima review di Google richiede tipicamente 3–7 giorni. Gli aggiornamenti successivi 1–2 giorni.
+
 ---
 
 ## Fase 2 — Internazionalizzazione
