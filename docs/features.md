@@ -495,36 +495,80 @@ di poter essere inserite nella roadmap.
 
 ### 4. Ricerca da Foto (AI)
 
-L'utente importa una foto — da internet, da una scatola di montaggio, da una rivista o scattata dal vivo — e seleziona con un mirino l'area esatta da analizzare. Claude Vision identifica il colore nel contesto visivo e suggerisce vernici dal catalogo. Funzionalità a crediti.
+L'utente importa una foto — da internet, da una scatola di montaggio, da una rivista o scattata dal vivo — seleziona l'area esatta con un mirino e ottiene un elenco di vernici candidate con percentuale di confidenza. Funzionalità a crediti.
 
-#### Flusso
+---
 
+#### Step 1 — Sorgente immagine
+
+Trigger: bottone "Cerca colore da foto" nell'inventario vernici o nella scheda ricetta.
+
+Bottom sheet con tre opzioni:
+
+| Opzione | Icona | Comportamento |
+|---------|-------|--------------|
+| Fotocamera | `camera_alt` | Apre la camera, scatta e carica la foto nel viewer |
+| Galleria | `photo_library` | Apre il picker immagini del dispositivo |
+| Annulla | `close` | Chiude il bottom sheet |
+
+Dopo la selezione la foto viene caricata nel viewer a schermo intero (step 2).
+
+---
+
+#### Step 2 — Selezione area con mirino
+
+Viewer a schermo intero con `InteractiveViewer` (zoom e pan).
+
+**Mirino:**
+- Cerchio riposizionabile con drag, dimensione fissa (circa 40dp di diametro)
+- Preview in tempo reale: chip esagonale piccolo accanto al mirino che mostra il colore medio dell'area selezionata (calcolato lato client, senza AI)
+- Il mirino parte centrato sulla foto
+
+**Layout:**
+- In alto: `×` per uscire
+- Al centro: foto con mirino sovrapposto
+- In basso: tip contestuale (visibile solo per foto da fotocamera):
+  > "Per risultati migliori: luce naturale diffusa, superficie asciutta, evita zone in ombra o riflessi"
+- In basso: bottone primario `Analizza` (larghezza piena) → invia foto + coordinate mirino a Claude Vision
+
+---
+
+#### Step 3 — Risultati
+
+**Header:**
+- Chip esagonale grande (48dp) con il colore estratto dall'area selezionata
+- Valore HEX sotto il chip
+- Testo: "Colori più simili nel catalogo"
+
+**Lista candidati** (3–5 risultati, ordinati per confidenza decrescente):
+
+Ogni riga:
 ```
-Importa foto (galleria / fotocamera / URL)
-        ↓
-Viewer con zoom e pan (InteractiveViewer)
-        ↓
-Posiziona il mirino (cerchio o rettangolo)
-sull'area di colore da rilevare
-        ↓
-Claude Vision analizza colore + contesto visivo
-(tipo di modello, periodo storico, tecnica)
-        ↓
-Risultato: 3-5 candidati con marca · codice · HEX
-e note contestuali (es. "probabile base coat,
-il top coat potrebbe essere più chiaro")
-        ↓
-Utente sceglie → aggiunge a inventario o ricetta
+[chip esagonale 36dp]  Vallejo · 70.950 · Black          87% ████████░░  [+]
+[chip esagonale 36dp]  Vallejo · 70.861 · Black Grey      71% ███████░░░  [+]
+[chip esagonale 36dp]  Citadel · Abaddon Black            64% ██████░░░░  [+]
 ```
+
+- **Chip** — colore reale da catalogo, confrontabile visivamente con il campione in header
+- **Marca · codice · nome** — testo principale
+- **Percentuale + barra** — indicatore di confidenza visivo
+- **Bottone `+`** — aggiunge direttamente a inventario o alla ricetta corrente
+
+**Note contestuali di Claude** (sotto la lista, testo body small):
+> "Il colore selezionato suggerisce un base coat grigio Wehrmacht. Il top coat finale potrebbe essere leggermente più chiaro."
+
+**Azioni in fondo:**
+- `Riprova` (testo) → torna allo step 2 con la stessa foto
+- `Nuova foto` (testo) → torna allo step 1
+
+---
 
 #### Sorgenti foto e affidabilità
 
-Le due sorgenti principali hanno affidabilità molto diverse:
-
-| Sorgente | Errore Delta-E tipico | Note |
-|----------|----------------------|------|
-| **Foto da internet / box art / riviste** | 3-8 unità | Luce da studio controllata, alta risoluzione, superficie asciutta — risultati buoni |
-| **Foto dal vivo (fotocamera)** | 10-20 unità | Luce ambiente variabile, WB automatico, riflessi — risultati orientativi |
+| Sorgente | Errore Delta-E tipico | Affidabilità |
+|----------|----------------------|--------------|
+| Foto da internet · box art · riviste | 3–8 unità | Buona — luce da studio, alta risoluzione, superficie asciutta |
+| Foto dal vivo (fotocamera) | 10–20 unità | Orientativa — luce variabile, WB automatico, possibili riflessi |
 
 **Fattori che peggiorano la rilevazione da fotocamera:**
 
@@ -533,21 +577,11 @@ Le due sorgenti principali hanno affidabilità molto diverse:
 | Illuminazione calda/fredda/mista | Sposta la tinta verso giallo/arancio o blu |
 | White balance automatico | Compensa in modo imprevedibile |
 | Superficie lucida o satinata | Riflessi alterano il colore percepito |
-| Ombre sul modello | Stessa vernice, Delta-E fino a 30-50 tra zona in luce e in ombra |
-| Vernice bagnata | Differenza fino al 15-20% rispetto all'asciutto |
+| Ombre sul modello | Delta-E fino a 30–50 tra zona in luce e in ombra |
+| Vernice bagnata | Differenza fino al 15–20% rispetto all'asciutto |
 | Compressione JPEG | Artefatti cromatici sulle tinte piatte |
 
-#### Come viene gestito in Patina
-
-- Il risultato è sempre presentato come **suggerimento orientativo**, mai come risposta definitiva
-- Claude Vision restituisce sempre **3-5 candidati** con indicatore di confidenza
-- Claude ragiona sul **contesto visivo** (tipo di veicolo, periodo storico, schema mimetico) e sulle vernici nell'inventario dell'utente — non solo sul campione cromatico isolato
-- Per foto dal vivo, l'UI mostra un tip con le condizioni ottimali:
-  - Luce naturale diffusa, niente flash
-  - Superficie asciutta e polimerizzata
-  - Distanza 10-15 cm, inquadratura perpendicolare
-  - Evitare zone in ombra o in piena luce diretta
-- Il **mirino di selezione** permette di isolare l'area precisa da analizzare, escludendo ombre, highlight e zone di transizione che altererebbero il risultato
+Il risultato è sempre presentato come suggerimento orientativo. Claude Vision ragiona sul **contesto visivo** (tipo di veicolo, periodo storico, schema mimetico) e sulle vernici nell'inventario dell'utente — non solo sul campione cromatico isolato.
 
 ### 5. Miscelazione AI Avanzata
 - Input in linguaggio naturale
