@@ -494,9 +494,34 @@ di poter essere inserite nella roadmap.
 > Pianificate in dettaglio al completamento della Fase 1.
 
 ### 4. Ricerca da Foto (AI)
-- Scatta o importa una foto di un colore reale
-- Claude Vision analizza e suggerisce vernici dal catalogo e possibili ricette
-- Funzionalità a crediti
+
+Scatta o importa una foto di un colore reale — Claude Vision analizza e suggerisce vernici dal catalogo e possibili ricette. Funzionalità a crediti.
+
+#### Affidabilità e limiti del riconoscimento colore da fotocamera
+
+La fotocamera di uno smartphone **non misura colori** — cattura luce riflessa. Questo introduce variabili che rendono il risultato orientativo, non definitivo:
+
+| Fattore | Effetto |
+|---------|---------|
+| Illuminazione (calda/fredda/mista) | Sposta la tinta verso giallo/arancio o blu |
+| White balance automatico | Compensa in modo imprevedibile |
+| Superficie (opaco/lucido/satinato) | Modifica la luce riflessa percepita |
+| Ombre e luci sul modello | Stessa vernice, Delta-E fino a 30-50 tra zona in luce e in ombra |
+| Vernice bagnata vs asciutta | Differenza fino al 15-20% sul valore percepito |
+| Compressione JPEG | Artefatti cromatici sulle tinte piatte |
+
+**Errore tipico** in condizioni normali: 10-20 unità Delta-E. La soglia di percezione umana è ~2-3 unità. Identificare un colore esatto da catalogo in modo affidabile è quindi molto difficile senza condizioni controllate.
+
+#### Come viene gestito in Patina
+
+- Il riconoscimento colore è presentato sempre come **suggerimento orientativo**, mai come risposta definitiva
+- Claude Vision restituisce sempre **3-5 candidati** con indicatore di confidenza, non un singolo risultato
+- Claude ragiona sul **contesto** (es. "grigio Wehrmacht su un Panzer") e sulle vernici già presenti nell'inventario dell'utente, non solo sul campione cromatico isolato
+- L'UI mostra un avviso esplicito sulle condizioni ottimali di scatto:
+  - Luce naturale diffusa (non diretta), niente flash
+  - Superficie asciutta e completamente polimerizzata
+  - Distanza 10-15 cm, inquadratura perpendicolare
+  - Evitare riflessi speculari su superfici lucide
 
 ### 5. Miscelazione AI Avanzata
 - Input in linguaggio naturale
