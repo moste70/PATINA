@@ -606,23 +606,77 @@ Il modellista fotografa una pagina del libretto istruzioni in bianco e nero. Cla
 
 I libretti istruzioni di Tamiya, Revell, Hasegawa, Italeri riportano codici colore accanto alle zone del modello (es. "XF-63", "70.950", "C-40") ma sono stampati in bianco e nero. Il modellista deve fare continuamente il "ping-pong" tra codice → scatola vernice → parte del modello. Questa feature elimina quel passaggio.
 
-#### Flusso
+#### Nota legale
+
+Il contenuto del libretto istruzioni è protetto da copyright della casa produttrice. Patina **non scarica, non archivia e non distribuisce** istruzioni di terzi. Il libretto viene fornito dall'utente (fisico fotografato o PDF personale) e processato localmente + Claude Vision esclusivamente nel contesto del progetto dell'utente. Questo è uso personale, analogo a Google Lens o un'app OCR.
+
+---
+
+#### Sorgenti supportate
+
+L'utente può caricare le istruzioni in due modi:
+
+**A — Foto pagina per pagina (libretto fisico)**
+
+Bottom sheet al tap su "Carica istruzioni":
+
+| Opzione | Comportamento |
+|---------|--------------|
+| `Fotocamera` | Scatta la pagina corrente, aggiunge alla sequenza |
+| `Galleria` | Seleziona una o più immagini già scattate (multi-selezione) |
+| `Annulla` | Chiude senza modifiche |
+
+- L'utente fotografa ogni pagina in sequenza — Patina le ordina per ordine di caricamento
+- Preview miniature delle pagine caricate con possibilità di riordinare, aggiungere o rimuovere singole pagine prima dell'analisi
+- Consiglio a schermo: "Fotografa su superficie piana, luce uniforme, senza riflessi"
+
+**B — PDF del libretto**
+
+- Picker file standard Android (`.pdf`)
+- Il PDF viene convertito in immagini internamente — ogni pagina diventa un'immagine analizzabile
+- Il file PDF **non viene mai inviato a Claude** — vengono inviate le singole pagine come immagini
+- Limite: PDF fino a 100 pagine (libretti tipici: 4-20 pagine)
+
+> **Nota:** Patina non scarica PDF da URL esterni. Il file deve provenire dalla memoria del dispositivo dell'utente.
+
+---
+
+#### Flusso di analisi
 
 ```
-Utente fotografa la pagina del libretto istruzioni
+Utente carica pagine (foto o PDF)
         ↓
-Claude Vision legge tutti i codici colore nella pagina
-(OCR contestuale — riconosce formato per marca: XF-xx, 70.xxx, C-xx…)
+Preview sequenza pagine — riordina / aggiungi / rimuovi
         ↓
-Per ogni codice: lookup nel catalogo → HEX reale
+Tap "Analizza istruzioni"
         ↓
-Overlay sulla foto: esagono colorato sovrapposto
-al codice stampato, con marca + nome + codice
+Claude Vision analizza ogni pagina:
+  • identifica gli step di montaggio (numeri cerchiati)
+  • legge i codici colore per ogni step (XF-xx, 70.xxx, C-xx…)
+  • descrive brevemente la zona di lavoro per ogni step
         ↓
-Risultato salvato nel progetto (non rielaborato ogni accesso)
+Genera fasi scorrevoli (swipe orizzontale):
+  Step 1 — Carrozzeria inferiore · XF-63 · XF-69
+  Step 2 — Motore · XF-1 · XF-56
+  Step 3 — Ruote e cingoli · XF-63 · XF-52
+  …
         ↓
-Tap sull'esagono → scheda vernice · aggiungi a inventario · equivalenze
+Pagina riepilogativa colori: unione di tutti i codici trovati
+→ aggiunta automatica all'inventario del progetto (con conferma)
+        ↓
+Risultato salvato nel progetto — non rielaborato ad ogni accesso
+        ↓
+Tap sull'esagono in ogni step → scheda vernice · aggiungi a inventario
 ```
+
+#### Viewer fasi scorrevoli
+
+Ogni step è una schermata con:
+- Foto/pagina originale con **overlay esagoni colorati** sui codici riconosciuti
+- Header: numero step + descrizione breve generata da Claude (es. "Carrozzeria inferiore")
+- Footer: lista chip esagonali delle vernici dello step con codice
+- Swipe orizzontale per navigare tra gli step
+- Bottone `⋮` per aggiungere tutte le vernici dello step all'inventario
 
 #### Layout overlay
 
