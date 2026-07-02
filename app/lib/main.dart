@@ -10,6 +10,9 @@ void main() async {
   final db = AppDatabase();
   await db.initializeCatalogs();
   final onboardingDone = await isOnboardingCompleted();
+  if (!onboardingDone) {
+    await db.initializeDemoProject();
+  }
   runApp(
     ProviderScope(
       overrides: [
