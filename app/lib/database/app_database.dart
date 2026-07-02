@@ -77,6 +77,8 @@ class AppDatabase extends _$AppDatabase {
       'assets/catalogs/vallejo_model_color.json',
       'assets/catalogs/citadel_base.json',
       'assets/catalogs/tamiya_xf.json',
+      'assets/catalogs/gunze_aqueous.json',
+      'assets/catalogs/gunze_mr_metal.json',
     ];
 
     await batch((b) async {

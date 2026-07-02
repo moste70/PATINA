@@ -39,11 +39,12 @@ class AppConstants {
     'sponge': 'Spugnatura',
   };
 
-  static const List<String> supportedBrands = ['vallejo', 'citadel', 'tamiya'];
+  static const List<String> supportedBrands = ['vallejo', 'citadel', 'tamiya', 'gunze'];
 
   static const Map<String, String> brandLabels = {
     'vallejo': 'Vallejo',
     'citadel': 'Citadel',
     'tamiya': 'Tamiya',
+    'gunze': 'Gunze (Mr. Color)',
   };
 }

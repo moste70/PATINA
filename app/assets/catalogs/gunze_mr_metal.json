@@ -1,0 +1,17 @@
+{
+  "brand": "gunze",
+  "line": "mr_metal_color",
+  "version": "2024.1-codes-only",
+  "note": "HEX values are placeholders — to be filled by Catalog Tool scraping GSI Creos website",
+  "paints": [
+    { "code": "211", "name": "Chrome Silver", "hex": "#000000" },
+    { "code": "212", "name": "Iron",          "hex": "#000000" },
+    { "code": "213", "name": "Stainless",     "hex": "#000000" },
+    { "code": "214", "name": "Dark Iron",     "hex": "#000000" },
+    { "code": "215", "name": "Copper",        "hex": "#000000" },
+    { "code": "216", "name": "Bronze",        "hex": "#000000" },
+    { "code": "217", "name": "Gold",          "hex": "#000000" },
+    { "code": "218", "name": "Aluminium",     "hex": "#000000" },
+    { "code": "219", "name": "Brass",         "hex": "#000000" }
+  ]
+}
