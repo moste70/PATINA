@@ -354,14 +354,14 @@ Raccoglie tutte le vernici che l'utente possiede fisicamente.
 
 **Funzionalità:**
 - Aggiunta da catalogo (cerca per codice o nome)
-- Aggiunta manuale per vernici non in catalogo
+- Aggiunta manuale per vernici non in catalogo (marca e codice obbligatori)
 - Filtro per marca, linea, quantità
 - Vista griglia chip esagonali / vista lista dettagliata (toggle)
 - Modifica quantità con tap rapido
 - Lista della spesa automatica (vernici `low` o `empty`)
 
 #### 2.2 Cataloghi Marche
-Database offline integrato, caricato in SQLite al primo avvio.
+Database offline integrato, caricato in SQLite al primo avvio tramite `initializeCatalogs()`.
 
 **Cataloghi Fase 1:**
 
@@ -377,6 +377,15 @@ Database offline integrato, caricato in SQLite al primo avvio.
 - Chip esagonale con colore reale
 - Aggiunta diretta all'inventario
 - Equivalenze tra marche (quando disponibile)
+
+**Aggiornamento cataloghi:**
+
+I cataloghi sono bundled nell'app (Fase 1) e aggiornati con le nuove versioni su Google Play.
+Le vernici inserite manualmente dall'utente (`custom_paints`) sono identificate da `brand+code`
+come chiave naturale. Al momento dell'aggiornamento, se un colore manuale coincide con uno
+nel nuovo catalogo ufficiale, viene rimosso automaticamente e sostituito dal dato verificato.
+I dati dell'inventario personale (`inventory_paints`) non vengono mai persi durante gli aggiornamenti
+perché referenziano `brand+code` e non l'ID interno del catalogo.
 
 #### 2.3 Gestione Ricette (`/recipes`)
 Miscele personalizzate salvate con proporzioni esatte.

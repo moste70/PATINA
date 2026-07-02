@@ -149,20 +149,42 @@ line            TEXT NOT NULL               -- model_color|base|xf|…
 code            TEXT NOT NULL
 name            TEXT NOT NULL
 hex             TEXT NOT NULL               -- es. "#4A3728"
+UNIQUE (brand, code)                        -- chiave naturale stabile
 ```
+
+> **Importante:** l'inventario referenzia le vernici tramite `brand+code` (chiave
+> naturale), non tramite `id`. Questo garantisce che gli aggiornamenti del catalogo
+> (che ricreano i record con nuovi ID) non rompano mai i dati dell'utente.
+
+### `custom_paints` _(vernici manuali utente)_
+```
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+brand           TEXT NOT NULL               -- obbligatorio — es. "scale75"
+code            TEXT NOT NULL               -- obbligatorio — es. "SC-01"
+name            TEXT NOT NULL
+hex             TEXT NOT NULL               -- es. "#2A1F18"
+created_at      INTEGER NOT NULL
+UNIQUE (brand, code)                        -- chiave naturale
+```
+
+> Al momento dell'aggiornamento catalogo, se un `brand+code` presente in
+> `custom_paints` viene incluso nel nuovo catalogo ufficiale, la voce manuale
+> viene rimossa automaticamente — il colore ufficiale (con HEX verificato) la sostituisce.
+> `brand` e `code` sono **obbligatori** nell'inserimento manuale.
 
 ### `inventory_paints`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
-catalog_id      INTEGER REFERENCES catalog_paints(id)
-custom_brand    TEXT
-custom_code     TEXT
-custom_name     TEXT
-custom_hex      TEXT
+catalog_brand   TEXT                        -- riferimento a catalog_paints (brand+code)
+catalog_code    TEXT                        --
+custom_brand    TEXT                        -- riferimento a custom_paints (brand+code)
+custom_code     TEXT                        --
 quantity        TEXT DEFAULT 'full'         -- full|half|low|empty
 notes           TEXT
 purchased_at    INTEGER
 ```
+
+> Uno e uno solo dei due gruppi (catalog_* o custom_*) è valorizzato per riga.
 
 ### `recipes`
 ```
@@ -183,7 +205,6 @@ updated_at      INTEGER NOT NULL
 id              INTEGER PRIMARY KEY AUTOINCREMENT
 recipe_id       INTEGER NOT NULL REFERENCES recipes(id)
 paint_id        INTEGER REFERENCES inventory_paints(id)
-catalog_id      INTEGER REFERENCES catalog_paints(id)
 percentage      REAL NOT NULL
 ```
 
