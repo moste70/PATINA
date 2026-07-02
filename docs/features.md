@@ -448,17 +448,15 @@ Documenta la tecnica applicata in un punto specifico del modello.
 
 ## Stato Implementazione Attuale
 
-> Tutte le schermate sono `PlaceholderScreen` — mostra icona + titolo + "In sviluppo".
-> L'AppBar mostra l'icona brand Patina (esagono custom painter) e un bottone cerca non funzionale.
-> La navigazione tra i 4 tab è funzionante tramite Go Router.
-
 | Schermata | Percorso | Stato |
 |-----------|----------|-------|
-| Archivio Progetti | `/projects` | Placeholder |
-| Scheda Progetto | `/projects/:id` | Placeholder |
-| Vernici / Inventario | `/paints` | Placeholder |
-| Ricette | `/recipes` | Placeholder |
-| Impostazioni | `/settings` | Placeholder |
+| Onboarding | `/onboarding` | ✅ Implementato — 4 schermate (Benvenuto, Funzionalità, Permessi, Pronto) |
+| Archivio Progetti | `/projects` | ✅ Implementato — lista, empty state, FAB, navigazione alla scheda |
+| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto) |
+| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile, galleria (placeholder), note, info |
+| Vernici / Inventario | `/paints` | ⬜ Placeholder |
+| Ricette | `/recipes` | ⬜ Placeholder |
+| Impostazioni | `/settings` | ⬜ Placeholder |
 
 ---
 
@@ -474,11 +472,10 @@ di poter essere inserite nella roadmap.
 | **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |
 | **Creazione Pin Lavorazione** | Flusso inserimento pin tecnica: selezione tipo lavorazione, prodotto usato, collegamento a fase |
 | **Visualizzatore Foto con Pin** | Viewer full-screen: zoom/pan via InteractiveViewer, overlay pin su canvas, controlli visibilità |
-| **Light Mode** | Palette light definita in `PatinaColors` ma da verificare su tutti i componenti — alcuni usano `onBackground` deprecated |
-| **Autenticazione** | Necessaria per Fase 2 — provider OAuth, flusso login/registrazione, gestione token |
-| **Stati di Sistema** | Loading spinner, empty state con CTA, errori di rete, permessi negati — pattern uniforme da definire |
+| **Light Mode** | Palette light definita in `PatinaColors` (Design System Ottone) — da verificare su tutti i componenti |
+| **Autenticazione** | Necessaria per Fase 3 — provider OAuth, flusso login/registrazione, gestione token |
+| **Stati di Sistema** | Pattern uniforme da definire: loading spinner, empty state con CTA, errori di rete, permessi negati |
 | **Notifiche** | Promemoria lavorazione, aggiornamenti catalogo — da decidere se e quando implementare |
-| **Wizard Nuovo Progetto** | Flusso multi-step creazione: nome → categoria/scala → foto cover → stato iniziale |
 | **Catalogo Vernici** | Vista sfoglia separata dall'inventario: raggruppamento per marca/linea, chip colore, aggiunta rapida |
 
 ---

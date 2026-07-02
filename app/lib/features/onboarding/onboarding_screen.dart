@@ -88,6 +88,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Expanded(
               child: PageView(
                 controller: _controller,
+                // Blocca swipe indietro dalla prima schermata
+                physics: _page == 0
+                    ? const NeverScrollableScrollPhysics()
+                    : const PageScrollPhysics(),
                 onPageChanged: (p) => setState(() => _page = p),
                 children: [
                   _Page1Welcome(onNext: () => _goTo(1)),

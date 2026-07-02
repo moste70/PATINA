@@ -59,25 +59,36 @@ patina/
 └── docs/                        # Documentazione di progetto
 ```
 
-> **Nota:** La cartella `features/` (projects/, paints/, recipes/, pins/) non esiste ancora.
-> Tutte le schermate sono attualmente `PlaceholderScreen`. Verrà popolata durante la Fase 1.
+> **Nota:** La cartella `features/` contiene `projects/` (wizard + scheda + archivio) e `onboarding/`.
+> Le cartelle `paints/`, `recipes/`, `pins/` verranno popolate durante la Fase 1B–1D.
 
 ---
 
 ## Design System
 
-### Palette Colori (`PatinaColors`)
+### Palette Colori (`PatinaColors`) — Design System "Ottone" v1.0
+
+Dark-first. Accent Ottone (#D99B3E), superfici grafite a undertone caldo.
+Tipografia: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo).
 
 | Token | Dark | Light | Uso |
 |-------|------|-------|-----|
-| `background` | `#12121A` | `#F5F4F0` | Sfondo app |
-| `surface` | `#1C1C26` | `#FFFFFF` | Card, bottom nav |
-| `surfaceVariant` | `#26263A` | `#EEEDE8` | Input, chip |
-| `primary` (accent) | `#7CB87C` | `#4A7A4A` | CTA, selezioni |
-| `secondary` (accentAlt) | `#B87C3E` | `#8A5A20` | Accento caldo |
-| `onBackground` | `#E8E8F0` | `#1A1A1F` | Testo principale |
-| `onSurface` | `#B0B0C8` | `#3A3A45` | Testo secondario |
-| `outline` | `#2A2A3A` | `#E0DED8` | Divisori, bordi |
+| `background` | `#16171B` | `#F4F2EC` | Sfondo app |
+| `surface` | `#1E2025` | `#FFFFFF` | Card, bottom nav |
+| `surfaceVariant` | `#282B31` | `#EAE7DF` | Input, chip |
+| `primary` — Ottone | `#D99B3E` | `#B07C24` | CTA, selezioni, accent |
+| `secondary` — Verderame | `#3FA8A0` | `#2E7D77` | Accento secondario |
+| `onBackground` | `#ECEAE4` | `#1C1A16` | Testo principale |
+| `onSurface` | `#9A9CA3` | `#57534A` | Testo secondario |
+| `outline` | `#3A3E46` | `#DBD6CB` | Divisori, bordi |
+
+**Colori semantici:**
+
+| Token | Valore | Uso |
+|-------|--------|-----|
+| `successo` | `#2F8F57` | Permessi concessi, completato |
+| `warning` | `#E0B84A` | Avvisi, quantità bassa vernice |
+| `errore` | `#C8503B` | Permessi negati, errori |
 
 ### Navigazione
 
