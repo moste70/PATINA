@@ -284,6 +284,41 @@ Le chiamate AI saranno gestite da un servizio dedicato con:
 ## Dati e Privacy
 
 - **Fase 1:** tutti i dati sono locali sul dispositivo, nessun account richiesto
-- Le foto restano nella memoria interna dell'app (non nella galleria pubblica)
-- Backup manuale tramite export ZIP (Fase 1E)
-- **Fase 2:** sync cloud opzionale con account utente
+- **Fase 3:** sync cloud opzionale con account utente
+
+### Archiviazione foto
+
+Le foto dei progetti vengono salvate nella **memoria interna privata dell'app**, non nella galleria pubblica del dispositivo:
+
+```
+/data/data/com.patina.app/files/projects/{projectId}/photos/{filename}.jpg
+```
+
+Questo percorso è accessibile solo da Patina — altre app e l'utente tramite file manager non possono accedervi direttamente.
+
+**Implicazioni importanti:**
+
+| Scenario | Comportamento |
+|----------|--------------|
+| Disinstallazione app | Tutte le foto vengono cancellate insieme all'app |
+| Backup Google One (automatico) | Le foto **non sono incluse** per default — richiede configurazione esplicita in `AndroidManifest.xml` |
+| Export ZIP (Fase 1E) | Unico modo per salvare le foto fuori dall'app in Fase 1 |
+| Migrazione dispositivo | Senza backup ZIP le foto vanno perse |
+
+**Configurazione backup Android (`AndroidManifest.xml`):**
+
+Da implementare in Fase 1E: dichiarare le regole di backup per includere la cartella foto nel backup automatico di Android (API 23+), così la migrazione tra dispositivi tramite Google One preserva i dati dell'utente.
+
+```xml
+<application
+    android:fullBackupContent="@xml/backup_rules"
+    android:dataExtractionRules="@xml/data_extraction_rules">
+```
+
+### Backup manuale (Fase 1E)
+
+Export ZIP che include:
+- Database SQLite completo (`patina.db`)
+- Cartella foto (`/files/projects/`)
+
+Import ZIP che ripristina entrambi. Unica soluzione di backup disponibile prima della Fase 3 (sync cloud).
