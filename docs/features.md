@@ -95,7 +95,11 @@ Projects(
 ##### Validazioni
 - Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
 - Nome > 80 caratteri → contatore caratteri visibile, input bloccato a 80
-- Foto > 10MB → toast "Immagine troppo grande, scegli un'altra"
+- Foto > 10MB → ridimensionamento automatico trasparente prima del salvataggio
+  (riduzione progressiva di risoluzione e qualità JPEG fino a ≤ 10MB).
+  La foto originale non viene mai rifiutata. Il limite di 10MB è imposto
+  dalla Claude API al momento dell'invio AI — la foto viene compressa solo
+  in quel momento, non al salvataggio nel progetto.
 
 ##### Stati di errore
 - Permesso camera negato → bottom sheet con spiegazione + link alle impostazioni Android
