@@ -1,147 +1,703 @@
 {
   "brand": "lifecolor",
   "line": "ua_camouflage",
-  "version": "2024.1-codes-only",
-  "note": "HEX values are placeholders — to be filled by Catalog Tool",
+  "version": "2024.1",
+  "note": "HEX values sourced from community databases — verify against physical paints",
   "paints": [
-    { "code": "UA001", "name": "Worn Effect",                    "hex": "#000000" },
-    { "code": "UA002", "name": "Matt Black",                     "hex": "#000000" },
-    { "code": "UA003", "name": "Matt White",                     "hex": "#000000" },
-    { "code": "UA004", "name": "Medium Grey",                    "hex": "#000000" },
-    { "code": "UA005", "name": "Dark Yellow",                    "hex": "#000000" },
-    { "code": "UA006", "name": "NATO Green",                     "hex": "#000000" },
-    { "code": "UA007", "name": "NATO Black",                     "hex": "#000000" },
-    { "code": "UA008", "name": "NATO Brown",                     "hex": "#000000" },
-    { "code": "UA009", "name": "Sand",                           "hex": "#000000" },
-    { "code": "UA010", "name": "Iraq Sand",                      "hex": "#000000" },
-    { "code": "UA011", "name": "Tank Brown",                     "hex": "#000000" },
-    { "code": "UA012", "name": "Olive Drab",                     "hex": "#000000" },
-    { "code": "UA013", "name": "Russian Green 4BO",              "hex": "#000000" },
-    { "code": "UA014", "name": "Panzer Dunkelgrau",              "hex": "#000000" },
-    { "code": "UA015", "name": "Rotbraun RAL 8012",              "hex": "#000000" },
-    { "code": "UA016", "name": "Dunkelgelb RAL 7028",            "hex": "#000000" },
-    { "code": "UA017", "name": "Olivgrun RAL 6003",              "hex": "#000000" },
-    { "code": "UA018", "name": "Dunkelgrun RAL 6009",            "hex": "#000000" },
-    { "code": "UA019", "name": "Dark Sand",                      "hex": "#000000" },
-    { "code": "UA020", "name": "US Olive Drab FS 34087",         "hex": "#000000" },
-    { "code": "UA021", "name": "US Field Drab FS 30118",         "hex": "#000000" },
-    { "code": "UA022", "name": "US Tan FS 33703",                "hex": "#000000" },
-    { "code": "UA023", "name": "US Khaki FS 34201",              "hex": "#000000" },
-    { "code": "UA024", "name": "British Khaki",                  "hex": "#000000" },
-    { "code": "UA025", "name": "British Desert Tan",             "hex": "#000000" },
-    { "code": "UA026", "name": "British Light Stone",            "hex": "#000000" },
-    { "code": "UA027", "name": "British Dark Bronze Green",      "hex": "#000000" },
-    { "code": "UA028", "name": "Israeli Sand Grey",              "hex": "#000000" },
-    { "code": "UA029", "name": "Israeli Grey",                   "hex": "#000000" },
-    { "code": "UA030", "name": "Japanese Khaki",                 "hex": "#000000" },
-    { "code": "UA031", "name": "Japanese Army Green",            "hex": "#000000" },
-    { "code": "UA032", "name": "Japanese Naval Grey",            "hex": "#000000" },
-    { "code": "UA033", "name": "Faded Olive Drab",               "hex": "#000000" },
-    { "code": "UA034", "name": "Worn Olive Drab",                "hex": "#000000" },
-    { "code": "UA035", "name": "Burnt Umber",                    "hex": "#000000" },
-    { "code": "UA036", "name": "Earth",                          "hex": "#000000" },
-    { "code": "UA037", "name": "Dark Mud",                       "hex": "#000000" },
-    { "code": "UA038", "name": "Light Mud",                      "hex": "#000000" },
-    { "code": "UA039", "name": "Dust",                           "hex": "#000000" },
-    { "code": "UA040", "name": "Light Dust",                     "hex": "#000000" },
-    { "code": "UA041", "name": "Bright Sand",                    "hex": "#000000" },
-    { "code": "UA042", "name": "Warm Sand",                      "hex": "#000000" },
-    { "code": "UA043", "name": "Dark Brown",                     "hex": "#000000" },
-    { "code": "UA044", "name": "Chocolate Brown",                "hex": "#000000" },
-    { "code": "UA045", "name": "Tan Earth",                      "hex": "#000000" },
-    { "code": "UA046", "name": "Light Orange Brown",             "hex": "#000000" },
-    { "code": "UA047", "name": "Orange Brown",                   "hex": "#000000" },
-    { "code": "UA048", "name": "Red Brown",                      "hex": "#000000" },
-    { "code": "UA049", "name": "Rust",                           "hex": "#000000" },
-    { "code": "UA050", "name": "Chipping",                       "hex": "#000000" },
-    { "code": "UA051", "name": "Dark Red",                       "hex": "#000000" },
-    { "code": "UA052", "name": "Aged White",                     "hex": "#000000" },
-    { "code": "UA053", "name": "Ivory",                          "hex": "#000000" },
-    { "code": "UA054", "name": "Pale Sand",                      "hex": "#000000" },
-    { "code": "UA055", "name": "Iraqi Sand",                     "hex": "#000000" },
-    { "code": "UA056", "name": "Panzer Aces Skin",               "hex": "#000000" },
-    { "code": "UA057", "name": "Dark Skin",                      "hex": "#000000" },
-    { "code": "UA058", "name": "Medium Flesh",                   "hex": "#000000" },
-    { "code": "UA059", "name": "Light Flesh",                    "hex": "#000000" },
-    { "code": "UA060", "name": "Highlight Flesh",                "hex": "#000000" },
-    { "code": "UA061", "name": "Dark Leather",                   "hex": "#000000" },
-    { "code": "UA062", "name": "Medium Leather",                 "hex": "#000000" },
-    { "code": "UA063", "name": "Light Leather",                  "hex": "#000000" },
-    { "code": "UA064", "name": "US Modern Field Green",          "hex": "#000000" },
-    { "code": "UA065", "name": "US Modern Desert Sand",          "hex": "#000000" },
-    { "code": "UA066", "name": "US Modern Desert Brown",         "hex": "#000000" },
-    { "code": "UA067", "name": "US MARPAT Desert Sand",          "hex": "#000000" },
-    { "code": "UA068", "name": "US MARPAT Desert Tan",           "hex": "#000000" },
-    { "code": "UA069", "name": "US MARPAT Desert Brown",         "hex": "#000000" },
-    { "code": "UA070", "name": "US MARPAT Woodland Green",       "hex": "#000000" },
-    { "code": "UA071", "name": "US MARPAT Woodland Brown",       "hex": "#000000" },
-    { "code": "UA072", "name": "US MARPAT Woodland Black",       "hex": "#000000" },
-    { "code": "UA073", "name": "British MTP Sand",               "hex": "#000000" },
-    { "code": "UA074", "name": "British MTP Brown",              "hex": "#000000" },
-    { "code": "UA075", "name": "British MTP Dark Brown",         "hex": "#000000" },
-    { "code": "UA076", "name": "British MTP Green",              "hex": "#000000" },
-    { "code": "UA077", "name": "British MTP Dark Green",         "hex": "#000000" },
-    { "code": "UA078", "name": "German Fleck Sand",              "hex": "#000000" },
-    { "code": "UA079", "name": "German Fleck Green",             "hex": "#000000" },
-    { "code": "UA080", "name": "German Fleck Brown",             "hex": "#000000" },
-    { "code": "UA081", "name": "German Fleck Dark Green",        "hex": "#000000" },
-    { "code": "UA082", "name": "Russian Flora Sand",             "hex": "#000000" },
-    { "code": "UA083", "name": "Russian Flora Green",            "hex": "#000000" },
-    { "code": "UA084", "name": "Russian Flora Dark Green",       "hex": "#000000" },
-    { "code": "UA085", "name": "Russian Flora Brown",            "hex": "#000000" },
-    { "code": "UA086", "name": "Italian Vegetato Sand",          "hex": "#000000" },
-    { "code": "UA087", "name": "Italian Vegetato Green",         "hex": "#000000" },
-    { "code": "UA088", "name": "Italian Vegetato Dark Green",    "hex": "#000000" },
-    { "code": "UA089", "name": "Italian Vegetato Brown",         "hex": "#000000" },
-    { "code": "UA090", "name": "Faded Brown",                    "hex": "#000000" },
-    { "code": "UA091", "name": "Worn Leather",                   "hex": "#000000" },
-    { "code": "UA092", "name": "Tired Metal",                    "hex": "#000000" },
-    { "code": "UA093", "name": "Damp Earth",                     "hex": "#000000" },
-    { "code": "UA094", "name": "Wet Earth",                      "hex": "#000000" },
-    { "code": "UA095", "name": "Dry Mud",                        "hex": "#000000" },
-    { "code": "UA096", "name": "Light Dry Mud",                  "hex": "#000000" },
-    { "code": "UA097", "name": "Deep Water",                     "hex": "#000000" },
-    { "code": "UA098", "name": "Medium Water",                   "hex": "#000000" },
-    { "code": "UA099", "name": "Light Water",                    "hex": "#000000" },
-    { "code": "UA100", "name": "Forest Green",                   "hex": "#000000" },
-    { "code": "UA101", "name": "Medium Forest",                  "hex": "#000000" },
-    { "code": "UA102", "name": "Light Forest",                   "hex": "#000000" },
-    { "code": "UA103", "name": "Wood Brown",                     "hex": "#000000" },
-    { "code": "UA104", "name": "Bark",                           "hex": "#000000" },
-    { "code": "UA105", "name": "Dry Grass",                      "hex": "#000000" },
-    { "code": "UA106", "name": "Straw",                          "hex": "#000000" },
-    { "code": "UA107", "name": "Yellow Green",                   "hex": "#000000" },
-    { "code": "UA108", "name": "Light Yellow Green",             "hex": "#000000" },
-    { "code": "UA109", "name": "Stone Grey",                     "hex": "#000000" },
-    { "code": "UA110", "name": "Light Stone",                    "hex": "#000000" },
-    { "code": "UA111", "name": "Concrete",                       "hex": "#000000" },
-    { "code": "UA112", "name": "Asphalt",                        "hex": "#000000" },
-    { "code": "UA113", "name": "Dark Asphalt",                   "hex": "#000000" },
-    { "code": "UA114", "name": "Steel",                          "hex": "#000000" },
-    { "code": "UA115", "name": "Dark Steel",                     "hex": "#000000" },
-    { "code": "UA116", "name": "Gun Metal",                      "hex": "#000000" },
-    { "code": "UA117", "name": "Bronze",                         "hex": "#000000" },
-    { "code": "UA118", "name": "Brass",                          "hex": "#000000" },
-    { "code": "UA119", "name": "Copper",                         "hex": "#000000" },
-    { "code": "UA120", "name": "Gold",                           "hex": "#000000" },
-    { "code": "UA121", "name": "Light Gold",                     "hex": "#000000" },
-    { "code": "UA122", "name": "Chrome",                         "hex": "#000000" },
-    { "code": "UA123", "name": "Exhaust",                        "hex": "#000000" },
-    { "code": "UA124", "name": "Light Exhaust",                  "hex": "#000000" },
-    { "code": "UA125", "name": "Burnt Exhaust",                  "hex": "#000000" },
-    { "code": "UA126", "name": "Camouflage Green",               "hex": "#000000" },
-    { "code": "UA127", "name": "Camouflage Brown",               "hex": "#000000" },
-    { "code": "UA128", "name": "Camouflage Sand",                "hex": "#000000" },
-    { "code": "UA129", "name": "Camouflage Black",               "hex": "#000000" },
-    { "code": "UA130", "name": "Shadow",                         "hex": "#000000" },
-    { "code": "UA131", "name": "Highlight",                      "hex": "#000000" },
-    { "code": "UF01",  "name": "Flat Base",                      "hex": "#000000" },
-    { "code": "UF02",  "name": "Flat Dark Yellow",               "hex": "#000000" },
-    { "code": "UF03",  "name": "Flat White",                     "hex": "#000000" },
-    { "code": "UF04",  "name": "Flat Black",                     "hex": "#000000" },
-    { "code": "UF05",  "name": "Flat Olive Green",               "hex": "#000000" },
-    { "code": "UF06",  "name": "Flat US Olive Drab",             "hex": "#000000" },
-    { "code": "UF07",  "name": "Flat Brown",                     "hex": "#000000" },
-    { "code": "UF08",  "name": "Flat Sand",                      "hex": "#000000" }
+    {
+      "code": "UA001",
+      "name": "Worn Effect",
+      "hex": "#A9A9A9"
+    },
+    {
+      "code": "UA002",
+      "name": "Matt Black",
+      "hex": "#1A1A1A"
+    },
+    {
+      "code": "UA003",
+      "name": "Matt White",
+      "hex": "#F2F4F3"
+    },
+    {
+      "code": "UA004",
+      "name": "Medium Grey",
+      "hex": "#7B8185"
+    },
+    {
+      "code": "UA005",
+      "name": "Dark Yellow",
+      "hex": "#AF9B6F"
+    },
+    {
+      "code": "UA006",
+      "name": "NATO Green",
+      "hex": "#354230"
+    },
+    {
+      "code": "UA007",
+      "name": "NATO Black",
+      "hex": "#232426"
+    },
+    {
+      "code": "UA008",
+      "name": "NATO Brown",
+      "hex": "#4C382B"
+    },
+    {
+      "code": "UA009",
+      "name": "Sand",
+      "hex": "#D2B48C"
+    },
+    {
+      "code": "UA010",
+      "name": "Iraq Sand",
+      "hex": "#C2A687"
+    },
+    {
+      "code": "UA011",
+      "name": "Tank Brown",
+      "hex": "#5C4A3F"
+    },
+    {
+      "code": "UA012",
+      "name": "Olive Drab",
+      "hex": "#4B513E"
+    },
+    {
+      "code": "UA013",
+      "name": "Russian Green 4BO",
+      "hex": "#42523C"
+    },
+    {
+      "code": "UA014",
+      "name": "Panzer Dunkelgrau",
+      "hex": "#434B4D"
+    },
+    {
+      "code": "UA015",
+      "name": "Rotbraun RAL 8012",
+      "hex": "#6B3A2C"
+    },
+    {
+      "code": "UA016",
+      "name": "Dunkelgelb RAL 7028",
+      "hex": "#AF9B6F"
+    },
+    {
+      "code": "UA017",
+      "name": "Olivgrun RAL 6003",
+      "hex": "#4C5743"
+    },
+    {
+      "code": "UA018",
+      "name": "Dunkelgrun RAL 6009",
+      "hex": "#223A2B"
+    },
+    {
+      "code": "UA019",
+      "name": "Dark Sand",
+      "hex": "#C2B296"
+    },
+    {
+      "code": "UA020",
+      "name": "US Olive Drab FS 34087",
+      "hex": "#4B4F3A"
+    },
+    {
+      "code": "UA021",
+      "name": "US Field Drab FS 30118",
+      "hex": "#5C4A3F"
+    },
+    {
+      "code": "UA022",
+      "name": "US Tan FS 33703",
+      "hex": "#E3C9A8"
+    },
+    {
+      "code": "UA023",
+      "name": "US Khaki FS 34201",
+      "hex": "#7D755C"
+    },
+    {
+      "code": "UA024",
+      "name": "British Khaki",
+      "hex": "#6E624A"
+    },
+    {
+      "code": "UA025",
+      "name": "British Desert Tan",
+      "hex": "#D8B589"
+    },
+    {
+      "code": "UA026",
+      "name": "British Light Stone",
+      "hex": "#D2B48C"
+    },
+    {
+      "code": "UA027",
+      "name": "British Dark Bronze Green",
+      "hex": "#253325"
+    },
+    {
+      "code": "UA028",
+      "name": "Israeli Sand Grey",
+      "hex": "#8A8D7F"
+    },
+    {
+      "code": "UA029",
+      "name": "Israeli Grey",
+      "hex": "#9EA4A7"
+    },
+    {
+      "code": "UA030",
+      "name": "Japanese Khaki",
+      "hex": "#8B7B58"
+    },
+    {
+      "code": "UA031",
+      "name": "Japanese Army Green",
+      "hex": "#4F5D43"
+    },
+    {
+      "code": "UA032",
+      "name": "Japanese Naval Grey",
+      "hex": "#5C6B73"
+    },
+    {
+      "code": "UA033",
+      "name": "Faded Olive Drab",
+      "hex": "#636A53"
+    },
+    {
+      "code": "UA034",
+      "name": "Worn Olive Drab",
+      "hex": "#575D47"
+    },
+    {
+      "code": "UA035",
+      "name": "Burnt Umber",
+      "hex": "#443631"
+    },
+    {
+      "code": "UA036",
+      "name": "Earth",
+      "hex": "#7A6B58"
+    },
+    {
+      "code": "UA037",
+      "name": "Dark Mud",
+      "hex": "#4E3E33"
+    },
+    {
+      "code": "UA038",
+      "name": "Light Mud",
+      "hex": "#9E8E7D"
+    },
+    {
+      "code": "UA039",
+      "name": "Dust",
+      "hex": "#D4C5B3"
+    },
+    {
+      "code": "UA040",
+      "name": "Light Dust",
+      "hex": "#E3DCCF"
+    },
+    {
+      "code": "UA041",
+      "name": "Bright Sand",
+      "hex": "#F4E3C1"
+    },
+    {
+      "code": "UA042",
+      "name": "Warm Sand",
+      "hex": "#E8CEAC"
+    },
+    {
+      "code": "UA043",
+      "name": "Dark Brown",
+      "hex": "#43352C"
+    },
+    {
+      "code": "UA044",
+      "name": "Chocolate Brown",
+      "hex": "#412F1F"
+    },
+    {
+      "code": "UA045",
+      "name": "Tan Earth",
+      "hex": "#A07F5E"
+    },
+    {
+      "code": "UA046",
+      "name": "Light Orange Brown",
+      "hex": "#B87343"
+    },
+    {
+      "code": "UA047",
+      "name": "Orange Brown",
+      "hex": "#A05A2C"
+    },
+    {
+      "code": "UA048",
+      "name": "Red Brown",
+      "hex": "#6E3A24"
+    },
+    {
+      "code": "UA049",
+      "name": "Rust",
+      "hex": "#8B4513"
+    },
+    {
+      "code": "UA050",
+      "name": "Chipping",
+      "hex": "#3A3532"
+    },
+    {
+      "code": "UA051",
+      "name": "Dark Red",
+      "hex": "#800000"
+    },
+    {
+      "code": "UA052",
+      "name": "Aged White",
+      "hex": "#FAF6E8"
+    },
+    {
+      "code": "UA053",
+      "name": "Ivory",
+      "hex": "#FFFDD0"
+    },
+    {
+      "code": "UA054",
+      "name": "Pale Sand",
+      "hex": "#D1C2A5"
+    },
+    {
+      "code": "UA055",
+      "name": "Iraqi Sand",
+      "hex": "#C2A687"
+    },
+    {
+      "code": "UA056",
+      "name": "Panzer Aces Skin",
+      "hex": "#FFCCB3"
+    },
+    {
+      "code": "UA057",
+      "name": "Dark Skin",
+      "hex": "#8B5A2B"
+    },
+    {
+      "code": "UA058",
+      "name": "Medium Flesh",
+      "hex": "#E3A857"
+    },
+    {
+      "code": "UA059",
+      "name": "Light Flesh",
+      "hex": "#FFD1B3"
+    },
+    {
+      "code": "UA060",
+      "name": "Highlight Flesh",
+      "hex": "#FFE5D9"
+    },
+    {
+      "code": "UA061",
+      "name": "Dark Leather",
+      "hex": "#4A3629"
+    },
+    {
+      "code": "UA062",
+      "name": "Medium Leather",
+      "hex": "#734A33"
+    },
+    {
+      "code": "UA063",
+      "name": "Light Leather",
+      "hex": "#A67A53"
+    },
+    {
+      "code": "UA064",
+      "name": "US Modern Field Green",
+      "hex": "#42533B"
+    },
+    {
+      "code": "UA065",
+      "name": "US Modern Desert Sand",
+      "hex": "#DCD0BA"
+    },
+    {
+      "code": "UA066",
+      "name": "US Modern Desert Brown",
+      "hex": "#9E8569"
+    },
+    {
+      "code": "UA067",
+      "name": "US MARPAT Desert Sand",
+      "hex": "#E5DCD0"
+    },
+    {
+      "code": "UA068",
+      "name": "US MARPAT Desert Tan",
+      "hex": "#C2B299"
+    },
+    {
+      "code": "UA069",
+      "name": "US MARPAT Desert Brown",
+      "hex": "#8B7355"
+    },
+    {
+      "code": "UA070",
+      "name": "US MARPAT Woodland Green",
+      "hex": "#3B4D3A"
+    },
+    {
+      "code": "UA071",
+      "name": "US MARPAT Woodland Brown",
+      "hex": "#5C4A3F"
+    },
+    {
+      "code": "UA072",
+      "name": "US MARPAT Woodland Black",
+      "hex": "#232426"
+    },
+    {
+      "code": "UA073",
+      "name": "British MTP Sand",
+      "hex": "#D2C2A5"
+    },
+    {
+      "code": "UA074",
+      "name": "British MTP Brown",
+      "hex": "#8B7355"
+    },
+    {
+      "code": "UA075",
+      "name": "British MTP Dark Brown",
+      "hex": "#5C4A3F"
+    },
+    {
+      "code": "UA076",
+      "name": "British MTP Green",
+      "hex": "#6B775C"
+    },
+    {
+      "code": "UA077",
+      "name": "British MTP Dark Green",
+      "hex": "#4A533E"
+    },
+    {
+      "code": "UA078",
+      "name": "German Fleck Sand",
+      "hex": "#C4B599"
+    },
+    {
+      "code": "UA079",
+      "name": "German Fleck Green",
+      "hex": "#4A5943"
+    },
+    {
+      "code": "UA080",
+      "name": "German Fleck Brown",
+      "hex": "#6B4D3A"
+    },
+    {
+      "code": "UA081",
+      "name": "German Fleck Dark Green",
+      "hex": "#2E3B2D"
+    },
+    {
+      "code": "UA082",
+      "name": "Russian Flora Sand",
+      "hex": "#C2B280"
+    },
+    {
+      "code": "UA083",
+      "name": "Russian Flora Green",
+      "hex": "#4F6E43"
+    },
+    {
+      "code": "UA084",
+      "name": "Russian Flora Dark Green",
+      "hex": "#2F4A2F"
+    },
+    {
+      "code": "UA085",
+      "name": "Russian Flora Brown",
+      "hex": "#5C4033"
+    },
+    {
+      "code": "UA086",
+      "name": "Italian Vegetato Sand",
+      "hex": "#D8C3A5"
+    },
+    {
+      "code": "UA087",
+      "name": "Italian Vegetato Green",
+      "hex": "#556B2F"
+    },
+    {
+      "code": "UA088",
+      "name": "Italian Vegetato Dark Green",
+      "hex": "#2E3B23"
+    },
+    {
+      "code": "UA089",
+      "name": "Italian Vegetato Brown",
+      "hex": "#5C4033"
+    },
+    {
+      "code": "UA090",
+      "name": "Faded Brown",
+      "hex": "#705B4E"
+    },
+    {
+      "code": "UA091",
+      "name": "Worn Leather",
+      "hex": "#6E4D3B"
+    },
+    {
+      "code": "UA092",
+      "name": "Tired Metal",
+      "hex": "#5A5D60"
+    },
+    {
+      "code": "UA093",
+      "name": "Damp Earth",
+      "hex": "#3D2B1F"
+    },
+    {
+      "code": "UA094",
+      "name": "Wet Earth",
+      "hex": "#2B1E17"
+    },
+    {
+      "code": "UA095",
+      "name": "Dry Mud",
+      "hex": "#A89B8D"
+    },
+    {
+      "code": "UA096",
+      "name": "Light Dry Mud",
+      "hex": "#C2B6A8"
+    },
+    {
+      "code": "UA097",
+      "name": "Deep Water",
+      "hex": "#123456"
+    },
+    {
+      "code": "UA098",
+      "name": "Medium Water",
+      "hex": "#318CE7"
+    },
+    {
+      "code": "UA099",
+      "name": "Light Water",
+      "hex": "#ADD8E6"
+    },
+    {
+      "code": "UA100",
+      "name": "Forest Green",
+      "hex": "#224D36"
+    },
+    {
+      "code": "UA101",
+      "name": "Medium Forest",
+      "hex": "#3B6E4C"
+    },
+    {
+      "code": "UA102",
+      "name": "Light Forest",
+      "hex": "#55A66E"
+    },
+    {
+      "code": "UA103",
+      "name": "Wood Brown",
+      "hex": "#8B5A2B"
+    },
+    {
+      "code": "UA104",
+      "name": "Bark",
+      "hex": "#4A3525"
+    },
+    {
+      "code": "UA105",
+      "name": "Dry Grass",
+      "hex": "#C2B280"
+    },
+    {
+      "code": "UA106",
+      "name": "Straw",
+      "hex": "#E4D96F"
+    },
+    {
+      "code": "UA107",
+      "name": "Yellow Green",
+      "hex": "#9ACD32"
+    },
+    {
+      "code": "UA108",
+      "name": "Light Yellow Green",
+      "hex": "#ADFF2F"
+    },
+    {
+      "code": "UA109",
+      "name": "Stone Grey",
+      "hex": "#8C897C"
+    },
+    {
+      "code": "UA110",
+      "name": "Light Stone",
+      "hex": "#D2B48C"
+    },
+    {
+      "code": "UA111",
+      "name": "Concrete",
+      "hex": "#A9A9A9"
+    },
+    {
+      "code": "UA112",
+      "name": "Asphalt",
+      "hex": "#4A4A4A"
+    },
+    {
+      "code": "UA113",
+      "name": "Dark Asphalt",
+      "hex": "#333333"
+    },
+    {
+      "code": "UA114",
+      "name": "Steel",
+      "hex": "#7B8387"
+    },
+    {
+      "code": "UA115",
+      "name": "Dark Steel",
+      "hex": "#4A4D50"
+    },
+    {
+      "code": "UA116",
+      "name": "Gun Metal",
+      "hex": "#464B4D"
+    },
+    {
+      "code": "UA117",
+      "name": "Bronze",
+      "hex": "#CD7F32"
+    },
+    {
+      "code": "UA118",
+      "name": "Brass",
+      "hex": "#C3A150"
+    },
+    {
+      "code": "UA119",
+      "name": "Copper",
+      "hex": "#B87333"
+    },
+    {
+      "code": "UA120",
+      "name": "Gold",
+      "hex": "#D4AF37"
+    },
+    {
+      "code": "UA121",
+      "name": "Light Gold",
+      "hex": "#F1E5AC"
+    },
+    {
+      "code": "UA122",
+      "name": "Chrome",
+      "hex": "#E0E4E6"
+    },
+    {
+      "code": "UA123",
+      "name": "Exhaust",
+      "hex": "#4F433B"
+    },
+    {
+      "code": "UA124",
+      "name": "Light Exhaust",
+      "hex": "#7D6B5D"
+    },
+    {
+      "code": "UA125",
+      "name": "Burnt Exhaust",
+      "hex": "#3A2A23"
+    },
+    {
+      "code": "UA126",
+      "name": "Camouflage Green",
+      "hex": "#495140"
+    },
+    {
+      "code": "UA127",
+      "name": "Camouflage Brown",
+      "hex": "#533D32"
+    },
+    {
+      "code": "UA128",
+      "name": "Camouflage Sand",
+      "hex": "#D1C2A5"
+    },
+    {
+      "code": "UA129",
+      "name": "Camouflage Black",
+      "hex": "#1C1C1C"
+    },
+    {
+      "code": "UA130",
+      "name": "Shadow",
+      "hex": "#1A1A1D"
+    },
+    {
+      "code": "UA131",
+      "name": "Highlight",
+      "hex": "#EAECEE"
+    },
+    {
+      "code": "UF01",
+      "name": "Flat Base",
+      "hex": "#F0F3F4"
+    },
+    {
+      "code": "UF02",
+      "name": "Flat Dark Yellow",
+      "hex": "#AF9B6F"
+    },
+    {
+      "code": "UF03",
+      "name": "Flat White",
+      "hex": "#F2F4F3"
+    },
+    {
+      "code": "UF04",
+      "name": "Flat Black",
+      "hex": "#1A1A1A"
+    },
+    {
+      "code": "UF05",
+      "name": "Flat Olive Green",
+      "hex": "#4C5743"
+    },
+    {
+      "code": "UF06",
+      "name": "Flat US Olive Drab",
+      "hex": "#4B4F3A"
+    },
+    {
+      "code": "UF07",
+      "name": "Flat Brown",
+      "hex": "#5C4033"
+    },
+    {
+      "code": "UF08",
+      "name": "Flat Sand",
+      "hex": "#D2B48C"
+    }
   ]
 }

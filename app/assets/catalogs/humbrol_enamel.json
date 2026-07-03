@@ -3,200 +3,980 @@
   "line": "enamel",
   "version": "2024.1",
   "paints": [
-    { "code": "1",     "name": "Matt Primer",                  "hex": "#000000" },
-    { "code": "2",     "name": "Emerald Green",                "hex": "#000000" },
-    { "code": "3",     "name": "Brunswick Green",              "hex": "#000000" },
-    { "code": "5",     "name": "Dark Admiralty Grey",          "hex": "#000000" },
-    { "code": "7",     "name": "Light Buff",                   "hex": "#000000" },
-    { "code": "9",     "name": "Tan",                          "hex": "#000000" },
-    { "code": "10",    "name": "Service Brown",                "hex": "#000000" },
-    { "code": "11",    "name": "Silver",                       "hex": "#000000" },
-    { "code": "12",    "name": "Copper",                       "hex": "#000000" },
-    { "code": "14",    "name": "French Blue",                  "hex": "#000000" },
-    { "code": "15",    "name": "Midnight Blue",                "hex": "#000000" },
-    { "code": "16",    "name": "Gold",                         "hex": "#000000" },
-    { "code": "18",    "name": "Orange",                       "hex": "#000000" },
-    { "code": "19",    "name": "Bright Red",                   "hex": "#000000" },
-    { "code": "20",    "name": "Crimson",                      "hex": "#000000" },
-    { "code": "21",    "name": "Gloss Black",                  "hex": "#000000" },
-    { "code": "22",    "name": "Gloss White",                  "hex": "#000000" },
-    { "code": "23",    "name": "Duck Egg Blue",                "hex": "#000000" },
-    { "code": "24",    "name": "Trainer Yellow",               "hex": "#000000" },
-    { "code": "25",    "name": "Blue",                         "hex": "#000000" },
-    { "code": "26",    "name": "Khaki",                        "hex": "#000000" },
-    { "code": "27",    "name": "Sea Grey",                     "hex": "#000000" },
-    { "code": "28",    "name": "Camouflage Grey",              "hex": "#000000" },
-    { "code": "29",    "name": "Dark Earth",                   "hex": "#000000" },
-    { "code": "30",    "name": "Dark Green",                   "hex": "#000000" },
-    { "code": "31",    "name": "Slate Grey",                   "hex": "#000000" },
-    { "code": "32",    "name": "Dark Grey",                    "hex": "#000000" },
-    { "code": "33",    "name": "Black",                        "hex": "#000000" },
-    { "code": "34",    "name": "Flat White",                   "hex": "#000000" },
-    { "code": "35",    "name": "Clear",                        "hex": "#000000" },
-    { "code": "38",    "name": "Lime",                         "hex": "#000000" },
-    { "code": "40",    "name": "Pale Grey",                    "hex": "#000000" },
-    { "code": "41",    "name": "Ivory",                        "hex": "#000000" },
-    { "code": "47",    "name": "Sea Blue",                     "hex": "#000000" },
-    { "code": "48",    "name": "Mediterranean Blue",           "hex": "#000000" },
-    { "code": "49",    "name": "Matt Varnish",                 "hex": "#000000" },
-    { "code": "50",    "name": "Green Mist",                   "hex": "#000000" },
-    { "code": "51",    "name": "Sunset Red",                   "hex": "#000000" },
-    { "code": "52",    "name": "Baltic Blue",                  "hex": "#000000" },
-    { "code": "53",    "name": "Gunmetal",                     "hex": "#000000" },
-    { "code": "54",    "name": "Brass",                        "hex": "#000000" },
-    { "code": "55",    "name": "Bronze",                       "hex": "#000000" },
-    { "code": "56",    "name": "Aluminium",                    "hex": "#000000" },
-    { "code": "60",    "name": "Matt Scarlet",                 "hex": "#000000" },
-    { "code": "61",    "name": "Matt Flesh",                   "hex": "#000000" },
-    { "code": "62",    "name": "Leather",                      "hex": "#000000" },
-    { "code": "63",    "name": "Sand",                         "hex": "#000000" },
-    { "code": "64",    "name": "Light Grey",                   "hex": "#000000" },
-    { "code": "65",    "name": "Aircraft Blue",                "hex": "#000000" },
-    { "code": "66",    "name": "Matt Olive Drab",              "hex": "#000000" },
-    { "code": "67",    "name": "Matt Tank Grey",               "hex": "#000000" },
-    { "code": "68",    "name": "Purple",                       "hex": "#000000" },
-    { "code": "69",    "name": "Yellow",                       "hex": "#000000" },
-    { "code": "70",    "name": "Brick Red",                    "hex": "#000000" },
-    { "code": "71",    "name": "Oak",                          "hex": "#000000" },
-    { "code": "72",    "name": "Khaki Drill",                  "hex": "#000000" },
-    { "code": "73",    "name": "Wine",                         "hex": "#000000" },
-    { "code": "74",    "name": "Linen",                        "hex": "#000000" },
-    { "code": "75",    "name": "Matt Bronze Green",            "hex": "#000000" },
-    { "code": "76",    "name": "Uniform Green",                "hex": "#000000" },
-    { "code": "77",    "name": "Matt Navy Blue",               "hex": "#000000" },
-    { "code": "78",    "name": "Cockpit Green",                "hex": "#000000" },
-    { "code": "79",    "name": "Blue Grey",                    "hex": "#000000" },
-    { "code": "80",    "name": "Grass Green",                  "hex": "#000000" },
-    { "code": "81",    "name": "Pale Yellow",                  "hex": "#000000" },
-    { "code": "82",    "name": "Orange Lining",                "hex": "#000000" },
-    { "code": "83",    "name": "Ochre",                        "hex": "#000000" },
-    { "code": "84",    "name": "Matt Mid Stone",               "hex": "#000000" },
-    { "code": "85",    "name": "Coal Black",                   "hex": "#000000" },
-    { "code": "86",    "name": "Light Olive",                  "hex": "#000000" },
-    { "code": "87",    "name": "Steel Grey",                   "hex": "#000000" },
-    { "code": "88",    "name": "Deck Green",                   "hex": "#000000" },
-    { "code": "89",    "name": "Middle Blue",                  "hex": "#000000" },
-    { "code": "90",    "name": "Beige Green",                  "hex": "#000000" },
-    { "code": "91",    "name": "Matt Black Green",             "hex": "#000000" },
-    { "code": "92",    "name": "Matt Iron Grey",               "hex": "#000000" },
-    { "code": "93",    "name": "Desert Yellow",                "hex": "#000000" },
-    { "code": "94",    "name": "Brown Yellow",                 "hex": "#000000" },
-    { "code": "95",    "name": "Concrete",                     "hex": "#000000" },
-    { "code": "96",    "name": "RAF Blue",                     "hex": "#000000" },
-    { "code": "97",    "name": "Eggshell",                     "hex": "#000000" },
-    { "code": "98",    "name": "Chocolate",                    "hex": "#000000" },
-    { "code": "99",    "name": "Lemon Yellow",                 "hex": "#000000" },
-    { "code": "100",   "name": "Red Brown",                    "hex": "#000000" },
-    { "code": "101",   "name": "Mid Green",                    "hex": "#000000" },
-    { "code": "102",   "name": "Army Green",                   "hex": "#000000" },
-    { "code": "103",   "name": "Cream",                        "hex": "#000000" },
-    { "code": "104",   "name": "Matt Oxford Blue",             "hex": "#000000" },
-    { "code": "105",   "name": "Marine Green",                 "hex": "#000000" },
-    { "code": "106",   "name": "Ocean Grey",                   "hex": "#000000" },
-    { "code": "107",   "name": "WW1 Purple",                   "hex": "#000000" },
-    { "code": "108",   "name": "WW1 Green",                    "hex": "#000000" },
-    { "code": "109",   "name": "WW1 Blue",                     "hex": "#000000" },
-    { "code": "110",   "name": "Matt Natural Wood",            "hex": "#000000" },
-    { "code": "111",   "name": "Matt Uniform Grey",            "hex": "#000000" },
-    { "code": "112",   "name": "Tarmac",                       "hex": "#000000" },
-    { "code": "113",   "name": "Matt Rust",                    "hex": "#000000" },
-    { "code": "114",   "name": "Russian Green",                "hex": "#000000" },
-    { "code": "115",   "name": "Russian Blue",                 "hex": "#000000" },
-    { "code": "116",   "name": "Matt US Dark Green",           "hex": "#000000" },
-    { "code": "117",   "name": "US Light Green",               "hex": "#000000" },
-    { "code": "118",   "name": "US Tan",                       "hex": "#000000" },
-    { "code": "119",   "name": "Israeli Light Earth",          "hex": "#000000" },
-    { "code": "120",   "name": "Israeli Light Green",          "hex": "#000000" },
-    { "code": "121",   "name": "Israeli Pale Stone",           "hex": "#000000" },
-    { "code": "122",   "name": "Israeli Light Blue",           "hex": "#000000" },
-    { "code": "123",   "name": "Dark Sea Grey",                "hex": "#000000" },
-    { "code": "124",   "name": "Petrol Blue",                  "hex": "#000000" },
-    { "code": "125",   "name": "Satin US Dark Grey",           "hex": "#000000" },
-    { "code": "126",   "name": "Satin US Medium Grey",         "hex": "#000000" },
-    { "code": "127",   "name": "US Ghost Grey",                "hex": "#000000" },
-    { "code": "128",   "name": "US Compass Grey",              "hex": "#000000" },
-    { "code": "129",   "name": "US Gull Grey",                 "hex": "#000000" },
-    { "code": "130",   "name": "Satin White",                  "hex": "#000000" },
-    { "code": "131",   "name": "Satin Green",                  "hex": "#000000" },
-    { "code": "132",   "name": "Satin Red",                    "hex": "#000000" },
-    { "code": "133",   "name": "Satin Brown",                  "hex": "#000000" },
-    { "code": "134",   "name": "Satin Blue",                   "hex": "#000000" },
-    { "code": "135",   "name": "Satin Varnish",                "hex": "#000000" },
-    { "code": "140",   "name": "Dk Gull Grey",                 "hex": "#000000" },
-    { "code": "141",   "name": "Light Sea Grey",               "hex": "#000000" },
-    { "code": "142",   "name": "Field Drab",                   "hex": "#000000" },
-    { "code": "144",   "name": "Intermediate Blue",            "hex": "#000000" },
-    { "code": "145",   "name": "Medium Grey",                  "hex": "#000000" },
-    { "code": "146",   "name": "Aircraft Grey",                "hex": "#000000" },
-    { "code": "147",   "name": "Matt Light Grey",              "hex": "#000000" },
-    { "code": "148",   "name": "Radome Tan",                   "hex": "#000000" },
-    { "code": "149",   "name": "Dark Green",                   "hex": "#000000" },
-    { "code": "150",   "name": "Forest Green",                 "hex": "#000000" },
-    { "code": "151",   "name": "Interior Green",               "hex": "#000000" },
-    { "code": "153",   "name": "Insignia Red",                 "hex": "#000000" },
-    { "code": "154",   "name": "Insignia Yellow",              "hex": "#000000" },
-    { "code": "155",   "name": "Olive Drab",                   "hex": "#000000" },
-    { "code": "156",   "name": "Satin Dark Grey",              "hex": "#000000" },
-    { "code": "157",   "name": "Azure Blue",                   "hex": "#000000" },
-    { "code": "158",   "name": "Interior Green",               "hex": "#000000" },
-    { "code": "159",   "name": "Khaki Drab",                   "hex": "#000000" },
-    { "code": "160",   "name": "German Cam Red Brown",         "hex": "#000000" },
-    { "code": "161",   "name": "US Marine Corps Green",        "hex": "#000000" },
-    { "code": "162",   "name": "Surface Grey",                 "hex": "#000000" },
-    { "code": "163",   "name": "Dark Green",                   "hex": "#000000" },
-    { "code": "164",   "name": "Dark Sea Grey",                "hex": "#000000" },
-    { "code": "165",   "name": "Medium Sea Grey",              "hex": "#000000" },
-    { "code": "166",   "name": "RAF Light Aircraft Grey",      "hex": "#000000" },
-    { "code": "167",   "name": "RAF Barley Grey",              "hex": "#000000" },
-    { "code": "168",   "name": "RAF Hemp",                     "hex": "#000000" },
-    { "code": "170",   "name": "Brown Bess",                   "hex": "#000000" },
-    { "code": "171",   "name": "Antique Bronze",               "hex": "#000000" },
-    { "code": "172",   "name": "Green",                        "hex": "#000000" },
-    { "code": "173",   "name": "Track Colour",                 "hex": "#000000" },
-    { "code": "174",   "name": "Signal Red",                   "hex": "#000000" },
-    { "code": "175",   "name": "Hellgrau RLM 76",              "hex": "#000000" },
-    { "code": "176",   "name": "Neutral Grey",                 "hex": "#000000" },
-    { "code": "177",   "name": "Hull Red",                     "hex": "#000000" },
-    { "code": "178",   "name": "British Scarlet",              "hex": "#000000" },
-    { "code": "179",   "name": "French Artillery Green",       "hex": "#000000" },
-    { "code": "180",   "name": "Red Leather",                  "hex": "#000000" },
-    { "code": "181",   "name": "Sea Blue",                     "hex": "#000000" },
-    { "code": "182",   "name": "Black Grey",                   "hex": "#000000" },
-    { "code": "183",   "name": "Grey",                         "hex": "#000000" },
-    { "code": "184",   "name": "Freight Stock Grey",           "hex": "#000000" },
-    { "code": "186",   "name": "Brown",                        "hex": "#000000" },
-    { "code": "187",   "name": "Sand",                         "hex": "#000000" },
-    { "code": "188",   "name": "Chrome Yellow",                "hex": "#000000" },
-    { "code": "189",   "name": "Insignia Blue",                "hex": "#000000" },
-    { "code": "190",   "name": "Blue Angels Blue",             "hex": "#000000" },
-    { "code": "191",   "name": "Chrome Silver",                "hex": "#000000" },
-    { "code": "192",   "name": "Blaze Matt",                   "hex": "#000000" },
-    { "code": "193",   "name": "Blaze Gloss",                  "hex": "#000000" },
-    { "code": "194",   "name": "Saturn Yellow Gloss",          "hex": "#000000" },
-    { "code": "195",   "name": "Dark Green",                   "hex": "#000000" },
-    { "code": "196",   "name": "Light Grey",                   "hex": "#000000" },
-    { "code": "197",   "name": "Lufthansa Yellow",             "hex": "#000000" },
-    { "code": "198",   "name": "Lufthansa Blue",               "hex": "#000000" },
-    { "code": "200",   "name": "Pink",                         "hex": "#000000" },
-    { "code": "201",   "name": "Metallic Black",               "hex": "#000000" },
-    { "code": "202",   "name": "Fluorescent Aurora Pink",      "hex": "#000000" },
-    { "code": "203",   "name": "Fluorescent Signal Green",     "hex": "#000000" },
-    { "code": "204",   "name": "Fluorescent Matt Saturn Yellow","hex": "#000000" },
-    { "code": "205",   "name": "Fluorescent Matt Fire Orange", "hex": "#000000" },
-    { "code": "206",   "name": "Base White",                   "hex": "#000000" },
-    { "code": "207",   "name": "Aurora Pink",                  "hex": "#000000" },
-    { "code": "208",   "name": "Signal Green",                 "hex": "#000000" },
-    { "code": "209",   "name": "Fire Orange",                  "hex": "#000000" },
-    { "code": "220",   "name": "Ferrari Red",                  "hex": "#000000" },
-    { "code": "221",   "name": "Garter Blue",                  "hex": "#000000" },
-    { "code": "250",   "name": "Desert Pink",                  "hex": "#000000" },
-    { "code": "27001", "name": "Metalcote Matt Aluminium",     "hex": "#000000" },
-    { "code": "27002", "name": "Metalcote Polished Aluminium", "hex": "#000000" },
-    { "code": "27003", "name": "Metalcote Polished Steel",     "hex": "#000000" },
-    { "code": "27004", "name": "Metalcote Gunmetal",           "hex": "#000000" },
-    { "code": "8191",  "name": "Metalcote Satin Bronze",       "hex": "#000000" },
-    { "code": "91321", "name": "Clear Red",                    "hex": "#000000" },
-    { "code": "91322", "name": "Clear Orange",                 "hex": "#000000" },
-    { "code": "91325", "name": "Clear Green",                  "hex": "#000000" }
+    {
+      "code": "1",
+      "name": "Matt Primer",
+      "hex": "#B4B9BC"
+    },
+    {
+      "code": "2",
+      "name": "Emerald Green",
+      "hex": "#009A44"
+    },
+    {
+      "code": "3",
+      "name": "Brunswick Green",
+      "hex": "#1D3A2F"
+    },
+    {
+      "code": "5",
+      "name": "Dark Admiralty Grey",
+      "hex": "#4A5357"
+    },
+    {
+      "code": "7",
+      "name": "Light Buff",
+      "hex": "#DCBE9B"
+    },
+    {
+      "code": "9",
+      "name": "Tan",
+      "hex": "#A06943"
+    },
+    {
+      "code": "10",
+      "name": "Service Brown",
+      "hex": "#4D362B"
+    },
+    {
+      "code": "11",
+      "name": "Silver",
+      "hex": "#C0C0C0"
+    },
+    {
+      "code": "12",
+      "name": "Copper",
+      "hex": "#B87333"
+    },
+    {
+      "code": "14",
+      "name": "French Blue",
+      "hex": "#0055A5"
+    },
+    {
+      "code": "15",
+      "name": "Midnight Blue",
+      "hex": "#1D2A44"
+    },
+    {
+      "code": "16",
+      "name": "Gold",
+      "hex": "#D4AF37"
+    },
+    {
+      "code": "18",
+      "name": "Orange",
+      "hex": "#FF6F00"
+    },
+    {
+      "code": "19",
+      "name": "Bright Red",
+      "hex": "#E4002B"
+    },
+    {
+      "code": "20",
+      "name": "Crimson",
+      "hex": "#9B111E"
+    },
+    {
+      "code": "21",
+      "name": "Gloss Black",
+      "hex": "#0A0A0A"
+    },
+    {
+      "code": "22",
+      "name": "Gloss White",
+      "hex": "#FAFAFA"
+    },
+    {
+      "code": "23",
+      "name": "Duck Egg Blue",
+      "hex": "#C2D5CE"
+    },
+    {
+      "code": "24",
+      "name": "Trainer Yellow",
+      "hex": "#FFCC00"
+    },
+    {
+      "code": "25",
+      "name": "Blue",
+      "hex": "#004B87"
+    },
+    {
+      "code": "26",
+      "name": "Khaki",
+      "hex": "#7E6E54"
+    },
+    {
+      "code": "27",
+      "name": "Sea Grey",
+      "hex": "#636F75"
+    },
+    {
+      "code": "28",
+      "name": "Camouflage Grey",
+      "hex": "#AFB4B1"
+    },
+    {
+      "code": "29",
+      "name": "Dark Earth",
+      "hex": "#5D4C3E"
+    },
+    {
+      "code": "30",
+      "name": "Dark Green",
+      "hex": "#3B4E43"
+    },
+    {
+      "code": "31",
+      "name": "Slate Grey",
+      "hex": "#5A6969"
+    },
+    {
+      "code": "32",
+      "name": "Dark Grey",
+      "hex": "#474A4C"
+    },
+    {
+      "code": "33",
+      "name": "Black",
+      "hex": "#1A1A1A"
+    },
+    {
+      "code": "34",
+      "name": "Flat White",
+      "hex": "#F2F4F3"
+    },
+    {
+      "code": "35",
+      "name": "Clear",
+      "hex": "#EBF5FB"
+    },
+    {
+      "code": "38",
+      "name": "Lime",
+      "hex": "#76CD26"
+    },
+    {
+      "code": "40",
+      "name": "Pale Grey",
+      "hex": "#CCD1D1"
+    },
+    {
+      "code": "41",
+      "name": "Ivory",
+      "hex": "#FFFDD0"
+    },
+    {
+      "code": "47",
+      "name": "Sea Blue",
+      "hex": "#004B6E"
+    },
+    {
+      "code": "48",
+      "name": "Mediterranean Blue",
+      "hex": "#007BA7"
+    },
+    {
+      "code": "49",
+      "name": "Matt Varnish",
+      "hex": "#EAECEE"
+    },
+    {
+      "code": "50",
+      "name": "Green Mist",
+      "hex": "#4D8C7D"
+    },
+    {
+      "code": "51",
+      "name": "Sunset Red",
+      "hex": "#FE4C40"
+    },
+    {
+      "code": "52",
+      "name": "Baltic Blue",
+      "hex": "#2A6478"
+    },
+    {
+      "code": "53",
+      "name": "Gunmetal",
+      "hex": "#555D61"
+    },
+    {
+      "code": "54",
+      "name": "Brass",
+      "hex": "#C3A150"
+    },
+    {
+      "code": "55",
+      "name": "Bronze",
+      "hex": "#967444"
+    },
+    {
+      "code": "56",
+      "name": "Aluminium",
+      "hex": "#B2B7B9"
+    },
+    {
+      "code": "60",
+      "name": "Matt Scarlet",
+      "hex": "#D22630"
+    },
+    {
+      "code": "61",
+      "name": "Matt Flesh",
+      "hex": "#F3CDAD"
+    },
+    {
+      "code": "62",
+      "name": "Leather",
+      "hex": "#8A5237"
+    },
+    {
+      "code": "63",
+      "name": "Sand",
+      "hex": "#D2B48C"
+    },
+    {
+      "code": "64",
+      "name": "Light Grey",
+      "hex": "#BFC1C2"
+    },
+    {
+      "code": "65",
+      "name": "Aircraft Blue",
+      "hex": "#6495ED"
+    },
+    {
+      "code": "66",
+      "name": "Matt Olive Drab",
+      "hex": "#4B4F43"
+    },
+    {
+      "code": "67",
+      "name": "Matt Tank Grey",
+      "hex": "#3E424B"
+    },
+    {
+      "code": "68",
+      "name": "Purple",
+      "hex": "#512888"
+    },
+    {
+      "code": "69",
+      "name": "Yellow",
+      "hex": "#FFD300"
+    },
+    {
+      "code": "70",
+      "name": "Brick Red",
+      "hex": "#8C3A2B"
+    },
+    {
+      "code": "71",
+      "name": "Oak",
+      "hex": "#C29B68"
+    },
+    {
+      "code": "72",
+      "name": "Khaki Drill",
+      "hex": "#A89A7B"
+    },
+    {
+      "code": "73",
+      "name": "Wine",
+      "hex": "#722F37"
+    },
+    {
+      "code": "74",
+      "name": "Linen",
+      "hex": "#E3D9C6"
+    },
+    {
+      "code": "75",
+      "name": "Matt Bronze Green",
+      "hex": "#253325"
+    },
+    {
+      "code": "76",
+      "name": "Uniform Green",
+      "hex": "#4C6B50"
+    },
+    {
+      "code": "77",
+      "name": "Matt Navy Blue",
+      "hex": "#2B3A4A"
+    },
+    {
+      "code": "78",
+      "name": "Cockpit Green",
+      "hex": "#72826B"
+    },
+    {
+      "code": "79",
+      "name": "Blue Grey",
+      "hex": "#5C6B73"
+    },
+    {
+      "code": "80",
+      "name": "Grass Green",
+      "hex": "#417A42"
+    },
+    {
+      "code": "81",
+      "name": "Pale Yellow",
+      "hex": "#F3E5AB"
+    },
+    {
+      "code": "82",
+      "name": "Orange Lining",
+      "hex": "#FF5F1F"
+    },
+    {
+      "code": "83",
+      "name": "Ochre",
+      "hex": "#CC7722"
+    },
+    {
+      "code": "84",
+      "name": "Matt Mid Stone",
+      "hex": "#C19A6B"
+    },
+    {
+      "code": "85",
+      "name": "Coal Black",
+      "hex": "#1F2421"
+    },
+    {
+      "code": "86",
+      "name": "Light Olive",
+      "hex": "#606E4C"
+    },
+    {
+      "code": "87",
+      "name": "Steel Grey",
+      "hex": "#778899"
+    },
+    {
+      "code": "88",
+      "name": "Deck Green",
+      "hex": "#2E5642"
+    },
+    {
+      "code": "89",
+      "name": "Middle Blue",
+      "hex": "#318CE7"
+    },
+    {
+      "code": "90",
+      "name": "Beige Green",
+      "hex": "#A3B899"
+    },
+    {
+      "code": "91",
+      "name": "Matt Black Green",
+      "hex": "#1E2B22"
+    },
+    {
+      "code": "92",
+      "name": "Matt Iron Grey",
+      "hex": "#434B4D"
+    },
+    {
+      "code": "93",
+      "name": "Desert Yellow",
+      "hex": "#E6C280"
+    },
+    {
+      "code": "94",
+      "name": "Brown Yellow",
+      "hex": "#CC9966"
+    },
+    {
+      "code": "95",
+      "name": "Concrete",
+      "hex": "#A9A9A9"
+    },
+    {
+      "code": "96",
+      "name": "RAF Blue",
+      "hex": "#5D6D7E"
+    },
+    {
+      "code": "97",
+      "name": "Eggshell",
+      "hex": "#FFF9E6"
+    },
+    {
+      "code": "98",
+      "name": "Chocolate",
+      "hex": "#412F1F"
+    },
+    {
+      "code": "99",
+      "name": "Lemon Yellow",
+      "hex": "#FAFA33"
+    },
+    {
+      "code": "100",
+      "name": "Red Brown",
+      "hex": "#8B5A2B"
+    },
+    {
+      "code": "101",
+      "name": "Mid Green",
+      "hex": "#008751"
+    },
+    {
+      "code": "102",
+      "name": "Army Green",
+      "hex": "#4B5320"
+    },
+    {
+      "code": "103",
+      "name": "Cream",
+      "hex": "#FFFDD0"
+    },
+    {
+      "code": "104",
+      "name": "Matt Oxford Blue",
+      "hex": "#002147"
+    },
+    {
+      "code": "105",
+      "name": "Marine Green",
+      "hex": "#1D4D3D"
+    },
+    {
+      "code": "106",
+      "name": "Ocean Grey",
+      "hex": "#5D6B70"
+    },
+    {
+      "code": "107",
+      "name": "WW1 Purple",
+      "hex": "#4E364A"
+    },
+    {
+      "code": "108",
+      "name": "WW1 Green",
+      "hex": "#4A513E"
+    },
+    {
+      "code": "109",
+      "name": "WW1 Blue",
+      "hex": "#3B4E5D"
+    },
+    {
+      "code": "110",
+      "name": "Matt Natural Wood",
+      "hex": "#D7B58E"
+    },
+    {
+      "code": "111",
+      "name": "Matt Uniform Grey",
+      "hex": "#7F8C8D"
+    },
+    {
+      "code": "112",
+      "name": "Tarmac",
+      "hex": "#343D46"
+    },
+    {
+      "code": "113",
+      "name": "Matt Rust",
+      "hex": "#B7410E"
+    },
+    {
+      "code": "114",
+      "name": "Russian Green",
+      "hex": "#42523C"
+    },
+    {
+      "code": "115",
+      "name": "Russian Blue",
+      "hex": "#2F4A5D"
+    },
+    {
+      "code": "116",
+      "name": "Matt US Dark Green",
+      "hex": "#2D3B32"
+    },
+    {
+      "code": "117",
+      "name": "US Light Green",
+      "hex": "#556B2F"
+    },
+    {
+      "code": "118",
+      "name": "US Tan",
+      "hex": "#B8860B"
+    },
+    {
+      "code": "119",
+      "name": "Israeli Light Earth",
+      "hex": "#C4A482"
+    },
+    {
+      "code": "120",
+      "name": "Israeli Light Green",
+      "hex": "#708269"
+    },
+    {
+      "code": "121",
+      "name": "Israeli Pale Stone",
+      "hex": "#E5D3B3"
+    },
+    {
+      "code": "122",
+      "name": "Israeli Light Blue",
+      "hex": "#ADD8E6"
+    },
+    {
+      "code": "123",
+      "name": "Dark Sea Grey",
+      "hex": "#565D63"
+    },
+    {
+      "code": "124",
+      "name": "Petrol Blue",
+      "hex": "#1F4E5B"
+    },
+    {
+      "code": "125",
+      "name": "Satin US Dark Grey",
+      "hex": "#464C51"
+    },
+    {
+      "code": "126",
+      "name": "Satin US Medium Grey",
+      "hex": "#737C84"
+    },
+    {
+      "code": "127",
+      "name": "US Ghost Grey",
+      "hex": "#ADB7BD"
+    },
+    {
+      "code": "128",
+      "name": "US Compass Grey",
+      "hex": "#8C969E"
+    },
+    {
+      "code": "129",
+      "name": "US Gull Grey",
+      "hex": "#C4CBD1"
+    },
+    {
+      "code": "130",
+      "name": "Satin White",
+      "hex": "#FAFAFA"
+    },
+    {
+      "code": "131",
+      "name": "Satin Green",
+      "hex": "#006400"
+    },
+    {
+      "code": "132",
+      "name": "Satin Red",
+      "hex": "#D1001C"
+    },
+    {
+      "code": "133",
+      "name": "Satin Brown",
+      "hex": "#5C4033"
+    },
+    {
+      "code": "134",
+      "name": "Satin Blue",
+      "hex": "#0F4C81"
+    },
+    {
+      "code": "135",
+      "name": "Satin Varnish",
+      "hex": "#F7F9FA"
+    },
+    {
+      "code": "140",
+      "name": "Dk Gull Grey",
+      "hex": "#626D71"
+    },
+    {
+      "code": "141",
+      "name": "Light Sea Grey",
+      "hex": "#9AA2A6"
+    },
+    {
+      "code": "142",
+      "name": "Field Drab",
+      "hex": "#685848"
+    },
+    {
+      "code": "144",
+      "name": "Intermediate Blue",
+      "hex": "#5B6D80"
+    },
+    {
+      "code": "145",
+      "name": "Medium Grey",
+      "hex": "#7F8991"
+    },
+    {
+      "code": "146",
+      "name": "Aircraft Grey",
+      "hex": "#D0D7D9"
+    },
+    {
+      "code": "147",
+      "name": "Matt Light Grey",
+      "hex": "#CCD1D1"
+    },
+    {
+      "code": "148",
+      "name": "Radome Tan",
+      "hex": "#E3C9A8"
+    },
+    {
+      "code": "149",
+      "name": "Dark Green",
+      "hex": "#25382B"
+    },
+    {
+      "code": "150",
+      "name": "Forest Green",
+      "hex": "#224D36"
+    },
+    {
+      "code": "151",
+      "name": "Interior Green",
+      "hex": "#6A7F5E"
+    },
+    {
+      "code": "153",
+      "name": "Insignia Red",
+      "hex": "#A61018"
+    },
+    {
+      "code": "154",
+      "name": "Insignia Yellow",
+      "hex": "#F9A602"
+    },
+    {
+      "code": "155",
+      "name": "Olive Drab",
+      "hex": "#4B513E"
+    },
+    {
+      "code": "156",
+      "name": "Satin Dark Grey",
+      "hex": "#505457"
+    },
+    {
+      "code": "157",
+      "name": "Azure Blue",
+      "hex": "#748FA3"
+    },
+    {
+      "code": "158",
+      "name": "Interior Green",
+      "hex": "#5B6D54"
+    },
+    {
+      "code": "159",
+      "name": "Khaki Drab",
+      "hex": "#554D3E"
+    },
+    {
+      "code": "160",
+      "name": "German Cam Red Brown",
+      "hex": "#593E30"
+    },
+    {
+      "code": "161",
+      "name": "US Marine Corps Green",
+      "hex": "#2E3B30"
+    },
+    {
+      "code": "162",
+      "name": "Surface Grey",
+      "hex": "#9EA4A7"
+    },
+    {
+      "code": "163",
+      "name": "Dark Green",
+      "hex": "#2A3A2F"
+    },
+    {
+      "code": "164",
+      "name": "Dark Sea Grey",
+      "hex": "#4A5156"
+    },
+    {
+      "code": "165",
+      "name": "Medium Sea Grey",
+      "hex": "#757D82"
+    },
+    {
+      "code": "166",
+      "name": "RAF Light Aircraft Grey",
+      "hex": "#C5CBCB"
+    },
+    {
+      "code": "167",
+      "name": "RAF Barley Grey",
+      "hex": "#A2A9AF"
+    },
+    {
+      "code": "168",
+      "name": "RAF Hemp",
+      "hex": "#BFA78F"
+    },
+    {
+      "code": "170",
+      "name": "Brown Bess",
+      "hex": "#513629"
+    },
+    {
+      "code": "171",
+      "name": "Antique Bronze",
+      "hex": "#665D46"
+    },
+    {
+      "code": "172",
+      "name": "Green",
+      "hex": "#006A4E"
+    },
+    {
+      "code": "173",
+      "name": "Track Colour",
+      "hex": "#6E5B54"
+    },
+    {
+      "code": "174",
+      "name": "Signal Red",
+      "hex": "#FF0000"
+    },
+    {
+      "code": "175",
+      "name": "Hellgrau RLM 76",
+      "hex": "#B1BFC4"
+    },
+    {
+      "code": "176",
+      "name": "Neutral Grey",
+      "hex": "#808689"
+    },
+    {
+      "code": "177",
+      "name": "Hull Red",
+      "hex": "#5C2E2B"
+    },
+    {
+      "code": "178",
+      "name": "British Scarlet",
+      "hex": "#CD212A"
+    },
+    {
+      "code": "179",
+      "name": "French Artillery Green",
+      "hex": "#596146"
+    },
+    {
+      "code": "180",
+      "name": "Red Leather",
+      "hex": "#9E4733"
+    },
+    {
+      "code": "181",
+      "name": "Sea Blue",
+      "hex": "#112E51"
+    },
+    {
+      "code": "182",
+      "name": "Black Grey",
+      "hex": "#32373B"
+    },
+    {
+      "code": "183",
+      "name": "Grey",
+      "hex": "#8A9597"
+    },
+    {
+      "code": "184",
+      "name": "Freight Stock Grey",
+      "hex": "#555A5C"
+    },
+    {
+      "code": "186",
+      "name": "Brown",
+      "hex": "#593E2B"
+    },
+    {
+      "code": "187",
+      "name": "Sand",
+      "hex": "#D8C3A5"
+    },
+    {
+      "code": "188",
+      "name": "Chrome Yellow",
+      "hex": "#FFA700"
+    },
+    {
+      "code": "189",
+      "name": "Insignia Blue",
+      "hex": "#1D2951"
+    },
+    {
+      "code": "190",
+      "name": "Blue Angels Blue",
+      "hex": "#002FA7"
+    },
+    {
+      "code": "191",
+      "name": "Chrome Silver",
+      "hex": "#E6E8FA"
+    },
+    {
+      "code": "192",
+      "name": "Blaze Matt",
+      "hex": "#FF5F1F"
+    },
+    {
+      "code": "193",
+      "name": "Blaze Gloss",
+      "hex": "#FF4500"
+    },
+    {
+      "code": "194",
+      "name": "Saturn Yellow Gloss",
+      "hex": "#CCFF00"
+    },
+    {
+      "code": "195",
+      "name": "Dark Green",
+      "hex": "#1B3622"
+    },
+    {
+      "code": "196",
+      "name": "Light Grey",
+      "hex": "#D3D3D3"
+    },
+    {
+      "code": "197",
+      "name": "Lufthansa Yellow",
+      "hex": "#FFCC00"
+    },
+    {
+      "code": "198",
+      "name": "Lufthansa Blue",
+      "hex": "#002244"
+    },
+    {
+      "code": "200",
+      "name": "Pink",
+      "hex": "#FFC0CB"
+    },
+    {
+      "code": "201",
+      "name": "Metallic Black",
+      "hex": "#232B2B"
+    },
+    {
+      "code": "202",
+      "name": "Fluorescent Aurora Pink",
+      "hex": "#FF007F"
+    },
+    {
+      "code": "203",
+      "name": "Fluorescent Signal Green",
+      "hex": "#00FF66"
+    },
+    {
+      "code": "204",
+      "name": "Fluorescent Matt Saturn Yellow",
+      "hex": "#DFFF00"
+    },
+    {
+      "code": "205",
+      "name": "Fluorescent Matt Fire Orange",
+      "hex": "#FF4F00"
+    },
+    {
+      "code": "206",
+      "name": "Base White",
+      "hex": "#FFFFFF"
+    },
+    {
+      "code": "207",
+      "name": "Aurora Pink",
+      "hex": "#FF1493"
+    },
+    {
+      "code": "208",
+      "name": "Signal Green",
+      "hex": "#39FF14"
+    },
+    {
+      "code": "209",
+      "name": "Fire Orange",
+      "hex": "#FF6600"
+    },
+    {
+      "code": "220",
+      "name": "Ferrari Red",
+      "hex": "#FF2800"
+    },
+    {
+      "code": "221",
+      "name": "Garter Blue",
+      "hex": "#0033aa"
+    },
+    {
+      "code": "250",
+      "name": "Desert Pink",
+      "hex": "#E1A6AD"
+    },
+    {
+      "code": "27001",
+      "name": "Metalcote Matt Aluminium",
+      "hex": "#A2A7A9"
+    },
+    {
+      "code": "27002",
+      "name": "Metalcote Polished Aluminium",
+      "hex": "#E3E4E5"
+    },
+    {
+      "code": "27003",
+      "name": "Metalcote Polished Steel",
+      "hex": "#7A7F82"
+    },
+    {
+      "code": "27004",
+      "name": "Metalcote Gunmetal",
+      "hex": "#4C5052"
+    },
+    {
+      "code": "8191",
+      "name": "Metalcote Satin Bronze",
+      "hex": "#826644"
+    },
+    {
+      "code": "91321",
+      "name": "Clear Red",
+      "hex": "#E31B23"
+    },
+    {
+      "code": "91322",
+      "name": "Clear Orange",
+      "hex": "#FF7900"
+    },
+    {
+      "code": "91325",
+      "name": "Clear Green",
+      "hex": "#00A859"
+    }
   ]
 }

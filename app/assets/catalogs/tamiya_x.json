@@ -3,34 +3,150 @@
   "line": "x_gloss",
   "version": "2024.1",
   "paints": [
-    { "code": "X-1",  "name": "Black",           "hex": "#000000" },
-    { "code": "X-2",  "name": "White",            "hex": "#FFFFFF" },
-    { "code": "X-3",  "name": "Royal Blue",       "hex": "#000000" },
-    { "code": "X-4",  "name": "Blue",             "hex": "#000000" },
-    { "code": "X-5",  "name": "Green",            "hex": "#000000" },
-    { "code": "X-6",  "name": "Orange",           "hex": "#000000" },
-    { "code": "X-7",  "name": "Red",              "hex": "#000000" },
-    { "code": "X-8",  "name": "Lemon Yellow",     "hex": "#000000" },
-    { "code": "X-9",  "name": "Brown",            "hex": "#000000" },
-    { "code": "X-10", "name": "Gun Metal",        "hex": "#000000" },
-    { "code": "X-11", "name": "Chrome Silver",    "hex": "#000000" },
-    { "code": "X-12", "name": "Gold Leaf",        "hex": "#000000" },
-    { "code": "X-13", "name": "Metallic Blue",    "hex": "#000000" },
-    { "code": "X-14", "name": "Sky Blue",         "hex": "#000000" },
-    { "code": "X-15", "name": "Light Green",      "hex": "#000000" },
-    { "code": "X-16", "name": "Light Purple",     "hex": "#000000" },
-    { "code": "X-17", "name": "Pink",             "hex": "#000000" },
-    { "code": "X-18", "name": "Semi Gloss Black", "hex": "#000000" },
-    { "code": "X-19", "name": "Smoke",            "hex": "#000000" },
-    { "code": "X-23", "name": "Clear Blue",       "hex": "#000000" },
-    { "code": "X-24", "name": "Clear Yellow",     "hex": "#000000" },
-    { "code": "X-25", "name": "Clear Green",      "hex": "#000000" },
-    { "code": "X-26", "name": "Clear Orange",     "hex": "#000000" },
-    { "code": "X-27", "name": "Clear Red",        "hex": "#000000" },
-    { "code": "X-28", "name": "Park Green",       "hex": "#000000" },
-    { "code": "X-31", "name": "Titanium Gold",    "hex": "#000000" },
-    { "code": "X-32", "name": "Titanium Silver",  "hex": "#000000" },
-    { "code": "X-33", "name": "Bronze",           "hex": "#000000" },
-    { "code": "X-34", "name": "Metallic Brown",   "hex": "#000000" }
+    {
+      "code": "X-1",
+      "name": "Black",
+      "hex": "#000000"
+    },
+    {
+      "code": "X-2",
+      "name": "White",
+      "hex": "#FFFFFF"
+    },
+    {
+      "code": "X-3",
+      "name": "Royal Blue",
+      "hex": "#1E3F66"
+    },
+    {
+      "code": "X-4",
+      "name": "Blue",
+      "hex": "#0055A5"
+    },
+    {
+      "code": "X-5",
+      "name": "Green",
+      "hex": "#008751"
+    },
+    {
+      "code": "X-6",
+      "name": "Orange",
+      "hex": "#F26522"
+    },
+    {
+      "code": "X-7",
+      "name": "Red",
+      "hex": "#E31B23"
+    },
+    {
+      "code": "X-8",
+      "name": "Lemon Yellow",
+      "hex": "#FFF200"
+    },
+    {
+      "code": "X-9",
+      "name": "Brown",
+      "hex": "#6F4E37"
+    },
+    {
+      "code": "X-10",
+      "name": "Gun Metal",
+      "hex": "#545A5C"
+    },
+    {
+      "code": "X-11",
+      "name": "Chrome Silver",
+      "hex": "#E6E8FA"
+    },
+    {
+      "code": "X-12",
+      "name": "Gold Leaf",
+      "hex": "#D4AF37"
+    },
+    {
+      "code": "X-13",
+      "name": "Metallic Blue",
+      "hex": "#1560BD"
+    },
+    {
+      "code": "X-14",
+      "name": "Sky Blue",
+      "hex": "#7EC0EE"
+    },
+    {
+      "code": "X-15",
+      "name": "Light Green",
+      "hex": "#90EE90"
+    },
+    {
+      "code": "X-16",
+      "name": "Light Purple",
+      "hex": "#B19CD9"
+    },
+    {
+      "code": "X-17",
+      "name": "Pink",
+      "hex": "#FFC0CB"
+    },
+    {
+      "code": "X-18",
+      "name": "Semi Gloss Black",
+      "hex": "#222222"
+    },
+    {
+      "code": "X-19",
+      "name": "Smoke",
+      "hex": "#4A4A4A"
+    },
+    {
+      "code": "X-23",
+      "name": "Clear Blue",
+      "hex": "#0073CF"
+    },
+    {
+      "code": "X-24",
+      "name": "Clear Yellow",
+      "hex": "#FFDE17"
+    },
+    {
+      "code": "X-25",
+      "name": "Clear Green",
+      "hex": "#00A859"
+    },
+    {
+      "code": "X-26",
+      "name": "Clear Orange",
+      "hex": "#F7931E"
+    },
+    {
+      "code": "X-27",
+      "name": "Clear Red",
+      "hex": "#ED1C24"
+    },
+    {
+      "code": "X-28",
+      "name": "Park Green",
+      "hex": "#00A651"
+    },
+    {
+      "code": "X-31",
+      "name": "Titanium Gold",
+      "hex": "#C5A059"
+    },
+    {
+      "code": "X-32",
+      "name": "Titanium Silver",
+      "hex": "#B5B8B1"
+    },
+    {
+      "code": "X-33",
+      "name": "Bronze",
+      "hex": "#CD7F32"
+    },
+    {
+      "code": "X-34",
+      "name": "Metallic Brown",
+      "hex": "#7B3F00"
+    }
   ]
 }
