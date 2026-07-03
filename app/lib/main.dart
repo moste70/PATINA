@@ -8,7 +8,6 @@ import 'features/onboarding/onboarding_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase();
-  await db.initializeCatalogs();
   final onboardingDone = await isOnboardingCompleted();
   if (!onboardingDone) {
     await db.initializeDemoProject();

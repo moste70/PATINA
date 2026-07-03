@@ -11,13 +11,13 @@
 | 0.3 | Configurazione dipendenze (Riverpod, Drift, Go Router, image_picker) | ✅ Completato |
 | 0.4 | Gestione permessi Android (camera, storage) | ✅ Completato |
 | 0.5 | Setup database Drift con tutte le tabelle (schemaVersion 1) | ✅ Completato |
-| 0.6 | Caricamento cataloghi JSON in SQLite al primo avvio (`initializeCatalogs`) | ✅ Completato |
+| 0.6 | Cataloghi vernici — 11 file JSON bundled in `assets/catalogs/`, letti on-demand da `rootBundle`. Aggiornamenti distribuiti con nuove release app (versione 2024.1 = lancio). | ✅ Completato |
 | 0.7 | Design system: palette dark/light (`PatinaColors`), tipografia, tema Flutter | ✅ Completato |
 | 0.8 | Navigazione con Go Router — ShellRoute, 4 tab, placeholder screens | ✅ Completato |
 | 0.9 | CI/CD GitHub Actions — build APK debug e release | ✅ Completato |
 | 0.10 | `AppConstants` — categorie, stati, fasi predefinite, marche, quantità | ✅ Completato |
 | 0.11 | Icona launcher Android (cluster esagoni) + fix NormalTheme AndroidManifest | ✅ Completato |
-| 0.12 | Font Google Fonts: Inter (UI) + DM Serif Display (heading) via `PatinaFonts` | ✅ Completato |
+| 0.12 | Font: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo) via `PatinaFonts` | ✅ Completato |
 
 ---
 
@@ -39,9 +39,9 @@
 
 | Task | Priorità | Descrizione | Stato |
 |------|----------|-------------|-------|
-| 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ⬜ Da fare |
-| 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ⬜ Da fare |
-| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ⬜ Da fare |
+| 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ✅ Completato |
+| 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ✅ Completato |
+| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ✅ Completato |
 | 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ⬜ Da fare |
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
 | 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
@@ -234,22 +234,47 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ---
 
+## Debito Tecnico e Bug Noti
+
+> Emersi dall'audit codice/documentazione del 2025-07-03. Risolvere prima o durante la Fase 1B.
+
+| Task | Priorità | Descrizione | Come risolvere | Stato |
+|------|----------|-------------|----------------|-------|
+| DT.1 | 🔴 Alta | `CustomPaints` non registrata in `@DriftDatabase` — la tabella non viene creata nel DB SQLite, tutto il flusso vernici manuali è non funzionante a runtime | Aggiungere `CustomPaints` alla lista tables in `app_database.dart` e incrementare `schemaVersion` a 2 con migrazione | ⬜ Da fare |
+| DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ⬜ Da fare |
+| DT.3 | 🟡 Media | `colorScheme.background` / `onBackground` deprecati in Flutter 3.18+ — genera warning in build | Sostituire con `colorScheme.surface` / `onSurface` in `app/lib/app/theme.dart` | ⬜ Da fare |
+| DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ⬜ Da fare |
+| DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ⬜ Da fare |
+| DT.6 | 🟡 Media | Campo `phaseId` orfano in `Pins` — non referenzia nessuna tabella, non documentato in architecture.md, mai popolato dall'UI | Documentarlo in architecture.md se previsto, altrimenti rimuoverlo dalla tabella (richiede migrazione DB) | ⬜ Da fare |
+| DT.7 | 🟡 Media | Campo `catalogId` in `RecipeIngredients` non documentato — doppio riferimento a inventory e catalog non spiegato | Documentare in architecture.md la logica del doppio riferimento | ⬜ Da fare |
+| DT.8 | 🟢 Bassa | Dipendenze inutilizzate in `pubspec.yaml`: `cached_network_image`, `uuid`, `dio`, `path_provider`, `path`, `intl`, `riverpod_annotation`, `riverpod_generator` | Rimuovere ora, reintrodurre quando effettivamente necessarie | ⬜ Da fare |
+| DT.9 | 🟢 Bassa | `docs/architecture.md` documenta solo 3 cataloghi (Vallejo MC, Citadel, Tamiya XF) — nella realtà sono 11 con ~1.000 colori | Aggiornare la sezione cataloghi in architecture.md | ⬜ Da fare |
+| DT.10 | 🟢 Bassa | `CLAUDE.md` mancante — nessuna guida per Claude Code su comandi build, codegen Drift, convenzioni naming | Creare `CLAUDE.md` alla radice con: `cd app && flutter pub get`, `flutter pub run build_runner build`, convenzioni progetto | ⬜ Da fare |
+
+---
+
 ## Stato Attuale
 
 ```
 Fase 0       ██████████  100%  — completata
-Fase 1       ░░░░░░░░░░    0%  — in corso: 1A (doc → Creazione Progetto, Scheda Progetto, Onboarding)
-Fase 2       ░░░░░░░░░░    0%  — Internazionalizzazione (EN + ES + FR)
+Fase 1A      ███████░░░   70%  — completata la base (1A.1/2/3/5); mancano galleria foto, modifica/elimina, ricerca
+Fase 1B      ░░░░░░░░░░    0%  — Vernici: catalogo + inventario (prossima fase)
+Fase 1C      ░░░░░░░░░░    0%  — Ricette
+Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
+Fase 1E      ░░░░░░░░░░    0%  — Rifinitura e Release
+Fase 2       ░░░░░░░░░░    0%  — Internazionalizzazione
 Fase 3       ░░░░░░░░░░    0%  — AI e Cloud
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
+Debito Tecnico ░░░░░░░░░░  0%  — 10 issue aperte (vedi sezione sopra)
 ```
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🔴 `1A-DOC.1` — Spec scheda creazione progetto
-2. 🔴 `1A-DOC.2` — Spec scheda principale progetto
-3. 🟡 `1A-DOC.3` — Spec onboarding
-4. 🔴 `1A.1` — Dev scheda creazione (dipende da DOC.1)
-5. 🔴 `1A.2` — Dev scheda principale (dipende da DOC.2)
-6. 🟡 `1A.3` — Dev dashboard archivio
-7. 🟡 `1A.5` — Dev onboarding (dipende da DOC.3)
+1. 🔴 `DT.1` — Aggiungere `CustomPaints` al DB (blocca tutto il flusso vernici manuali)
+2. 🔴 `DT.2` — Fix ordine demo project / onboarding
+3. 🔴 `1A.4` — Galleria foto progetto (sblocca 1D)
+4. 🟡 `1A.6` — Modifica, archiviazione, eliminazione progetto
+5. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
+6. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
+7. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
+8. 🟢 `DT.8` — Rimozione dipendenze inutilizzate da pubspec.yaml
