@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'tables/projects.dart';
 import 'tables/paints.dart';
 import 'tables/recipes.dart';
@@ -69,16 +70,29 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  static const String _catalogVersion = '2024.1';
+  static const String _catalogVersionKey = 'catalog_version';
+
   Future<void> initializeCatalogs() async {
-    final count = await (select(catalogPaints)..limit(1)).get();
-    if (count.isNotEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final storedVersion = prefs.getString(_catalogVersionKey);
+    if (storedVersion == _catalogVersion) return;
+
+    // Nuova versione catalogo: svuota e ricarica (non tocca inventory)
+    await delete(catalogPaints).go();
 
     final catalogFiles = [
       'assets/catalogs/vallejo_model_color.json',
+      'assets/catalogs/vallejo_model_air.json',
       'assets/catalogs/citadel_base.json',
       'assets/catalogs/tamiya_xf.json',
+      'assets/catalogs/tamiya_x.json',
       'assets/catalogs/gunze_aqueous.json',
+      'assets/catalogs/gunze_mr_color.json',
       'assets/catalogs/gunze_mr_metal.json',
+      'assets/catalogs/humbrol_enamel.json',
+      'assets/catalogs/lifecolor_ua.json',
+      'assets/catalogs/lifecolor_lc.json',
     ];
 
     await batch((b) async {
@@ -101,6 +115,8 @@ class AppDatabase extends _$AppDatabase {
         } catch (_) {}
       }
     });
+
+    await prefs.setString(_catalogVersionKey, _catalogVersion);
   }
 }
 
