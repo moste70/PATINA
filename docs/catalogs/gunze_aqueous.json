@@ -1,0 +1,768 @@
+{
+  "brand": "gunze",
+  "line": "aqueous_hobby_color",
+  "version": "2024.1",
+  "note": "HEX values sourced from community databases — verify against physical paints",
+  "paints": [
+    {
+      "code": "H1",
+      "name": "White",
+      "hex": "#FFFFFF"
+    },
+    {
+      "code": "H2",
+      "name": "Black",
+      "hex": "#1A1A1A"
+    },
+    {
+      "code": "H3",
+      "name": "Red",
+      "hex": "#D21F1B"
+    },
+    {
+      "code": "H4",
+      "name": "Yellow",
+      "hex": "#F6D000"
+    },
+    {
+      "code": "H5",
+      "name": "Blue",
+      "hex": "#00539B"
+    },
+    {
+      "code": "H6",
+      "name": "Green",
+      "hex": "#008559"
+    },
+    {
+      "code": "H7",
+      "name": "Brown",
+      "hex": "#5D3E2B"
+    },
+    {
+      "code": "H8",
+      "name": "Silver",
+      "hex": "#C0C0C0"
+    },
+    {
+      "code": "H9",
+      "name": "Gold",
+      "hex": "#C5A059"
+    },
+    {
+      "code": "H10",
+      "name": "Copper",
+      "hex": "#B87333"
+    },
+    {
+      "code": "H11",
+      "name": "Flat White",
+      "hex": "#F2F4F3"
+    },
+    {
+      "code": "H12",
+      "name": "Flat Black",
+      "hex": "#1A1A1A"
+    },
+    {
+      "code": "H13",
+      "name": "Flat Red",
+      "hex": "#C91A1A"
+    },
+    {
+      "code": "H14",
+      "name": "Orange",
+      "hex": "#FF6F00"
+    },
+    {
+      "code": "H15",
+      "name": "Bright Blue",
+      "hex": "#0066CC"
+    },
+    {
+      "code": "H16",
+      "name": "Yellow Green",
+      "hex": "#9ACD32"
+    },
+    {
+      "code": "H17",
+      "name": "Cocoa Brown",
+      "hex": "#4A2F22"
+    },
+    {
+      "code": "H18",
+      "name": "Steel",
+      "hex": "#7B8387"
+    },
+    {
+      "code": "H19",
+      "name": "Pink",
+      "hex": "#FFC0CB"
+    },
+    {
+      "code": "H20",
+      "name": "Flat Clear",
+      "hex": "#EBF5FB"
+    },
+    {
+      "code": "H21",
+      "name": "Off White",
+      "hex": "#F8F4E3"
+    },
+    {
+      "code": "H22",
+      "name": "Gray",
+      "hex": "#808689"
+    },
+    {
+      "code": "H23",
+      "name": "Shine Red",
+      "hex": "#FF3333"
+    },
+    {
+      "code": "H24",
+      "name": "Orange Yellow",
+      "hex": "#FFA700"
+    },
+    {
+      "code": "H25",
+      "name": "Sky Blue",
+      "hex": "#87CEEB"
+    },
+    {
+      "code": "H26",
+      "name": "Bright Green",
+      "hex": "#00CC44"
+    },
+    {
+      "code": "H27",
+      "name": "Tan",
+      "hex": "#D2B48C"
+    },
+    {
+      "code": "H28",
+      "name": "Metal Black",
+      "hex": "#2B2D2F"
+    },
+    {
+      "code": "H29",
+      "name": "Salmon Pink",
+      "hex": "#FF91A4"
+    },
+    {
+      "code": "H30",
+      "name": "Clear",
+      "hex": "#FFFFFF"
+    },
+    {
+      "code": "H31",
+      "name": "White Green",
+      "hex": "#E2ECE9"
+    },
+    {
+      "code": "H32",
+      "name": "Field Gray (1)",
+      "hex": "#5D6860"
+    },
+    {
+      "code": "H33",
+      "name": "Russet",
+      "hex": "#80461B"
+    },
+    {
+      "code": "H34",
+      "name": "Cream Yellow",
+      "hex": "#FFFDD0"
+    },
+    {
+      "code": "H35",
+      "name": "Cobalt Blue",
+      "hex": "#0047AB"
+    },
+    {
+      "code": "H36",
+      "name": "Dark Green",
+      "hex": "#253A2B"
+    },
+    {
+      "code": "H37",
+      "name": "Wood Brown",
+      "hex": "#8B5A2B"
+    },
+    {
+      "code": "H38",
+      "name": "Steel Red",
+      "hex": "#783F40"
+    },
+    {
+      "code": "H39",
+      "name": "Purple",
+      "hex": "#660099"
+    },
+    {
+      "code": "H40",
+      "name": "Flat Base",
+      "hex": "#F0F3F4"
+    },
+    {
+      "code": "H41",
+      "name": "Pale Green",
+      "hex": "#A2B9A2"
+    },
+    {
+      "code": "H42",
+      "name": "Blue Gray",
+      "hex": "#566D7E"
+    },
+    {
+      "code": "H43",
+      "name": "Wine Red",
+      "hex": "#722F37"
+    },
+    {
+      "code": "H44",
+      "name": "Flesh",
+      "hex": "#FFD1B3"
+    },
+    {
+      "code": "H45",
+      "name": "Light Blue",
+      "hex": "#ADD8E6"
+    },
+    {
+      "code": "H46",
+      "name": "Emerald Green",
+      "hex": "#50C878"
+    },
+    {
+      "code": "H47",
+      "name": "Red Brown",
+      "hex": "#6E3A24"
+    },
+    {
+      "code": "H48",
+      "name": "Field Gray (2)",
+      "hex": "#4A534D"
+    },
+    {
+      "code": "H49",
+      "name": "Violet",
+      "hex": "#7F00FF"
+    },
+    {
+      "code": "H50",
+      "name": "Lime Green",
+      "hex": "#32CD32"
+    },
+    {
+      "code": "H51",
+      "name": "Light Gull Gray",
+      "hex": "#C4CBD1"
+    },
+    {
+      "code": "H52",
+      "name": "Olive Drab (1)",
+      "hex": "#4B5338"
+    },
+    {
+      "code": "H53",
+      "name": "Neutral Gray",
+      "hex": "#7B8185"
+    },
+    {
+      "code": "H54",
+      "name": "Navy Blue",
+      "hex": "#1D2A44"
+    },
+    {
+      "code": "H55",
+      "name": "Midnight Blue",
+      "hex": "#101D33"
+    },
+    {
+      "code": "H56",
+      "name": "Intermediate Blue",
+      "hex": "#5B6D80"
+    },
+    {
+      "code": "H57",
+      "name": "Aircraft Gray",
+      "hex": "#D4DBDF"
+    },
+    {
+      "code": "H58",
+      "name": "Interior Green",
+      "hex": "#6A7F58"
+    },
+    {
+      "code": "H59",
+      "name": "UN Green",
+      "hex": "#3B533E"
+    },
+    {
+      "code": "H60",
+      "name": "UA Green",
+      "hex": "#2F4A34"
+    },
+    {
+      "code": "H61",
+      "name": "UN Gray",
+      "hex": "#A6AEB5"
+    },
+    {
+      "code": "H62",
+      "name": "UA Gray",
+      "hex": "#6E777D"
+    },
+    {
+      "code": "H63",
+      "name": "Metallic Blue Green",
+      "hex": "#008080"
+    },
+    {
+      "code": "H64",
+      "name": "Rust Dark Green",
+      "hex": "#2B3A2C"
+    },
+    {
+      "code": "H65",
+      "name": "Flat Black Green",
+      "hex": "#1E2721"
+    },
+    {
+      "code": "H66",
+      "name": "Rusinsky Brown",
+      "hex": "#5A3D28"
+    },
+    {
+      "code": "H67",
+      "name": "RLM65 Light Blue",
+      "hex": "#879BA3"
+    },
+    {
+      "code": "H68",
+      "name": "RLM74 Dark Gray",
+      "hex": "#4A514D"
+    },
+    {
+      "code": "H69",
+      "name": "RLM75 Gray",
+      "hex": "#757D82"
+    },
+    {
+      "code": "H70",
+      "name": "RLM02 Gray",
+      "hex": "#8A9385"
+    },
+    {
+      "code": "H71",
+      "name": "Middle Stone",
+      "hex": "#AE9569"
+    },
+    {
+      "code": "H72",
+      "name": "Dark Earth",
+      "hex": "#5D4C3E"
+    },
+    {
+      "code": "H73",
+      "name": "Dark Green",
+      "hex": "#3A453B"
+    },
+    {
+      "code": "H74",
+      "name": "Sky",
+      "hex": "#C2D5C6"
+    },
+    {
+      "code": "H75",
+      "name": "Dark Sea Gray",
+      "hex": "#565D63"
+    },
+    {
+      "code": "H76",
+      "name": "Burnt Iron",
+      "hex": "#4A4D4A"
+    },
+    {
+      "code": "H77",
+      "name": "Tire Black",
+      "hex": "#2A2C2E"
+    },
+    {
+      "code": "H78",
+      "name": "Olive Drab (2)",
+      "hex": "#434836"
+    },
+    {
+      "code": "H79",
+      "name": "Snow/White Dis",
+      "hex": "#EBECE7"
+    },
+    {
+      "code": "H80",
+      "name": "Khaki Green",
+      "hex": "#5D604D"
+    },
+    {
+      "code": "H81",
+      "name": "Khaki",
+      "hex": "#7E6E54"
+    },
+    {
+      "code": "H82",
+      "name": "Dark Gray (1)",
+      "hex": "#424649"
+    },
+    {
+      "code": "H83",
+      "name": "Dark Gray (2)",
+      "hex": "#383B3E"
+    },
+    {
+      "code": "H84",
+      "name": "Mahogany",
+      "hex": "#42281D"
+    },
+    {
+      "code": "H85",
+      "name": "Sail Color",
+      "hex": "#EBDCB9"
+    },
+    {
+      "code": "H86",
+      "name": "Red Madder",
+      "hex": "#A31D1D"
+    },
+    {
+      "code": "H87",
+      "name": "Metallic Red",
+      "hex": "#B31B1B"
+    },
+    {
+      "code": "H88",
+      "name": "Metallic Blue",
+      "hex": "#0F52BA"
+    },
+    {
+      "code": "H89",
+      "name": "Metallic Green",
+      "hex": "#006400"
+    },
+    {
+      "code": "H90",
+      "name": "Clear Red",
+      "hex": "#ED1C24"
+    },
+    {
+      "code": "H91",
+      "name": "Clear Yellow",
+      "hex": "#FFDE17"
+    },
+    {
+      "code": "H92",
+      "name": "Clear Orange",
+      "hex": "#F7931E"
+    },
+    {
+      "code": "H93",
+      "name": "Clear Blue",
+      "hex": "#0073CF"
+    },
+    {
+      "code": "H94",
+      "name": "Clear Green",
+      "hex": "#00A859"
+    },
+    {
+      "code": "H95",
+      "name": "Smoke Gray",
+      "hex": "#555555"
+    },
+    {
+      "code": "H96",
+      "name": "Smoke Blue",
+      "hex": "#3B4E5D"
+    },
+    {
+      "code": "H301",
+      "name": "Gray FS36081",
+      "hex": "#3C4043"
+    },
+    {
+      "code": "H302",
+      "name": "Green FS34092",
+      "hex": "#344B3C"
+    },
+    {
+      "code": "H303",
+      "name": "Green FS34102",
+      "hex": "#4D634E"
+    },
+    {
+      "code": "H304",
+      "name": "Olive Green FS34087",
+      "hex": "#4B4F3A"
+    },
+    {
+      "code": "H305",
+      "name": "Gray FS36118",
+      "hex": "#4E5459"
+    },
+    {
+      "code": "H306",
+      "name": "Gray FS35270",
+      "hex": "#708090"
+    },
+    {
+      "code": "H307",
+      "name": "Gray FS36320",
+      "hex": "#8F969C"
+    },
+    {
+      "code": "H308",
+      "name": "Gray FS36375",
+      "hex": "#A2AAB0"
+    },
+    {
+      "code": "H309",
+      "name": "Green FS34079",
+      "hex": "#3B443B"
+    },
+    {
+      "code": "H310",
+      "name": "Brown FS30219",
+      "hex": "#A07F5E"
+    },
+    {
+      "code": "H311",
+      "name": "Gray FS36622",
+      "hex": "#DCDCDC"
+    },
+    {
+      "code": "H312",
+      "name": "Green FS34227",
+      "hex": "#8E9E84"
+    },
+    {
+      "code": "H313",
+      "name": "Yellow FS33531",
+      "hex": "#E3C99E"
+    },
+    {
+      "code": "H314",
+      "name": "Blue FS35622",
+      "hex": "#C4D8E2"
+    },
+    {
+      "code": "H315",
+      "name": "Gray FS16440",
+      "hex": "#D3D9DE"
+    },
+    {
+      "code": "H316",
+      "name": "White FS17875",
+      "hex": "#FAF9F5"
+    },
+    {
+      "code": "H317",
+      "name": "Gray FS36231",
+      "hex": "#7A8084"
+    },
+    {
+      "code": "H318",
+      "name": "Radome",
+      "hex": "#E8D3B9"
+    },
+    {
+      "code": "H319",
+      "name": "Light Green",
+      "hex": "#7BC07B"
+    },
+    {
+      "code": "H320",
+      "name": "Dark Green",
+      "hex": "#2F4F2F"
+    },
+    {
+      "code": "H321",
+      "name": "Hell Brown",
+      "hex": "#B58A63"
+    },
+    {
+      "code": "H322",
+      "name": "Indian Yellow",
+      "hex": "#E3A857"
+    },
+    {
+      "code": "H323",
+      "name": "Light Blue",
+      "hex": "#ADD8E6"
+    },
+    {
+      "code": "H324",
+      "name": "Light Gray",
+      "hex": "#DCDCDC"
+    },
+    {
+      "code": "H325",
+      "name": "Gray FS26440",
+      "hex": "#C4CBD1"
+    },
+    {
+      "code": "H326",
+      "name": "Blue FS15044",
+      "hex": "#1A2B4C"
+    },
+    {
+      "code": "H327",
+      "name": "White FS17778",
+      "hex": "#FDFCFA"
+    },
+    {
+      "code": "H328",
+      "name": "Blue FS15050",
+      "hex": "#002FA7"
+    },
+    {
+      "code": "H329",
+      "name": "Yellow FS13638",
+      "hex": "#FFA700"
+    },
+    {
+      "code": "H330",
+      "name": "Dark Green/Brown",
+      "hex": "#3E4235"
+    },
+    {
+      "code": "H331",
+      "name": "Dark Sea Gray A",
+      "hex": "#535C61"
+    },
+    {
+      "code": "H332",
+      "name": "Light Gray A",
+      "hex": "#C8CCCC"
+    },
+    {
+      "code": "H333",
+      "name": "Dark Slate Gray A",
+      "hex": "#4A5257"
+    },
+    {
+      "code": "H334",
+      "name": "Dark Dull Red A",
+      "hex": "#7B1F1F"
+    },
+    {
+      "code": "H335",
+      "name": "Extra Dark Sea Gray A",
+      "hex": "#434B4F"
+    },
+    {
+      "code": "H336",
+      "name": "Pale Gray A",
+      "hex": "#E2E4E1"
+    },
+    {
+      "code": "H337",
+      "name": "Hemp A",
+      "hex": "#C2B296"
+    },
+    {
+      "code": "H338",
+      "name": "Engine Gray A",
+      "hex": "#464A4D"
+    },
+    {
+      "code": "H339",
+      "name": "Field Green A",
+      "hex": "#4A5B43"
+    },
+    {
+      "code": "H340",
+      "name": "Sky Type S A",
+      "hex": "#BDD5C3"
+    },
+    {
+      "code": "H401",
+      "name": "Dark Gray (T)",
+      "hex": "#3A3D40"
+    },
+    {
+      "code": "H402",
+      "name": "Green Brown (T)",
+      "hex": "#54513E"
+    },
+    {
+      "code": "H403",
+      "name": "Dark Yellow (T)",
+      "hex": "#BFA87A"
+    },
+    {
+      "code": "H404",
+      "name": "Khaki Brown (T)",
+      "hex": "#705E46"
+    },
+    {
+      "code": "H405",
+      "name": "Olive Green (T)",
+      "hex": "#3F4A38"
+    },
+    {
+      "code": "H406",
+      "name": "Chocolate Brown (T)",
+      "hex": "#483227"
+    },
+    {
+      "code": "H413",
+      "name": "RLM04 Yellow",
+      "hex": "#F4C430"
+    },
+    {
+      "code": "H414",
+      "name": "RLM23 Red",
+      "hex": "#D21F1B"
+    },
+    {
+      "code": "H415",
+      "name": "Flat Black Gray",
+      "hex": "#2F3538"
+    },
+    {
+      "code": "H417",
+      "name": "RLM65 Hell Blau",
+      "hex": "#879BA3"
+    },
+    {
+      "code": "H418",
+      "name": "RLM78 Hell Blau",
+      "hex": "#5B6D75"
+    },
+    {
+      "code": "H421",
+      "name": "RLM80 Olive Green",
+      "hex": "#343E31"
+    },
+    {
+      "code": "H422",
+      "name": "RLM81 Brown Violet",
+      "hex": "#504E3E"
+    },
+    {
+      "code": "H423",
+      "name": "RLM82 Light Green",
+      "hex": "#456637"
+    },
+    {
+      "code": "H424",
+      "name": "RLM83 Dark Green",
+      "hex": "#323F31"
+    },
+    {
+      "code": "H425",
+      "name": "RLM84 Dark Green",
+      "hex": "#2B3629"
+    }
+  ]
+}
