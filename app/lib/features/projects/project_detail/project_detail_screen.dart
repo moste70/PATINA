@@ -225,8 +225,12 @@ class _ProjectDetailContentState
                   PopupMenuDivider(),
                   PopupMenuItem(
                       value: 'delete',
-                      child:
-                          Text('Elimina', style: TextStyle(color: Colors.red))),
+                      child: Builder(
+                        builder: (ctx) => Text(
+                          'Elimina',
+                          style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                        ),
+                      )),
                 ],
               ),
             ],

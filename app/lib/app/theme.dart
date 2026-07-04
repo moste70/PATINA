@@ -232,6 +232,28 @@ class PatinaTheme {
         side: BorderSide(color: scheme.outline),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: scheme.surfaceContainer,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        shadowColor: Colors.black38,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: scheme.outline, width: 1),
+        ),
+        textStyle: GoogleFonts.ibmPlexSans(
+          color: scheme.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        labelTextStyle: WidgetStatePropertyAll(
+          GoogleFonts.ibmPlexSans(
+            color: scheme.onSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ),
     );
   }
 }
