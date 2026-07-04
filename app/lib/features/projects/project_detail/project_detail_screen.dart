@@ -277,11 +277,14 @@ class _ProjectDetailContentState
                       ),
                     ),
                   ),
-                  // Chip stato in alto a sinistra
+                  // Chip stato — sopra il titolo, tappabile per cambiare stato
                   Positioned(
-                    top: 56,
+                    bottom: 80,
                     left: 16,
-                    child: _StatusChip(status: p.status),
+                    child: _StatusChip(
+                      status: p.status,
+                      onTap: _showStatusSheet,
+                    ),
                   ),
                 ],
               ),
@@ -434,7 +437,8 @@ class _ProjectDetailContentState
 
 class _StatusChip extends StatelessWidget {
   final String status;
-  const _StatusChip({required this.status});
+  final VoidCallback? onTap;
+  const _StatusChip({required this.status, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -456,20 +460,32 @@ class _StatusChip extends StatelessWidget {
         ),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: status == 'todo'
-            ? Border.all(color: Colors.white54)
-            : null,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          border: status == 'todo'
+              ? Border.all(color: Colors.white54)
+              : Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    color: fg,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.expand_more, color: fg, size: 14),
+            ],
+          ],
+        ),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: fg,
-              fontSize: 12,
-              fontWeight: FontWeight.w600)),
     );
   }
 }
