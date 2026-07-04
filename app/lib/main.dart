@@ -7,7 +7,7 @@ import 'database/app_database.dart';
 import 'features/onboarding/onboarding_screen.dart';
 // AppL10n è generato da `flutter gen-l10n` (lib/l10n/app_it.arb + app_en.arb).
 // Uso: AppL10n.of(context).actionSave
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:patina/l10n/app_localizations.dart';
 import 'features/settings/settings_screen.dart' show localePrefProvider;
 
 void main() async {
