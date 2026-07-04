@@ -35,6 +35,41 @@ assets/catalogs/    # 11 JSON cataloghi vernici (v2024.1, ~1.000 colori)
 docs/               # Documentazione: vision, features, architecture, roadmap
 ```
 
+## Internazionalizzazione (i18n)
+
+Sistema: `flutter_localizations` + `intl` + file `.arb` — generatore ufficiale Flutter.
+
+```bash
+# Dopo aver aggiunto/modificato chiavi nei file .arb, rigenera il codice:
+cd app && flutter gen-l10n
+# (oppure basta flutter pub get / flutter build, che lo eseguono automaticamente)
+```
+
+**File:**
+- `app/l10n.yaml` — configurazione del generatore
+- `app/lib/l10n/app_it.arb` — stringhe italiane (file template, lingua di riferimento)
+- `app/lib/l10n/app_en.arb` — stringhe inglesi
+- `package:flutter_gen/gen_l10n/app_localizations.dart` — file generato (non committare)
+
+**Uso nel codice:**
+```dart
+// Accesso
+final l = AppL10n.of(context);
+Text(l.actionSave)        // "Salva" / "Save"
+Text(l.errorScaleFormat)  // "Formato non valido (es. 1/35)"
+
+// Con parametri (aggiungere al .arb con {placeholder}):
+// "greeting": "Ciao, {name}!"
+// "@greeting": { "placeholders": { "name": { "type": "String" } } }
+Text(l.greeting(user.name))
+```
+
+**Regole:**
+1. Ogni nuova stringa visibile all'utente va prima nell'`.arb` italiano, poi tradotta nell'inglese
+2. Naming chiavi: `<area><NomeStringa>` — es. `projectNameLabel`, `actionSave`, `errorRequired`
+3. Le stringhe hardcoded esistenti si migrano gradualmente feature per feature
+4. Non usare mai stringhe hardcoded per testi nuovi
+
 ## Convenzioni
 
 - **State management:** Riverpod con `StateNotifierProvider` e `Provider` scritti a mano (no codegen `@riverpod`)
