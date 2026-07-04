@@ -112,6 +112,39 @@
 | 1E.7 | Preparazione store listing Google Play | ⬜ Da fare |
 | 1E.8 | Release beta (Google Play Internal Testing) | ⬜ Da fare |
 
+### ✅ Checklist pre-rilascio — comandi da eseguire
+
+Eseguire nell'ordine prima di ogni build di rilascio:
+
+```bash
+cd app
+
+# 1. Dipendenze aggiornate
+flutter pub get
+
+# 2. Rigenera codice Drift (obbligatorio se sono cambiate le tabelle)
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# 3. Test cataloghi (nessun codegen necessario)
+flutter test test/catalogs/
+
+# 4. Test database (richiede il .g.dart generato al passo 2)
+flutter test test/database/
+
+# 5. Analisi statica
+flutter analyze
+
+# 6. Build APK release
+flutter build apk --release
+
+# 7. Verifica versionCode e versionName in android/app/build.gradle
+#    → incrementare versionCode di 1 ad ogni upload su Play Console
+```
+
+> Tutti i test devono passare prima di procedere con il caricamento su Google Play Console.
+
+---
+
 ### Note pre-lancio — Adempimenti amministrativi
 
 #### Account e pagamenti
