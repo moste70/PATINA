@@ -80,90 +80,55 @@ class _PaintsPainter extends CustomPainter {
     final cx = sw / 2;
     final cy = sh / 2;
 
-    final p = Paint()
+    final stroke = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = sw * 0.055
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final fp = Paint()
+    final fill = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
 
-    final bw = sw * 0.58;
-    final bh = sh * 0.46;
-    final bx = cx - bw / 2;
-    final by = cy - bh * 0.30;
-    final bot = by + bh;
-    final br = bw * 0.12;
+    // Palette outline — kidney shape via two overlapping arcs
+    // Outer arc: large ellipse-ish curve
+    final path = Path();
+    // Draw a palette shape: roughly oval with an indentation on the right side
+    final r = sw * 0.42;
+    final ox = cx - sw * 0.04;
+    final oy = cy + sh * 0.02;
 
-    // Body
-    final bodyPath = Path()
-      ..moveTo(bx + br, by)
-      ..lineTo(bx + bw - br, by)
-      ..arcToPoint(Offset(bx + bw, by + br),
-          radius: Radius.circular(br), clockwise: true)
-      ..lineTo(bx + bw, bot - br)
-      ..arcToPoint(Offset(bx + bw - br, bot),
-          radius: Radius.circular(br), clockwise: true)
-      ..lineTo(bx + br, bot)
-      ..arcToPoint(Offset(bx, bot - br),
-          radius: Radius.circular(br), clockwise: true)
-      ..lineTo(bx, by + br)
-      ..arcToPoint(Offset(bx + br, by),
-          radius: Radius.circular(br), clockwise: true)
-      ..close();
-    canvas.drawPath(bodyPath, p);
+    path.addOval(Rect.fromCenter(
+      center: Offset(ox, oy),
+      width: sw * 0.84,
+      height: sh * 0.78,
+    ));
 
-    // Lid (slightly wider)
-    final lidH = bh * 0.22;
-    final lidW = bw + sw * 0.06;
-    final lx = cx - lidW / 2;
-    final lidTop = by - lidH;
-    final lidR = lidH * 0.35;
+    // Thumb hole — punch out a small circle top-right
+    final holeX = ox + sw * 0.18;
+    final holeY = oy - sh * 0.18;
+    final holePath = Path()
+      ..addOval(Rect.fromCenter(
+        center: Offset(holeX, holeY),
+        width: sw * 0.22,
+        height: sh * 0.22,
+      ));
 
-    final lidPath = Path()
-      ..moveTo(lx + lidR, lidTop)
-      ..lineTo(lx + lidW - lidR, lidTop)
-      ..arcToPoint(Offset(lx + lidW, lidTop + lidR),
-          radius: Radius.circular(lidR), clockwise: true)
-      ..lineTo(lx + lidW, by)
-      ..lineTo(lx, by)
-      ..lineTo(lx, lidTop + lidR)
-      ..arcToPoint(Offset(lx + lidR, lidTop),
-          radius: Radius.circular(lidR), clockwise: true)
-      ..close();
-    canvas.drawPath(lidPath, p);
+    final palettePath = Path.combine(PathOperation.difference, path, holePath);
+    canvas.drawPath(palettePath, stroke);
 
-    // Knurl lines on lid
-    final kY1 = lidTop + lidH * 0.2;
-    final kY2 = lidTop + lidH * 0.8;
-    for (var i = -1; i <= 1; i++) {
-      canvas.drawLine(
-        Offset(cx + i * lidW * 0.22, kY1),
-        Offset(cx + i * lidW * 0.22, kY2),
-        p,
-      );
+    // Color dots on the palette surface
+    final dots = [
+      Offset(ox - sw * 0.22, oy - sh * 0.12),
+      Offset(ox - sw * 0.10, oy - sh * 0.25),
+      Offset(ox + sw * 0.06, oy - sh * 0.26),
+      Offset(ox + sw * 0.20, oy - sh * 0.08),
+      Offset(ox - sw * 0.24, oy + sh * 0.10),
+    ];
+    for (final dot in dots) {
+      canvas.drawCircle(dot, sw * 0.055, fill);
     }
-
-    // Label rect
-    final lbW = bw * 0.70;
-    final lbH = bh * 0.38;
-    final lbX = cx - lbW / 2;
-    final lbY = by + bh * 0.28;
-    canvas.drawRect(Rect.fromLTWH(lbX, lbY, lbW, lbH), p);
-
-    // Lines inside label
-    final lm = lbW * 0.15;
-    canvas.drawLine(
-        Offset(lbX + lm, lbY + lbH * 0.35),
-        Offset(lbX + lbW - lm, lbY + lbH * 0.35),
-        p);
-    canvas.drawLine(
-        Offset(lbX + lm, lbY + lbH * 0.65),
-        Offset(lbX + lbW - lm * 1.5, lbY + lbH * 0.65),
-        p);
   }
 
   @override
