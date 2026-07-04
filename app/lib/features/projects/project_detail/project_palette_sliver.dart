@@ -162,68 +162,53 @@ class _PaletteRow extends ConsumerWidget {
       builder: (context, snap) {
         final inStock = snap.data ?? false;
 
-        return Dismissible(
-          key: ValueKey(paint.id),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: scheme.error.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.delete_outline, color: scheme.error),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(10),
           ),
-          onDismissed: (_) =>
-              ref.read(projectRepositoryProvider).deleteProjectPaint(paint.id),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                // Hex color circle
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _hexColor(paint.hex),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: scheme.outline.withOpacity(0.4), width: 1),
-                  ),
+          child: Row(
+            children: [
+              // Hex color circle
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _hexColor(paint.hex),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: scheme.outline.withOpacity(0.4), width: 1),
                 ),
-                const SizedBox(width: 12),
-                // Code + name
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        paint.code,
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurface,
-                          letterSpacing: 0.3,
-                        ),
+              ),
+              const SizedBox(width: 12),
+              // Code + name
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      paint.code,
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurface,
+                        letterSpacing: 0.3,
                       ),
-                      Text(
-                        paint.name,
-                        style: tt.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                    ),
+                    Text(
+                      paint.name,
+                      style: tt.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                // Stock badge
-                _StockBadge(inStock: inStock, scheme: scheme),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              // Stock badge
+              _StockBadge(inStock: inStock, scheme: scheme),
+            ],
           ),
         );
       },

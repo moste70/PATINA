@@ -313,9 +313,6 @@ class _ProjectDetailContentState
             ),
           ),
 
-          // ── Palette del kit ──
-          ProjectPaletteSliver(projectId: widget.project.id),
-
           // ── Galleria Foto ──
           _SectionHeader(title: 'Galleria'),
           _GallerySliver(projectId: widget.project.id),
@@ -383,6 +380,9 @@ class _ProjectDetailContentState
                     ),
             ),
           ),
+
+          // ── Palette del kit ──
+          ProjectPaletteSliver(projectId: widget.project.id),
 
           // ── Info Progetto ──
           _SectionHeader(title: 'Info'),
