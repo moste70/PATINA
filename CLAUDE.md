@@ -80,6 +80,22 @@ Text(l.greeting(user.name))
 - **Palette DB:** `quantity` in InventoryPaints può essere: `full` | `half` | `low` | `empty`
 - **Stati progetto:** `todo` | `in_progress` | `completed`
 
+## Supporto Tablet (Fase 1F)
+
+Breakpoint Material 3 adottati per PATINA:
+
+| Classe | Larghezza | Layout |
+|--------|-----------|--------|
+| Compact | < 600 dp | Smartphone verticale — layout attuale, `BottomNavigationBar` |
+| Medium | 600–900 dp | Tablet piccolo / smartphone landscape — `NavigationRail`, colonne |
+| Expanded | > 900 dp | Tablet grande / foldable — `NavigationRail` estesa, pannello maestro-dettaglio |
+
+**Regole da rispettare in ogni nuova schermata:**
+1. **Non usare** `MediaQuery.of(context).size.width` raw — usare sempre `AdaptiveLayout` / `WindowSizeClass` (Fase 1F.1) quando sarà implementato; nel frattempo aggiungere un `TODO(tablet)` come commento
+2. **Max-width** — i contenuti delle schermate a colonna singola non devono superare `840 dp`; avvolgere con `Center` + `ConstrainedBox(maxWidth: 840)` (Fase 1F.3)
+3. **Griglie** — dichiarare `crossAxisCount` come variabile calcolata dalla larghezza, non come costante hardcoded
+4. La `ShellRoute` di Go Router rimane invariata — il supporto tablet cambia solo il widget shell (nav rail vs bottom bar), non la struttura delle route
+
 ## Design system Ottone v1.0
 
 - Accent principale: `#D99B3E` (Ottone/brass)
