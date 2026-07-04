@@ -13,5 +13,7 @@ class Pins extends Table {
   TextColumn get techniqueType => text().nullable()();
   TextColumn get productUsed => text().nullable()();
   TextColumn get notes => text().nullable()();
+  // Riservato per le fasi di lavorazione (Fase 1D). Non esiste ancora
+  // una tabella phases — aggiungere FK e migrazione quando sarà implementata.
   IntColumn get phaseId => integer().nullable()();
 }

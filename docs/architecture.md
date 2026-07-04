@@ -226,15 +226,23 @@ notes           TEXT
 
 ## Cataloghi Vernici
 
-I cataloghi sono bundled come asset JSON e caricati in SQLite al primo avvio.
+I cataloghi sono **bundled come asset JSON** in `app/assets/catalogs/` e letti on-demand tramite `rootBundle` — non vengono precaricati nel DB SQLite. Ogni aggiornamento dei cataloghi viene distribuito con una nuova release dell'app.
 
-**Cataloghi inclusi in Fase 1** (verificati, dati reali presenti negli asset):
+**Versione corrente: 2024.1** — 11 cataloghi, ~1.000 colori totali.
 
 | File | Marca | Linea (`line`) | Colori |
 |------|-------|----------------|--------|
-| `vallejo_model_color.json` | `vallejo` | `model_color` | 30 |
-| `citadel_base.json` | `citadel` | `base` | 20 |
-| `tamiya_xf.json` | `tamiya` | `xf` | 28 |
+| `vallejo_model_color.json` | `vallejo` | `model_color` | 218 |
+| `vallejo_model_air.json` | `vallejo` | `model_air` | 97 |
+| `citadel_base.json` | `citadel` | `base` | 31 |
+| `tamiya_xf.json` | `tamiya` | `xf_flat` | 92 |
+| `tamiya_x.json` | `tamiya` | `x_gloss` | 29 |
+| `gunze_aqueous.json` | `gunze` | `aqueous` | 150 |
+| `gunze_mr_color.json` | `gunze` | `mr_color` | 256 |
+| `gunze_mr_metal.json` | `gunze` | `mr_metal_color` | 9 |
+| `humbrol_enamel.json` | `humbrol` | `enamel` | 195 |
+| `lifecolor_ua.json` | `lifecolor` | `ua_camouflage` | 139 |
+| `lifecolor_lc.json` | `lifecolor` | `lc_basic_gloss` | 27 |
 
 **Formato JSON:**
 ```json
@@ -248,8 +256,8 @@ I cataloghi sono bundled come asset JSON e caricati in SQLite al primo avvio.
 }
 ```
 
-Espansione cataloghi (Vallejo Game Color/Air/Panzer Aces, Citadel Layer/Shade/Contrast,
-Tamiya X/LP, AK Interactive, Ammo by Mig, Humbrol, Mr. Color) pianificata in Fase 2.
+Espansione cataloghi (Vallejo Game Color/Panzer Aces, Citadel Layer/Shade/Contrast/Air,
+Tamiya LP, AK Interactive, Ammo by Mig, Scale75) pianificata tramite Catalog Tool (repo separato).
 
 ---
 

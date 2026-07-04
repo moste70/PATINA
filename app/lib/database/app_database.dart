@@ -12,6 +12,7 @@ part 'app_database.g.dart';
   Projects,
   ProjectPhotos,
   CatalogPaints,
+  CustomPaints,
   InventoryPaints,
   Recipes,
   RecipeIngredients,
@@ -21,7 +22,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        // v2: aggiunta tabella custom_paints per vernici inserite manualmente
+        await m.createTable(customPaints);
+      }
+    },
+  );
 
   Future<void> initializeDemoProject() async {
     final existing = await (select(projects)..limit(1)).get();

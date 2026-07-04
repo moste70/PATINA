@@ -256,7 +256,7 @@ class _ProjectDetailContentState
                       ? Image.file(File(p.coverPhoto!),
                           fit: BoxFit.cover)
                       : Container(
-                          color: scheme.surfaceVariant,
+                          color: scheme.surfaceContainerHigh,
                           child: Icon(Icons.view_module_outlined,
                               size: 64,
                               color: scheme.onSurface.withOpacity(0.2)),
@@ -365,7 +365,7 @@ class _ProjectDetailContentState
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: scheme.surfaceVariant,
+                          color: scheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(

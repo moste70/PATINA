@@ -16,9 +16,9 @@ class PlaceholderScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: scheme.background,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
-        backgroundColor: scheme.background,
+        backgroundColor: scheme.surface,
         leading: Padding(
           padding: const EdgeInsets.all(10),
           child: _PatinaIcon(color: scheme.primary),
@@ -39,7 +39,7 @@ class PlaceholderScreen extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: scheme.surfaceVariant,
+                color: scheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: scheme.outline, width: 1),
               ),
@@ -51,7 +51,7 @@ class PlaceholderScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: scheme.onBackground,
+                color: scheme.onSurface,
                 letterSpacing: 0.3,
               ),
             ),

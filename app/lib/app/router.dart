@@ -82,7 +82,7 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
 
     return Scaffold(
-      backgroundColor: scheme.background,
+      backgroundColor: scheme.surface,
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
