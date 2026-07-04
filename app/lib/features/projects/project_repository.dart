@@ -77,6 +77,50 @@ class ProjectRepository {
         .getSingleOrNull();
     return row != null;
   }
+
+  // ── Lista della spesa ───────────────────────────────────────���────────────
+  // Tutte le project_paints non presenti in inventory_paints, con il nome
+  // del progetto. Si aggiorna automaticamente quando cambia inventario o palette.
+  Stream<List<ShoppingEntry>> watchShoppingList() {
+    const sql = '''
+      SELECT pp.brand, pp.code, pp.name, pp.hex, p.name AS project_name
+      FROM project_paints pp
+      JOIN projects p ON pp.project_id = p.id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM inventory_paints ip
+        WHERE ip.catalog_brand = pp.brand AND ip.catalog_code = pp.code
+      )
+      ORDER BY p.name, pp.brand, pp.code
+    ''';
+    return _db.customSelect(sql, readsFrom: {
+      _db.projectPaints,
+      _db.projects,
+      _db.inventoryPaints,
+    }).watch().map((rows) => rows
+        .map((r) => ShoppingEntry(
+              brand: r.read<String>('brand'),
+              code: r.read<String>('code'),
+              name: r.read<String>('name'),
+              hex: r.read<String>('hex'),
+              projectName: r.read<String>('project_name'),
+            ))
+        .toList());
+  }
+}
+
+class ShoppingEntry {
+  final String brand;
+  final String code;
+  final String name;
+  final String hex;
+  final String projectName;
+  const ShoppingEntry({
+    required this.brand,
+    required this.code,
+    required this.name,
+    required this.hex,
+    required this.projectName,
+  });
 }
 
 final projectRepositoryProvider = Provider<ProjectRepository>((ref) {

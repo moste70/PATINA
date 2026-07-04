@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../database/app_database.dart';
 import '../project_repository.dart';
@@ -97,6 +98,12 @@ class ProjectPaletteSliver extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
+                  GestureDetector(
+                    onTap: () => context.push('/shopping'),
+                    child: Icon(Icons.shopping_cart_outlined,
+                        color: scheme.primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
                   GestureDetector(
                     onTap: () => _showAddSheet(context, ref),
                     child: Icon(Icons.add, color: scheme.primary, size: 20),

@@ -8,6 +8,7 @@ import '../features/projects/project_detail/project_detail_screen.dart';
 import '../shared/widgets/placeholder_screen.dart';
 import '../shared/widgets/nav_icons.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/shopping/shopping_list_screen.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -74,6 +75,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings',
             name: 'settings',
             builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/shopping',
+            name: 'shopping',
+            builder: (context, state) => const ShoppingListScreen(),
           ),
         ],
       ),
