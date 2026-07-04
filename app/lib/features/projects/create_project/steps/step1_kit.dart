@@ -18,6 +18,7 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
   bool _nameTouched = false;
   bool _brandTouched = false;
   bool _scaleTouched = false;
+  bool _categoryTouched = false;
 
   static const _scaleChips = ['1/12', '1/24', '1/35', '1/48', '1/72', '1/100', '1/144'];
   static const _categoryIcons = {
@@ -141,7 +142,26 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         const SizedBox(height: 24),
 
         // Categoria
-        Text('Categoria *', style: tt.titleSmall),
+        Builder(builder: (ctx) {
+          final categoryError = _categoryTouched && state.category == null;
+          final labelColor = categoryError ? Theme.of(ctx).colorScheme.error : null;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Categoria *',
+                style: tt.titleSmall?.copyWith(color: labelColor),
+              ),
+              if (categoryError) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Seleziona una categoria',
+                  style: tt.bodySmall?.copyWith(color: Theme.of(ctx).colorScheme.error),
+                ),
+              ],
+            ],
+          );
+        }),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
@@ -156,7 +176,10 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
                 color: selected ? scheme.primary : scheme.onSurface,
               ),
               label: Text(AppConstants.categoryLabels[cat] ?? cat),
-              onSelected: (_) => notifier.setCategory(cat),
+              onSelected: (_) {
+                setState(() => _categoryTouched = true);
+                notifier.setCategory(cat);
+              },
               selectedColor: scheme.primary.withOpacity(0.18),
               checkmarkColor: scheme.primary,
               side: BorderSide(
@@ -173,6 +196,7 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
               _nameTouched = true;
               _brandTouched = true;
               _scaleTouched = true;
+              _categoryTouched = true;
             });
             if (state.step1Valid) widget.onNext();
           },
