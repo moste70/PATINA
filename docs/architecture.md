@@ -274,41 +274,104 @@ Avvio app
   │     Sfondo: #1C1A16 (Fondo)
   │     Icona: marchio PATINA flat (WindowSplashScreenAnimatedIcon)
   │     Durata: ~180ms (fino a Flutter ready)
+  │     Sfondo identico → transizione impercettibile
   │
   └─ [Flutter] SplashScreen widget
-        Handoff: dissolvenza incrociata flat → animato (400ms)
-        Animazione: assemblaggio esagoni in senso orario + wordmark
-        Durata totale: ~3.2s poi naviga a home
+        Animazione: assemblaggio esagoni orario + wordmark
+        Durata totale: 3.4s poi context.go('/projects')
 ```
 
-### Fasi dell'animazione Flutter
+### Timeline animazione Flutter
 
-| Fase | Durata | Descrizione |
-|------|--------|-------------|
-| Handoff | 400ms | Crossfade dal flat nativo al layer Flutter con gradiente |
-| Ring orario | ~1.9s | Esagoni appaiono uno alla volta: alto → top-right → bot-right → bottom → bot-left → top-left |
-| Centrale | 360ms | Esagono centrale (Ottone `#D99B3E`) — ultimo a comparire |
-| Wordmark | 500ms | "PATINA" + tagline salgono con fade |
-| Idle breathing | ∞ | Pulse lento del glow Ottone fino a navigazione |
+| Fase | Start | Durata | Descrizione |
+|------|-------|--------|-------------|
+| Ring hex 0 — top | 0ms | 360ms | Primo esagono in alto |
+| Ring hex 1 — top-right | 320ms | 360ms | +320ms (STEP) |
+| Ring hex 2 — bot-right | 640ms | 360ms | |
+| Ring hex 3 — bottom | 960ms | 360ms | |
+| Ring hex 4 — bot-left | 1280ms | 360ms | |
+| Ring hex 5 — top-left | 1600ms | 360ms | |
+| Centrale | 2120ms | 360ms | STEP×6 + 200ms di pausa |
+| Wordmark fade+slide | 2600ms | 500ms | +480ms dopo centrale |
+| Navigazione | 4000ms | — | `context.go('/projects')` |
+| Idle breathing | loop | 4000ms | Pulse glow Ottone (sin wave) |
 
-### Implementazione
+### Parametri tecnici
 
-- **Native splash:** configurato in `android/app/src/main/res/values/styles.xml` tramite `windowSplashScreenBackground` e `windowSplashScreenAnimatedIcon`
-- **Flutter widget:** `SplashScreen` in `app/lib/features/onboarding/splash_screen.dart`
-  - `AnimationController` con stagger via `Interval` per ogni esagono
-  - `CustomPainter` esteso da `_PatinaMarkPainter` con alpha/scale per singolo esagono
-  - `SlideTransition` + `FadeTransition` per il wordmark
-  - `GoRouter.go('/projects')` al termine dell'animazione
-- **Continuità visiva:** sfondo identico (`#1C1A16`) su entrambi i layer — il passaggio è impercettibile
+```dart
+// Timing
+const _kTotalMs      = 3400;   // durata AnimationController principale
+const _kStep         = 320;    // ms tra ogni hex dell'anello
+const _kHexDur       = 360;    // ms durata ingresso singolo hex
+const _kCentralDelay = 2120;   // _kStep * 6 + 200
+const _kTextStart    = 2600;   // _kCentralDelay + 480
+const _kTextDur      = 500;
+const _kNavigateDelay = 4000;  // _kTotalMs + 600
+
+// Mark sizing
+final markPx = min(screenW, screenH) * 0.38;
+final s = markPx / 120.0;       // scala dallo spazio 120×120
+
+// Scala ingresso hex: rimbalzo
+scale = 0.45 + 0.55 * easeOutBack(t);
+
+// Breathing idle (sin wave)
+pulse = 0.055 * sin(breatheT * 2π);
+glowAlpha = 0.20 + pulse * 0.7;  // range ~0.08–0.26 (clamped)
+glowRadius = markPx * (0.8 + pulse * 0.5);
+```
+
+### Curve di animazione
+
+| Curva | Uso |
+|-------|-----|
+| `Curves.easeOut` | Alpha fade-in di ogni hex, wordmark |
+| `_EaseOutBack` (custom) | Scale ingresso hex — leggero rimbalzo `c1=1.70158` |
+| `sin(t × 2π)` | Breathing glow idle |
+
+### Palette esagoni (posizione → colore)
+
+| Posizione | Hex | Note |
+|-----------|-----|------|
+| top (0) | `#D8CFBE` | Pallido — luce diretta |
+| top-right (1) | `#DEC295` | Chiaro |
+| bot-right (2) | `#EC9C26` | Oro caldo |
+| bottom (3) | `#EF8E08` | Più saturo — profondo |
+| bot-left (4) | `#E7A848` | Oro medio |
+| top-left (5) | `#E4B56E` | Caldo chiaro — ritorno |
+| centrale (6) | `#D99B3E` | Accent Ottone |
+
+### Rendering esagoni (doppio passaggio)
+
+Per giunture uniformi tra esagoni adiacenti il `CustomPainter` usa due passaggi separati:
+
+1. **Fill pass** — tutti e 7 gli esagoni disegnati con:
+   - Fill base col colore posizionale
+   - Gradiente direzionale lineare: `topLeft(rgba 255,255,255 × 0.20)` → `(rgba 255,255,255 × 0.04 @40%)` → `bottomRight(rgba 0,0,0 × 0.28)`
+2. **Stroke pass** — stroke uniforme su tutti: `rgba(0,0,0, 0.50)`, `strokeWidth=1.4`, `strokeJoin=round`
+
+Un singolo passaggio causerebbe stroke doppi non uniformi sugli spigoli condivisi.
 
 ### File coinvolti
 
 ```
-app/lib/features/onboarding/splash_screen.dart   # widget Flutter (da creare)
-app/android/app/src/main/res/values/styles.xml   # native splash config
-app/android/app/src/main/res/drawable/           # ic_splash_foreground.xml
-app/lib/shared/widgets/patina_logo.dart          # _PatinaMarkPainter (già esistente)
+app/lib/features/onboarding/splash_screen.dart   ✅ implementato
+app/android/app/src/main/res/values/styles.xml   ⬜ native splash config (da fare)
+app/android/app/src/main/res/drawable/           ⬜ ic_splash_foreground.xml (da fare)
+app/lib/app/router.dart                          ⬜ aggiungere rotta /splash (da fare)
 ```
+
+### Integrazione router (da fare)
+
+```dart
+// In router.dart — aggiungere prima delle rotte principali
+GoRoute(
+  path: '/splash',
+  builder: (context, state) => const SplashScreen(),
+),
+```
+
+In `main.dart` impostare `initialLocation: '/splash'` oppure usare un `redirect` che porta a `/splash` solo al primo avvio.
 
 ---
 
