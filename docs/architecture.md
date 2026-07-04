@@ -261,6 +261,57 @@ Tamiya LP, AK Interactive, Ammo by Mig, Scale75) pianificata tramite Catalog Too
 
 ---
 
+## Splash Screen (Ibrido Native + Flutter)
+
+L'avvio dell'app usa una strategia **ibrida** per garantire fluidità su Android 12+ e massima espressività visiva.
+
+### Architettura
+
+```
+Avvio app
+  │
+  ├─ [Android OS] Native Splash Screen (API 31+)
+  │     Sfondo: #1C1A16 (Fondo)
+  │     Icona: marchio PATINA flat (WindowSplashScreenAnimatedIcon)
+  │     Durata: ~180ms (fino a Flutter ready)
+  │
+  └─ [Flutter] SplashScreen widget
+        Handoff: dissolvenza incrociata flat → animato (400ms)
+        Animazione: assemblaggio esagoni in senso orario + wordmark
+        Durata totale: ~3.2s poi naviga a home
+```
+
+### Fasi dell'animazione Flutter
+
+| Fase | Durata | Descrizione |
+|------|--------|-------------|
+| Handoff | 400ms | Crossfade dal flat nativo al layer Flutter con gradiente |
+| Ring orario | ~1.9s | Esagoni appaiono uno alla volta: alto → top-right → bot-right → bottom → bot-left → top-left |
+| Centrale | 360ms | Esagono centrale (Ottone `#D99B3E`) — ultimo a comparire |
+| Wordmark | 500ms | "PATINA" + tagline salgono con fade |
+| Idle breathing | ∞ | Pulse lento del glow Ottone fino a navigazione |
+
+### Implementazione
+
+- **Native splash:** configurato in `android/app/src/main/res/values/styles.xml` tramite `windowSplashScreenBackground` e `windowSplashScreenAnimatedIcon`
+- **Flutter widget:** `SplashScreen` in `app/lib/features/onboarding/splash_screen.dart`
+  - `AnimationController` con stagger via `Interval` per ogni esagono
+  - `CustomPainter` esteso da `_PatinaMarkPainter` con alpha/scale per singolo esagono
+  - `SlideTransition` + `FadeTransition` per il wordmark
+  - `GoRouter.go('/projects')` al termine dell'animazione
+- **Continuità visiva:** sfondo identico (`#1C1A16`) su entrambi i layer — il passaggio è impercettibile
+
+### File coinvolti
+
+```
+app/lib/features/onboarding/splash_screen.dart   # widget Flutter (da creare)
+app/android/app/src/main/res/values/styles.xml   # native splash config
+app/android/app/src/main/res/drawable/           # ic_splash_foreground.xml
+app/lib/shared/widgets/patina_logo.dart          # _PatinaMarkPainter (già esistente)
+```
+
+---
+
 ## Algoritmo Miscelazione (Fase 1)
 
 Calcolo in spazio colore **CIELAB** per distanza percettiva accurata (Delta-E).
