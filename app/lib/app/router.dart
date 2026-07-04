@@ -6,6 +6,7 @@ import '../features/onboarding/splash_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/projects/project_detail/project_detail_screen.dart';
 import '../shared/widgets/placeholder_screen.dart';
+import '../features/settings/settings_screen.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -71,10 +72,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/settings',
             name: 'settings',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Impostazioni',
-              icon: Icons.settings_outlined,
-            ),
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),

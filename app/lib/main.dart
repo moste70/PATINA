@@ -8,6 +8,7 @@ import 'features/onboarding/onboarding_screen.dart';
 // AppL10n è generato da `flutter gen-l10n` (lib/l10n/app_it.arb + app_en.arb).
 // Uso: AppL10n.of(context).actionSave
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'features/settings/settings_screen.dart' show localePrefProvider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,12 @@ class PatinaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final localePref = ref.watch(localePrefProvider);
+    final locale = switch (localePref) {
+      'it' => const Locale('it'),
+      'en' => const Locale('en'),
+      _ => null, // null = sistema operativo
+    };
     return MaterialApp.router(
       title: 'Patina',
       debugShowCheckedModeBanner: false,
@@ -38,6 +45,7 @@ class PatinaApp extends ConsumerWidget {
       darkTheme: PatinaTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
+      locale: locale,
       localizationsDelegates: const [
         AppL10n.delegate,
         GlobalMaterialLocalizations.delegate,
