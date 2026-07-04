@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../database/app_database.dart';
 import '../../../shared/constants/app_constants.dart';
 import '../project_repository.dart';
+import 'project_palette_sliver.dart';
 
 // Provider per il singolo progetto
 final projectByIdProvider = StreamProvider.autoDispose.family<Project, int>(
@@ -308,6 +309,9 @@ class _ProjectDetailContentState
               ),
             ),
           ),
+
+          // ── Palette del kit ──
+          ProjectPaletteSliver(projectId: widget.project.id),
 
           // ── Galleria Foto ──
           _SectionHeader(title: 'Galleria'),
