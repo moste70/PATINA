@@ -161,7 +161,7 @@ class _Page1Welcome extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          PatinaMark(size: 120, monoColor: scheme.primary),
+          const PatinaMark(size: 120),
           const SizedBox(height: 40),
           Text('Benvenuto in Patina',
               style: tt.displayMedium, textAlign: TextAlign.center),
