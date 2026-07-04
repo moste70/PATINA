@@ -27,15 +27,16 @@ Campi:
 | Campo | Tipo | Obbligatorio | Note |
 |-------|------|:---:|-------|
 | Nome modello | TextField | ✅ | es. "Tiger I Ausf. E" — max 80 caratteri |
-| Marca kit | TextField | ❌ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
-| Scala | TextField | ❌ | es. "1/35", "1/72" — testo libero con suggerimenti chip: 1/35 · 1/48 · 1/72 · 1/100 · 1/144 · Altra |
-| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Diorama · Altro |
+| Marca kit | TextField | ✅ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
+| Scala | TextField | ✅ | Formato `1/N` obbligatorio (es. "1/35"). Chip suggerimento: 1/12 · 1/24 · 1/35 · 1/48 · 1/72 · 1/100 · 1/144 |
+| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Auto · Moto · Diorama · Altro |
 
 Comportamento:
 - Il campo **Nome** riceve il focus automaticamente all'apertura (tastiera aperta)
-- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo
+- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo testo
 - La **categoria** mostra icone + etichette, selezione con tap, chip selezionato in `primary`
-- Bottone **Avanti** attivo solo se Nome e Categoria sono compilati
+- La label **Categoria** diventa rossa se si preme Avanti senza selezionarne una
+- Bottone **Avanti** è sempre toccabile; al tap mostra gli errori sui campi non compilati o non validi
 
 ---
 
@@ -93,7 +94,10 @@ Projects(
 ```
 
 ##### Validazioni
-- Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
+- **Nome** vuoto o solo spazi → errore mostrato al tap su Avanti
+- **Marca** vuota → errore "La marca è obbligatoria" mostrato al tap su Avanti
+- **Scala** vuota o formato non valido (non corrisponde a `1/\d+`) → errore mostrato al tap su Avanti
+- **Categoria** non selezionata → label "Categoria" diventa rossa al tap su Avanti
 - Nome > 80 caratteri → contatore caratteri visibile, input bloccato a 80
 - Foto > 10MB → ridimensionamento automatico trasparente prima del salvataggio
   (riduzione progressiva di risoluzione e qualità JPEG fino a ≤ 10MB).
@@ -292,25 +296,41 @@ Ultima cella è il bottone `+` con icona fotocamera.
 
 ---
 
-##### Sezione 4 — Vernici Usate
+##### Sezione 2b — Palette del Kit
 
-Lista compatta delle vernici dell'inventario collegate a questo progetto
-(tramite i pin di tipo `color` sulla foto).
+Lista delle vernici selezionate per questo progetto, indipendente dai pin.
+Viene mostrata tra l'header e la galleria foto.
 
 **Struttura riga:**
 ```
-[chip hex esagonale] Vallejo 70.950 · Black           [→ pin]
+[●  chip colore]  XF-85  Rubber Black        [ In magazzino ✓ ]
+[●  chip colore]  XF-63  German Grey         [ Da acquistare  ]
 ```
-- Chip esagonale con colore reale
-- Marca + codice + nome
-- Contatore pin che usano questa vernice (`→ 3 pin`)
-- Tap: apre scheda vernice nell'inventario
+- Cerchio con colore HEX reale (da catalogo)
+- Codice vernice in JetBrains Mono + nome
+- Badge **"In magazzino"** (verde `#2F8F57`) se presente nell'inventario personale
+- Badge **"Da acquistare"** (neutro) se non nell'inventario
+- Swipe a sinistra sulla riga per eliminare dalla palette
+- Bottone `+` in intestazione sezione → apre bottom sheet ricerca
 
-**Empty state:** "Nessuna vernice collegata — aggiungi pin colore alle foto"
+**Bottom sheet "Aggiungi vernice":**
+- Campo di ricerca full-text su tutti gli 11 cataloghi JSON in bundle
+- Ricerca per codice (es. `XF-85`), nome (es. `rubber`) o marca (es. `tamiya`)
+- Ogni risultato: chip colore + codice + nome + marca
+- Tap su risultato o su `+` → aggiunge alla palette (duplicati ignorati)
+- Il bottom sheet è `DraggableScrollableSheet` (85% → 95% schermo)
+
+**Empty state:** "Nessuna vernice aggiunta. Tocca + per cercare nei cataloghi."
+
+**Nota:** la palette del kit è indipendente dall'inventario — puoi aggiungere qualsiasi vernice dal catalogo senza possederla fisicamente. Il badge indica solo lo stato magazzino attuale.
 
 ---
 
-##### Sezione 5 — Note Progetto
+##### Sezione 3 — Galleria Foto
+
+_(invariata — vedi Sezione 2 sopra)_
+
+##### Sezione 4 — Note Progetto
 
 Campo testo espandibile. In visualizzazione mostra max 4 righe con bottone "Mostra tutto".
 Tap attiva editing inline (diventa TextField multiline con autofocus).
@@ -320,7 +340,7 @@ Placeholder: "Aggiungi note, riferimenti, obiettivi del progetto…"
 
 ---
 
-##### Sezione 6 — Info Progetto
+##### Sezione 5 — Info Progetto
 
 Row compatta con metadati:
 
@@ -465,11 +485,43 @@ Documenta la tecnica applicata in un punto specifico del modello.
 |-----------|----------|-------|
 | Onboarding | `/onboarding` | ✅ Implementato — 4 schermate (Benvenuto, Funzionalità, Permessi, Pronto) |
 | Archivio Progetti | `/projects` | ✅ Implementato — lista, empty state, FAB, navigazione alla scheda |
-| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto) |
-| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile, galleria (placeholder), note, info |
+| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto); brand+scala obbligatori, validazione on-press |
+| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile, palette del kit, galleria foto, note, info |
+| Palette del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe per rimuovere |
+| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, elimina con long-press |
+| Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app |
 | Vernici / Inventario | `/paints` | ⬜ Placeholder |
 | Ricette | `/recipes` | ⬜ Placeholder |
-| Impostazioni | `/settings` | ⬜ Placeholder |
+
+---
+
+---
+
+### 1.3 Impostazioni (`/settings`)
+
+Schermata accessibile dal tab Impostazioni nella bottom nav.
+
+#### Sezione Aspetto
+
+| Voce | Tipo | Comportamento |
+|------|------|--------------|
+| Tema | Tile con valore corrente | Bottom sheet: Scuro · Chiaro · Sistema (default) |
+
+Il tema viene persistito in `SharedPreferences` (chiave `theme_mode`) e applicato immediatamente a `MaterialApp` tramite `ThemeModeNotifier` (Riverpod).
+
+#### Sezione Lingua
+
+| Voce | Tipo | Comportamento |
+|------|------|--------------|
+| Lingua dell'app | Tile con valore corrente | Bottom sheet: Italiano · English · Sistema (default) |
+
+La lingua viene persistita in `SharedPreferences` (chiave `app_locale`) e applicata tramite `LocaleNotifier`. La `Locale` viene passata a `MaterialApp.locale` — il cambio è live senza riavvio. I testi dell'app usano `AppL10n.of(context)` (flutter_localizations + file `.arb`).
+
+#### Sezione Info
+
+| Voce | Valore |
+|------|--------|
+| Versione | `1.0.0-beta.1` (hardcoded, aggiornato a ogni release) |
 
 ---
 
@@ -480,7 +532,6 @@ di poter essere inserite nella roadmap.
 
 | Area | Note |
 |------|------|
-| **Profilo / Impostazioni** | `/settings` placeholder — contenuto da definire: tema dark/light toggle, lingua, backup/restore, info app, versione |
 | **Backup e ripristino** | Export ZIP (DB + foto) e import ZIP. Le foto sono nella memoria interna privata dell'app — senza backup vengono perse alla disinstallazione. Configurare anche le regole backup Android (`backup_rules.xml`) per il backup automatico Google One. |
 | **Paywall** | Modello monetizzazione Fase 2: crediti, subscription o one-time — da decidere prima dell'implementazione AI |
 | **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |

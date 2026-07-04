@@ -5,7 +5,7 @@
 | Layer | Tecnologia | Versione / Note |
 |-------|-----------|-----------------|
 | Framework | Flutter (Dart) | Cross-platform Android/iOS, UI ricca, grafica custom |
-| State Management | Riverpod + riverpod_generator | Reattivo, testabile, supporto async nativo |
+| State Management | Riverpod (`StateNotifierProvider`, `Provider`) | Reattivo, testabile, supporto async nativo — senza codegen |
 | Database locale | Drift (SQLite) via drift_flutter | Type-safe, query reattive, dati relazionali |
 | Navigazione | Go Router | Dichiarativo, ShellRoute per bottom nav, deep linking |
 | Immagini | image_picker + cached_network_image | Selezione da galleria/camera, cache efficiente |
@@ -42,25 +42,35 @@ patina/
 │   │   │   └── theme.dart       # PatinaColors, PatinaFonts, PatinaTheme
 │   │   ├── shared/
 │   │   │   ├── widgets/
-│   │   │   │   └── placeholder_screen.dart  # Schermo placeholder con icona Patina
+│   │   │   │   ├── placeholder_screen.dart  # Schermo placeholder
+│   │   │   │   ├── patina_logo.dart         # PatinaMark (7 esagoni)
+│   │   │   │   └── nav_icons.dart           # CustomPainter icone bottom nav
 │   │   │   ├── utils/
 │   │   │   │   └── permissions.dart         # Gestione permessi camera/storage
 │   │   │   └── constants/
 │   │   │       └── app_constants.dart       # Categorie, stati, marche, quantità
+│   │   ├── features/
+│   │   │   ├── onboarding/                  # Splash, onboarding 4 schermate
+│   │   │   ├── projects/
+│   │   │   │   ├── projects_screen.dart     # Archivio progetti
+│   │   │   │   ├── project_repository.dart  # CRUD progetti + foto + palette
+│   │   │   │   ├── create_project/          # Wizard 3 step
+│   │   │   │   └── project_detail/
+│   │   │   │       ├── project_detail_screen.dart
+│   │   │   │       └── project_palette_sliver.dart  # Palette del kit
+│   │   │   └── settings/
+│   │   │       └── settings_screen.dart     # Tema + lingua + info
 │   │   └── database/
-│   │       ├── app_database.dart            # Drift DB + initializeCatalogs()
+│   │       ├── app_database.dart            # Drift DB, schemaVersion 3
 │   │       ├── app_database.g.dart          # Generato da build_runner
 │   │       └── tables/
 │   │           ├── projects.dart            # Projects, ProjectPhotos
-│   │           ├── paints.dart              # CatalogPaints, InventoryPaints
+│   │           ├── paints.dart              # CatalogPaints, CustomPaints, InventoryPaints, ProjectPaints
 │   │           ├── recipes.dart             # Recipes, RecipeIngredients
 │   │           └── pins.dart                # Pins
 │   └── pubspec.yaml
 └── docs/                        # Documentazione di progetto
 ```
-
-> **Nota:** La cartella `features/` contiene `projects/` (wizard + scheda + archivio) e `onboarding/`.
-> Le cartelle `paints/`, `recipes/`, `pins/` verranno popolate durante la Fase 1B–1D.
 
 ---
 
@@ -94,29 +104,35 @@ Tipografia: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo).
 
 L'app usa un `ShellRoute` con `NavigationBar` a 4 voci:
 
-| Tab | Percorso | Icona outline | Icona selected |
-|-----|----------|--------------|----------------|
-| Progetti | `/projects` | `view_module_outlined` | `view_module` |
-| Vernici | `/paints` | `palette_outlined` | `palette` |
-| Ricette | `/recipes` | `science_outlined` | `science` |
-| Impostazioni | `/settings` | `settings_outlined` | `settings` |
+| Tab | Percorso | Icona (CustomPainter) |
+|-----|----------|-----------------------|
+| Progetti | `/projects` | Griglia 2×2 con taglio angolare 60° — `ProjectsIcon` |
+| Vernici | `/paints` | Tavolozza da pittore con foro pollice e 5 punti colore — `PaintsIcon` |
+| Ricette | `/recipes` | Matraccio da laboratorio con bolla — `RecipesIcon` |
+| Impostazioni | `/settings` | Ingranaggio 6 denti a geometria 60° — `SettingsIcon` |
+
+Le icone sono definite in `app/lib/shared/widgets/nav_icons.dart` come `CustomPainter`.
+Il colore attivo/inattivo viene letto dall'`IconTheme` del `NavigationBar` — il tono Ottone `#D99B3E` è impostato nel `NavigationBarThemeData` del tema.
 
 Rotta aggiuntiva: `/projects/:id` — scheda progetto (non nel tab, navigata dalla lista).
 I pin su foto sono accessibili dalla scheda progetto, non tramite tab dedicato.
 
 ### Icona Patina (in-app)
 
-`PlaceholderScreen` mostra nell'AppBar un'icona custom (`_HexPainter`):
-esagono outline con punto centrale, disegnato via `CustomPainter` in colore `primary`.
-Questa è l'icona di brand usata nell'interfaccia — distinta dall'icona launcher.
+`PatinaMark` in `app/lib/shared/widgets/patina_logo.dart`: cluster di 7 esagoni flat-top
+con la stessa palette della splash screen. Usata nell'onboarding e come placeholder.
+Parametro `monoColor` forza colore singolo (usato in contesti icon-only).
 
 ---
 
 ## Schema Database (Drift/SQLite)
 
-Il database è inizializzato al primo avvio (`schemaVersion: 1`).
-I cataloghi vengono caricati dagli asset JSON una sola volta (`initializeCatalogs()`
-verifica se la tabella è già popolata prima di procedere).
+Schema corrente: **v3**. Migrazione automatica in `app_database.dart`:
+- v1 → tabelle base
+- v2 → aggiunta `custom_paints`
+- v3 → aggiunta `project_paints`
+
+I cataloghi sono asset JSON bundled, **non** precaricati nel DB — letti on-demand via `rootBundle`.
 
 ### `projects`
 ```
@@ -124,7 +140,7 @@ id              INTEGER PRIMARY KEY AUTOINCREMENT
 name            TEXT NOT NULL
 brand           TEXT
 scale           TEXT                        -- es. "1/35"
-category        TEXT                        -- tank|aircraft|figure|ship|diorama|other
+category        TEXT                        -- tank|aircraft|figure|ship|car|motorcycle|diorama|other
 cover_photo     TEXT                        -- path locale
 status          TEXT DEFAULT 'todo'         -- todo|in_progress|completed
 notes           TEXT
@@ -141,11 +157,28 @@ caption         TEXT
 taken_at        INTEGER
 ```
 
+### `project_paints` _(palette del kit — v3)_
+```
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+project_id      INTEGER NOT NULL REFERENCES projects(id)
+brand           TEXT NOT NULL               -- es. "tamiya"
+code            TEXT NOT NULL               -- es. "XF-85"
+name            TEXT NOT NULL               -- denormalizzato per display offline
+hex             TEXT NOT NULL               -- es. "#3A3A3A"
+added_at        INTEGER NOT NULL
+UNIQUE (project_id, brand, code)
+```
+
+> Usa `brand+code` come chiave naturale, compatibile con `catalog_paints` e `custom_paints`.
+> Il campo `name` e `hex` sono denormalizzati per evitare JOIN in lettura — aggiornati solo
+> se il catalogo viene rigenerato. Il badge "In magazzino" viene calcolato live confrontando
+> con `inventory_paints.catalog_brand + catalog_code`.
+
 ### `catalog_paints`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
-brand           TEXT NOT NULL               -- vallejo|citadel|tamiya
-line            TEXT NOT NULL               -- model_color|base|xf|…
+brand           TEXT NOT NULL               -- vallejo|citadel|tamiya|gunze|humbrol|lifecolor
+line            TEXT NOT NULL               -- model_color|base|xf_flat|x_gloss|…
 code            TEXT NOT NULL
 name            TEXT NOT NULL
 hex             TEXT NOT NULL               -- es. "#4A3728"
