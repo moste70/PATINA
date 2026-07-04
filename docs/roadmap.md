@@ -18,6 +18,7 @@
 | 0.10 | `AppConstants` — categorie, stati, fasi predefinite, marche, quantità | ✅ Completato |
 | 0.11 | Icona launcher Android (cluster esagoni) + fix NormalTheme AndroidManifest | ✅ Completato |
 | 0.12 | Font: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo) via `PatinaFonts` | ✅ Completato |
+| 0.13 | Icone custom bottom navigation bar — `CustomPainter` per Progetti (griglia), Vernici (tavolozza), Ricette (matraccio), Impostazioni (ingranaggio 60°) | ✅ Completato |
 
 ---
 
@@ -42,7 +43,7 @@
 | 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ✅ Completato |
 | 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ✅ Completato |
 | 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ✅ Completato |
-| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ⬜ Da fare |
+| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ✅ Completato |
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
 | 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
 | 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) | ⬜ Da fare |
@@ -105,7 +106,7 @@
 |------|-------------|-------|
 | 1E.1 | Export backup ZIP (tutti i dati + foto) | ⬜ Da fare |
 | 1E.2 | Import backup | ⬜ Da fare |
-| 1E.3 | Impostazioni app (tema dark/light, lingua) | ⬜ Da fare |
+| 1E.3 | Impostazioni app (tema dark/light, lingua) | ✅ Completato |
 | 1E.4 | Empty state e onboarding primo avvio | ⬜ Da fare |
 | 1E.5 | Test su dispositivi reali | ⬜ Da fare |
 | 1E.6 | Ottimizzazione performance (immagini, DB) | ⬜ Da fare |
@@ -249,7 +250,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | 2.4 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
 | 2.5 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
 | 2.6 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
-| 2.7 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ⬜ Da fare |
+| 2.7 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ✅ Completato |
 
 ---
 
@@ -323,7 +324,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | DT.1 | 🔴 Alta | `CustomPaints` non registrata in `@DriftDatabase` — la tabella non viene creata nel DB SQLite, tutto il flusso vernici manuali è non funzionante a runtime | Aggiungere `CustomPaints` alla lista tables in `app_database.dart` e incrementare `schemaVersion` a 2 con migrazione | ✅ Risolto (serve `build_runner build` per rigenerare .g.dart) |
 | DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ⬜ Da fare |
 | DT.3 | 🟡 Media | `colorScheme.background` / `onBackground` / `surfaceVariant` deprecati in Flutter 3.18+ — genera warning in build | Migrazione completa: `background→surface`, `onBackground→onSurface`, `surface→surfaceContainer`, `surfaceVariant→surfaceContainerHigh` in tutti i file dart | ✅ Risolto |
-| DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ⬜ Da fare |
+| DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ✅ Risolto |
 | DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ⬜ Da fare |
 | DT.6 | 🟡 Media | Campo `phaseId` orfano in `Pins` — non referenzia nessuna tabella, non documentato, mai popolato dall'UI | Riservato per Fase 1D (fasi di lavorazione) — documentato con commento in `tables/pins.dart`. Aggiungere FK e migrazione quando si implementerà la tabella `phases` | ✅ Documentato |
 | DT.7 | 🟡 Media | Campo `catalogId` in `RecipeIngredients` non documentato — doppio riferimento a inventory e catalog non spiegato | Documentato con commento in `tables/recipes.dart`: `paintId` = percorso principale (inventario), `catalogId` = alternativo (vernice non ancora in inventario) | ✅ Documentato |
@@ -336,26 +337,25 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 ## Stato Attuale
 
 ```
-Fase 0       ██████████  100%  — completata
-Fase 1A      ████████░░   80%  — galleria foto implementata; mancano modifica/elimina, ricerca
+Fase 0       ██████████  100%  — completata (incl. icone nav custom)
+Fase 1A      █████████░   90%  — galleria foto OK; mancano modifica/elimina progetto, ricerca
 Fase 1B      ░░░░░░░░░░    0%  — Vernici: catalogo + inventario (prossima fase)
 Fase 1C      ░░░░░░░░░░    0%  — Ricette
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
-Fase 1E      ░░░░░░░░░░    0%  — Rifinitura e Release
+Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
-Fase 2       ██░░░░░░░░   20%  — Infrastruttura i18n completata (IT+EN); manca migrazione stringhe + ES/FR
+Fase 2       ███░░░░░░░   30%  — i18n IT+EN + selezione lingua completati; manca migrazione stringhe + ES/FR
 Fase 3       ░░░░░░░░░░    0%  — AI e Cloud
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ███░░░░░░░  30% — DT.1/3/6/7/8/9/10 risolti; DT.2/4/5 aperti
+Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risolti; DT.2/5 aperti
 ```
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🔴 `DT.1` — Aggiungere `CustomPaints` al DB (blocca tutto il flusso vernici manuali)
-2. 🔴 `DT.2` — Fix ordine demo project / onboarding
-3. 🔴 `1A.4` — Galleria foto progetto (sblocca 1D)
-4. 🟡 `1A.6` — Modifica, archiviazione, eliminazione progetto
-5. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
-6. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
-7. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
-8. 🟢 `DT.8` — Rimozione dipendenze inutilizzate da pubspec.yaml
+1. 🔴 `DT.2` — Fix ordine demo project / onboarding
+2. 🟡 `1A.6` — Modifica, archiviazione, eliminazione progetto
+3. 🟡 `2.3` — Migrazione stringhe hardcoded → `AppL10n` (feature per feature)
+4. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
+5. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
+6. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
+7. 🟢 `1A.7` — Ricerca e filtri nell'archivio (nome, categoria, stato)
