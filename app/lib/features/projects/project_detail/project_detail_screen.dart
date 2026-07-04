@@ -217,13 +217,13 @@ class _ProjectDetailContentState
                   if (v == 'cover') _updateCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
                       value: 'status', child: Text('Cambia stato')),
-                  PopupMenuItem(
+                  const PopupMenuItem(
                       value: 'cover',
                       child: Text('Cambia foto copertina')),
-                  PopupMenuDivider(),
+                  const PopupMenuDivider(),
                   PopupMenuItem(
                       value: 'delete',
                       child: Builder(
