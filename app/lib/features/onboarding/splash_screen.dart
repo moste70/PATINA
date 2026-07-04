@@ -268,9 +268,9 @@ class _SplashMarkPainter extends CustomPainter {
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFD99B3E).withValues(alpha: glowAlpha),
-            const Color(0xFFD99B3E).withValues(alpha: glowAlpha * 0.3),
-            const Color(0xFFD99B3E).withValues(alpha: 0),
+            const Color(0xFFD99B3E).withOpacity(glowAlpha),
+            const Color(0xFFD99B3E).withOpacity(glowAlpha * 0.3),
+            const Color(0xFFD99B3E).withOpacity(0),
           ],
           stops: const [0.0, 0.6, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: r));
@@ -310,7 +310,7 @@ class _SplashMarkPainter extends CustomPainter {
 
     // Base fill
     canvas.drawPath(path, Paint()
-      ..color = color.withValues(alpha: alpha)
+      ..color = color.withOpacity(alpha)
       ..style = PaintingStyle.fill);
 
     // Gradiente direzionale: top-left chiaro → bottom-right scuro
@@ -322,9 +322,9 @@ class _SplashMarkPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.20 * alpha),
-            Colors.white.withValues(alpha: 0.04 * alpha),
-            Colors.black.withValues(alpha: 0.28 * alpha),
+            Colors.white.withOpacity(0.20 * alpha),
+            Colors.white.withOpacity(0.04 * alpha),
+            Colors.black.withOpacity(0.28 * alpha),
           ],
           stops: const [0.0, 0.4, 1.0],
         ).createShader(bounds),
@@ -349,7 +349,7 @@ class _SplashMarkPainter extends CustomPainter {
     canvas.drawPath(
       _polyPath(poly, s),
       Paint()
-        ..color = Colors.black.withValues(alpha: 0.50 * alpha)
+        ..color = Colors.black.withOpacity(0.50 * alpha)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.4
         ..strokeJoin = StrokeJoin.round,

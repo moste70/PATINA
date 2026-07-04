@@ -2,6 +2,7 @@
 // Prima di eseguire: cd app && flutter pub run build_runner build
 // Runnare: flutter test test/database/app_database_test.dart
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:patina/database/app_database.dart';
