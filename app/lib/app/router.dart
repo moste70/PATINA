@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/onboarding/onboarding_screen.dart';
+import '../features/onboarding/splash_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/projects/project_detail/project_detail_screen.dart';
 import '../shared/widgets/placeholder_screen.dart';
@@ -16,8 +17,17 @@ final routerProvider = Provider<GoRouter>((ref) {
   final onboardingDone = ref.watch(onboardingCompletedProvider);
 
   return GoRouter(
-    initialLocation: onboardingDone ? '/projects' : '/onboarding',
+    // Lo splash decide sempre lui dove andare dopo l'animazione
+    initialLocation: '/splash',
     routes: [
+      // Splash — fuori dallo ShellRoute, niente bottom nav
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => SplashScreen(
+          onboardingCompleted: onboardingDone,
+        ),
+      ),
       // Onboarding — fuori dallo ShellRoute (no bottom nav)
       GoRoute(
         path: '/onboarding',

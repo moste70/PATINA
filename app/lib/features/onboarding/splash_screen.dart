@@ -51,7 +51,10 @@ class _EaseOutBack extends Curve {
 
 // ─── SplashScreen widget ──────────────────────────────────────────────────────
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  /// Se true, dopo l'animazione naviga a /projects; altrimenti a /onboarding.
+  final bool onboardingCompleted;
+
+  const SplashScreen({super.key, required this.onboardingCompleted});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -129,7 +132,9 @@ class _SplashScreenState extends State<SplashScreen>
     _ctrl.forward();
 
     Future.delayed(const Duration(milliseconds: _kNavigateDelay), () {
-      if (mounted) context.go('/projects');
+      if (mounted) {
+        context.go(widget.onboardingCompleted ? '/projects' : '/onboarding');
+      }
     });
   }
 

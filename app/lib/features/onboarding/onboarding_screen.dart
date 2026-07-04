@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../database/app_database.dart';
 import '../../shared/utils/permissions.dart';
 import '../../shared/widgets/patina_logo.dart';
 
@@ -17,14 +19,14 @@ Future<void> _markOnboardingCompleted() async {
   await prefs.setBool(_kOnboardingKey, true);
 }
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
 
@@ -72,6 +74,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
+    final db = ref.read(databaseProvider);
+    await db.initializeDemoProject();
     await _markOnboardingCompleted();
     if (mounted) context.go('/projects');
   }

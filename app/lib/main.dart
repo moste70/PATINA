@@ -9,9 +9,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase();
   final onboardingDone = await isOnboardingCompleted();
-  if (!onboardingDone) {
-    await db.initializeDemoProject();
-  }
   runApp(
     ProviderScope(
       overrides: [
