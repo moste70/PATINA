@@ -16,16 +16,22 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
   late final TextEditingController _brandCtrl;
   late final TextEditingController _scaleCtrl;
   bool _nameTouched = false;
+  bool _brandTouched = false;
+  bool _scaleTouched = false;
 
-  static const _scaleChips = ['1/35', '1/48', '1/72', '1/100', '1/144'];
+  static const _scaleChips = ['1/12', '1/24', '1/35', '1/48', '1/72', '1/100', '1/144'];
   static const _categoryIcons = {
     'tank': Icons.military_tech_outlined,
     'aircraft': Icons.flight_outlined,
     'figure': Icons.person_outline,
     'ship': Icons.directions_boat_outlined,
+    'car': Icons.directions_car_outlined,
+    'motorcycle': Icons.two_wheeler_outlined,
     'diorama': Icons.landscape_outlined,
     'other': Icons.category_outlined,
   };
+
+  static final _scaleRegex = RegExp(r'^1\/\d+$');
 
   @override
   void initState() {
@@ -52,6 +58,13 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
     final tt = Theme.of(context).textTheme;
 
     final nameError = _nameTouched && state.name.trim().isEmpty;
+    final brandError = _brandTouched && (state.brand == null || state.brand!.trim().isEmpty);
+    final scaleValue = state.scale ?? '';
+    final scaleError = _scaleTouched && scaleValue.trim().isEmpty
+        ? 'La scala è obbligatoria'
+        : _scaleTouched && scaleValue.trim().isNotEmpty && !_scaleRegex.hasMatch(scaleValue.trim())
+            ? 'Formato non valido (es. 1/35)'
+            : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -82,22 +95,30 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         TextField(
           controller: _brandCtrl,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Marca kit',
+          decoration: InputDecoration(
+            labelText: 'Marca kit *',
             hintText: 'es. Tamiya, Revell, Hasegawa',
+            errorText: brandError ? 'La marca è obbligatoria' : null,
           ),
-          onChanged: notifier.setBrand,
+          onChanged: (v) {
+            setState(() => _brandTouched = true);
+            notifier.setBrand(v);
+          },
         ),
         const SizedBox(height: 16),
 
         // Scala
         TextField(
           controller: _scaleCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Scala',
+          decoration: InputDecoration(
+            labelText: 'Scala *',
             hintText: 'es. 1/35',
+            errorText: scaleError,
           ),
-          onChanged: notifier.setScale,
+          onChanged: (v) {
+            setState(() => _scaleTouched = true);
+            notifier.setScale(v);
+          },
         ),
         const SizedBox(height: 8),
         SingleChildScrollView(
@@ -147,12 +168,14 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         const SizedBox(height: 32),
 
         FilledButton(
-          onPressed: state.step1Valid
-              ? () {
-                  setState(() => _nameTouched = true);
-                  if (state.step1Valid) widget.onNext();
-                }
-              : () => setState(() => _nameTouched = true),
+          onPressed: () {
+            setState(() {
+              _nameTouched = true;
+              _brandTouched = true;
+              _scaleTouched = true;
+            });
+            if (state.step1Valid) widget.onNext();
+          },
           child: const Text('Avanti'),
         ),
       ],

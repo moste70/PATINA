@@ -22,6 +22,22 @@ class ProjectRepository {
 
   Future<void> deleteProject(int id) =>
       (_db.delete(_db.projects)..where((t) => t.id.equals(id))).go();
+
+  Stream<List<ProjectPhoto>> watchProjectPhotos(int projectId) =>
+      (_db.select(_db.projectPhotos)
+            ..where((t) => t.projectId.equals(projectId))
+            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+          .watch();
+
+  Future<void> addProjectPhoto(int projectId, String path) =>
+      _db.into(_db.projectPhotos).insert(ProjectPhotosCompanion(
+            projectId: Value(projectId),
+            path: Value(path),
+            takenAt: Value(DateTime.now().millisecondsSinceEpoch),
+          ));
+
+  Future<void> deleteProjectPhoto(int photoId) =>
+      (_db.delete(_db.projectPhotos)..where((t) => t.id.equals(photoId))).go();
 }
 
 final projectRepositoryProvider = Provider<ProjectRepository>((ref) {

@@ -26,7 +26,14 @@ class CreateProjectState {
     this.isSaving = false,
   });
 
-  bool get step1Valid => name.trim().isNotEmpty && category != null;
+  static final _scaleRegex = RegExp(r'^1\/\d+$');
+
+  bool get step1Valid =>
+      name.trim().isNotEmpty &&
+      category != null &&
+      brand != null && brand!.trim().isNotEmpty &&
+      scale != null && _scaleRegex.hasMatch(scale!.trim());
+
   bool get hasData => name.isNotEmpty || category != null || brand != null;
 
   CreateProjectState copyWith({

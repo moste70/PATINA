@@ -307,19 +307,7 @@ class _ProjectDetailContentState
 
           // ── Galleria Foto ──
           _SectionHeader(title: 'Galleria'),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 88,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  // Bottone aggiungi
-                  _PhotoAddButton(onTap: () {}),
-                ],
-              ),
-            ),
-          ),
+          _GallerySliver(projectId: widget.project.id),
 
           // ── Note Progetto ──
           _SectionHeader(title: 'Note'),
@@ -499,6 +487,119 @@ class _SectionHeader extends StatelessWidget {
             Expanded(
                 child: Divider(color: scheme.outline, thickness: 1)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+final _projectPhotosProvider =
+    StreamProvider.autoDispose.family<List<ProjectPhoto>, int>(
+  (ref, projectId) =>
+      ref.watch(projectRepositoryProvider).watchProjectPhotos(projectId),
+);
+
+class _GallerySliver extends ConsumerWidget {
+  final int projectId;
+  const _GallerySliver({required this.projectId});
+
+  Future<void> _addPhoto(BuildContext context, WidgetRef ref) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Fotocamera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Galleria'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Annulla'),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    try {
+      final file = await ImagePicker().pickImage(source: source, imageQuality: 85);
+      if (file != null) {
+        await ref.read(projectRepositoryProvider).addProjectPhoto(projectId, file.path);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _deletePhoto(BuildContext context, WidgetRef ref, int photoId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminare la foto?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await ref.read(projectRepositoryProvider).deleteProjectPhoto(photoId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photosAsync = ref.watch(_projectPhotosProvider(projectId));
+    final photos = photosAsync.valueOrNull ?? [];
+
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 88,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            _PhotoAddButton(onTap: () => _addPhoto(context, ref)),
+            ...photos.map((photo) => _PhotoThumbnail(
+              photo: photo,
+              onLongPress: () => _deletePhoto(context, ref, photo.id),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoThumbnail extends StatelessWidget {
+  final ProjectPhoto photo;
+  final VoidCallback onLongPress;
+  const _PhotoThumbnail({required this.photo, required this.onLongPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Container(
+        width: 80,
+        height: 80,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            image: FileImage(File(photo.path)),
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
