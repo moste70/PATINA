@@ -189,20 +189,67 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ---
 
+## Fase 1F — Supporto Tablet
+
+**Obiettivo:** far funzionare bene l'app su schermi medi e grandi (tablet Android da 8" a 12"+), sfruttando lo spazio extra senza stravolgere il codice esistente.
+
+> Nota: Flutter usa i **Material 3 Window Size Classes** come riferimento:
+> - **Compact** — larghezza < 600 dp (smartphone in verticale) → layout attuale
+> - **Medium** — 600–840 dp (tablet piccolo, smartphone landscape) → NavigationRail + colonne
+> - **Expanded** — > 840 dp (tablet grande, foldable aperto) → pannello maestro-dettaglio
+
+### Fondamenta (da fare prima di qualsiasi altra cosa)
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1F.1 | 🔴 Alta | Crea `AdaptiveLayout` helper — `LayoutBuilder` con breakpoint `compact / medium / expanded`; espone un `WindowSizeClass` usabile ovunque tramite `InheritedWidget` o provider Riverpod | ⬜ Da fare |
+| 1F.2 | 🔴 Alta | **Navigazione adattiva** — sostituisce `BottomNavigationBar` con `NavigationRail` su Medium/Expanded; ShellRoute in Go Router rimane invariato, cambia solo il widget shell | ⬜ Da fare |
+| 1F.3 | 🔴 Alta | **Max-width constraint globale** — avvolge il contenuto delle schermate principali in un `Center` + `ConstrainedBox(maxWidth: 840)` per evitare layout spalmati su schermi da 12" | ⬜ Da fare |
+
+### Layout adattivi per feature
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1F.4 | 🟡 Media | **Archivio progetti — pannello maestro-dettaglio** — su Expanded, lista progetto a sinistra (330 dp) e scheda dettaglio a destra nella stessa schermata; Go Router aggiorna l'URL normalmente | ⬜ Da fare |
+| 1F.5 | 🟡 Media | **Griglia archivio adattiva** — `crossAxisCount` dinamico: 2 su Compact, 3 su Medium, 4 su Expanded | ⬜ Da fare |
+| 1F.6 | 🟡 Media | **Wizard nuovo progetto** — su Expanded, layout a due colonne (form a sinistra, anteprima/info a destra) invece di PageView lineare | ⬜ Da fare |
+| 1F.7 | 🟡 Media | **Inventario vernici** (Fase 1B) — griglia esagonale con `crossAxisCount` adattivo; sidebar filtri permanente su Expanded | ⬜ Da fare |
+| 1F.8 | 🟢 Bassa | **Pin su foto** (Fase 1D) — pannello pin-list a fianco del viewer foto su Expanded | ⬜ Da fare |
+
+### Ottimizzazioni e polish
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1F.9 | 🟡 Media | Supporto tastiera fisica — shortcut `Ctrl+N` (nuovo progetto), `Escape` (chiudi/indietro), frecce nella lista | ⬜ Da fare |
+| 1F.10 | 🟢 Bassa | Hover state sui card — `MouseRegion` + elevazione / highlight on hover per uso con mouse/trackpad | ⬜ Da fare |
+| 1F.11 | 🟢 Bassa | Drag & drop foto nella galleria progetto — riordino con `ReorderableListView` | ⬜ Da fare |
+| 1F.12 | 🟢 Bassa | Test su emulatori tablet (Pixel Tablet, Pixel Fold) e screenshot Google Play per il form factor tablet | ⬜ Da fare |
+
+### Note implementative
+
+- **Non usare `MediaQuery.of(context).size.width` raw** — passare sempre per `AdaptiveLayout` / `WindowSizeClass` per evitare magic numbers sparsi nel codice.
+- **Go Router** funziona già bene: su Expanded il pannello maestro-dettaglio viene gestito con una `ShellRoute` che renderizza entrambi i rami, non con due route separate.
+- **`NavigationRail`** su Medium/Expanded usa le stesse voci del `BottomNavigationBar` attuale — i label si mostrano solo su Expanded (`.extended = true`).
+- Breakpoint consigliati per PATINA (adattati al contenuto grafico): Compact < 600 dp · Medium 600–900 dp · Expanded > 900 dp.
+
+---
+
 ## Fase 2 — Internazionalizzazione
 
 **Obiettivo:** rendere l'app accessibile ai mercati internazionali con le maggiori community di modellismo.
 
 > Prerequisito: completamento Fase 1E (release italiana stabile).
+> L'infrastruttura (flutter_localizations + intl + file .arb IT/EN) è già predisposta nella Fase 0.
 
 | Task | Priorità | Descrizione | Stato |
 |------|----------|-------------|-------|
-| 2.1 | 🔴 Alta | Setup `flutter_localizations` + `intl` — struttura `.arb` files, estrazione tutte le stringhe UI | ⬜ Da fare |
-| 2.2 | 🔴 Alta | Traduzione inglese (EN) — testi UI, onboarding, store listing Google Play | ⬜ Da fare |
-| 2.3 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
-| 2.4 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
-| 2.5 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
-| 2.6 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ⬜ Da fare |
+| 2.1 | 🔴 Alta | Setup `flutter_localizations` + `intl` — struttura `.arb` files, delegate in MaterialApp | ✅ Completato |
+| 2.2 | 🔴 Alta | Chiavi IT/EN per azioni comuni, validazione, onboarding, categorie, stati, galleria | ✅ Completato |
+| 2.3 | 🔴 Alta | Migrazione stringhe hardcoded esistenti → `AppL10n.of(context).*` (feature per feature) | ⬜ Da fare |
+| 2.4 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
+| 2.5 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
+| 2.6 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
+| 2.7 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ⬜ Da fare |
 
 ---
 
@@ -290,15 +337,16 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ```
 Fase 0       ██████████  100%  — completata
-Fase 1A      ███████░░░   70%  — completata la base (1A.1/2/3/5); mancano galleria foto, modifica/elimina, ricerca
+Fase 1A      ████████░░   80%  — galleria foto implementata; mancano modifica/elimina, ricerca
 Fase 1B      ░░░░░░░░░░    0%  — Vernici: catalogo + inventario (prossima fase)
 Fase 1C      ░░░░░░░░░░    0%  — Ricette
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ░░░░░░░░░░    0%  — Rifinitura e Release
-Fase 2       ░░░░░░░░░░    0%  — Internazionalizzazione
+Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
+Fase 2       ██░░░░░░░░   20%  — Infrastruttura i18n completata (IT+EN); manca migrazione stringhe + ES/FR
 Fase 3       ░░░░░░░░░░    0%  — AI e Cloud
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ░░░░░░░░░░  0%  — 10 issue aperte (vedi sezione sopra)
+Debito Tecnico ███░░░░░░░  30% — DT.1/3/6/7/8/9/10 risolti; DT.2/4/5 aperti
 ```
 
 ### Prossimi step immediati (ordine esecuzione)
