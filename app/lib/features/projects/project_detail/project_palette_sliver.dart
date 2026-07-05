@@ -20,6 +20,9 @@ class _CatalogPaint {
       required this.code,
       required this.name,
       required this.hex});
+
+  factory _CatalogPaint.fromScan(ScanPaintResult r) =>
+      _CatalogPaint(brand: r.brand, code: r.code, name: r.name, hex: r.hex);
 }
 
 const _catalogAssets = [
@@ -57,7 +60,7 @@ Future<List<_CatalogPaint>> _loadAllCatalogs() async {
   return result;
 }
 
-// ── Providers ────────────────────────────────────────────────────────────────
+// ── Providers ─────────────────────────────────────────────────────────────────
 
 final _catalogProvider = FutureProvider<List<_CatalogPaint>>((ref) async {
   return _loadAllCatalogs();
@@ -106,7 +109,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   GestureDetector(
-                    onTap: () => showScanInstructionsSheet(context, ref, projectId),
+                    onTap: () => _scan(context, ref),
                     child: Icon(Icons.document_scanner_outlined,
                         color: scheme.primary, size: 20),
                   ),
@@ -124,13 +127,11 @@ class ProjectPaletteSliver extends ConsumerWidget {
               error: (_, __) => const SizedBox.shrink(),
               data: (paints) {
                 if (paints.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Text(
-                      'Nessuna vernice aggiunta.\nTocca + per cercare nei cataloghi.',
-                      style: tt.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
+                  return _EmptyPalette(
+                    onScan: () => _scan(context, ref),
+                    onManual: () => _showAddSheet(context, ref),
+                    scheme: scheme,
+                    tt: tt,
                   );
                 }
                 return Column(
@@ -149,11 +150,125 @@ class ProjectPaletteSliver extends ConsumerWidget {
     );
   }
 
+  Future<void> _scan(BuildContext context, WidgetRef ref) async {
+    final results = await scanKitInstructions(context);
+    if (results == null || !context.mounted) return;
+
+    if (results.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Nessun codice riconosciuto. Riprova con una foto più nitida.'),
+        ),
+      );
+      return;
+    }
+
+    final preloaded = results.map(_CatalogPaint.fromScan).toList();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _AddPaintSheet(
+        projectId: projectId,
+        initialResults: preloaded,
+      ),
+    );
+  }
+
   void _showAddSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => _AddPaintSheet(projectId: projectId),
+    );
+  }
+}
+
+// ── Empty palette state ───────────────────────────────────────────────────────
+
+class _EmptyPalette extends StatelessWidget {
+  final VoidCallback onScan;
+  final VoidCallback onManual;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _EmptyPalette(
+      {required this.onScan,
+      required this.onManual,
+      required this.scheme,
+      required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Auto-load tile (supported brands)
+        GestureDetector(
+          onTap: onScan,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: scheme.primary.withOpacity(0.4), width: 1),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.document_scanner_outlined,
+                    color: scheme.primary, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Caricamento automatico',
+                        style: tt.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        'Fotografia il foglio istruzioni\n'
+                        '${supportedBrands.join(' · ')}',
+                        style: tt.bodySmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right,
+                    color: scheme.onSurfaceVariant, size: 18),
+              ],
+            ),
+          ),
+        ),
+        // Manual add tile
+        GestureDetector(
+          onTap: onManual,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search, color: scheme.onSurfaceVariant, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Cerca nel catalogo',
+                    style: tt.bodyMedium,
+                  ),
+                ),
+                Icon(Icons.chevron_right,
+                    color: scheme.onSurfaceVariant, size: 18),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -185,7 +300,6 @@ class _PaletteRow extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              // Hex color circle
               Container(
                 width: 32,
                 height: 32,
@@ -197,7 +311,6 @@ class _PaletteRow extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // Code + name
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +333,6 @@ class _PaletteRow extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // Stock badge
               _StockBadge(inStock: inStock, scheme: scheme),
             ],
           ),
@@ -288,10 +400,13 @@ class _StockBadge extends StatelessWidget {
 }
 
 // ── Add paint bottom sheet ────────────────────────────────────────────────────
+// Se initialResults è valorizzato, la sheet mostra quei risultati direttamente
+// (modalità post-scansione). L'utente può comunque cercare altro nel catalogo.
 
 class _AddPaintSheet extends ConsumerStatefulWidget {
   final int projectId;
-  const _AddPaintSheet({required this.projectId});
+  final List<_CatalogPaint>? initialResults;
+  const _AddPaintSheet({required this.projectId, this.initialResults});
 
   @override
   ConsumerState<_AddPaintSheet> createState() => _AddPaintSheetState();
@@ -299,8 +414,19 @@ class _AddPaintSheet extends ConsumerStatefulWidget {
 
 class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   final _controller = TextEditingController();
-  List<_CatalogPaint> _results = [];
-  bool _searching = false;
+  late List<_CatalogPaint> _results;
+  bool _fromScan = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialResults != null && widget.initialResults!.isNotEmpty) {
+      _results = widget.initialResults!;
+      _fromScan = true;
+    } else {
+      _results = [];
+    }
+  }
 
   @override
   void dispose() {
@@ -311,10 +437,14 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   void _search(String query, List<_CatalogPaint> all) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) {
-      setState(() => _results = []);
+      setState(() {
+        _results = widget.initialResults ?? [];
+        _fromScan = widget.initialResults != null;
+      });
       return;
     }
     setState(() {
+      _fromScan = false;
       _results = all
           .where((p) =>
               p.code.toLowerCase().contains(q) ||
@@ -363,9 +493,25 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
           ),
           // Title
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-            child: Text('Aggiungi vernice', style: tt.titleMedium),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _fromScan ? 'Vernici trovate' : 'Aggiungi vernice',
+                    style: tt.titleMedium,
+                  ),
+                ),
+                if (_fromScan)
+                  Text(
+                    '${_results.length} riconosciute',
+                    style: tt.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+              ],
+            ),
           ),
+          const SizedBox(height: 12),
           // Search field
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -374,9 +520,11 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
               error: (_, __) => const SizedBox.shrink(),
               data: (all) => TextField(
                 controller: _controller,
-                autofocus: true,
+                autofocus: !_fromScan,
                 decoration: InputDecoration(
-                  hintText: 'Cerca per codice, nome o marca…',
+                  hintText: _fromScan
+                      ? 'Cerca per aggiungere altre vernici…'
+                      : 'Cerca per codice, nome o marca…',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
@@ -432,10 +580,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                         style: GoogleFonts.jetBrainsMono(
                             fontSize: 13, fontWeight: FontWeight.w500),
                       ),
-                      subtitle: Text(
-                        p.brand,
-                        style: tt.bodySmall,
-                      ),
+                      subtitle: Text(p.brand, style: tt.bodySmall),
                       trailing: IconButton(
                         icon: Icon(Icons.add, color: scheme.primary),
                         onPressed: () => _add(p),
