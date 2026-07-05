@@ -11,7 +11,7 @@
 | 0.3 | Configurazione dipendenze (Riverpod, Drift, Go Router, image_picker) | ✅ Completato |
 | 0.4 | Gestione permessi Android (camera, storage) | ✅ Completato |
 | 0.5 | Setup database Drift con tutte le tabelle (schemaVersion 1) | ✅ Completato |
-| 0.6 | Cataloghi vernici — 11 file JSON bundled in `assets/catalogs/`, letti on-demand da `rootBundle`. Aggiornamenti distribuiti con nuove release app (versione 2024.1 = lancio). | ✅ Completato |
+| 0.6 | Cataloghi vernici — 13 file JSON bundled in `assets/catalogs/`, letti on-demand da `rootBundle`. ~1.220 colori totali (versione 2024.1). Inclusi Tamiya LP (lacquer, 76) e Tamiya TS (spray, 100) aggiunti dopo il lancio iniziale. | ✅ Completato |
 | 0.7 | Design system: palette dark/light (`PatinaColors`), tipografia, tema Flutter | ✅ Completato |
 | 0.8 | Navigazione con Go Router — ShellRoute, 4 tab, placeholder screens | ✅ Completato |
 | 0.9 | CI/CD GitHub Actions — build APK debug e release | ✅ Completato |
@@ -61,7 +61,7 @@
 | 1B.3 | Inventario personale — griglia chip esagonali / lista | ⬜ Da fare |
 | 1B.4 | Aggiunta vernice da catalogo o manuale | ⬜ Da fare |
 | 1B.5 | Modifica quantità con tap rapido | ⬜ Da fare |
-| 1B.6 | Lista della spesa automatica (vernici finite/quasi finite) | ⬜ Da fare |
+| 1B.6 | Lista della spesa — sezione automatica (vernici `low`/`empty` dall'inventario) + voci manuali libere; schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
 | 1B.7 | Equivalenze tra marche | ⬜ Da fare |
 
 ---
@@ -339,13 +339,13 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 ```
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
 Fase 1A      █████████░   90%  — galleria foto OK; mancano modifica/elimina progetto, ricerca
-Fase 1B      ░░░░░░░░░░    0%  — Vernici: catalogo + inventario (prossima fase)
+Fase 1B      █░░░░░░░░░   14%  — lista della spesa (1B.6) completata; catalogo + inventario da fare
 Fase 1C      ░░░░░░░░░░    0%  — Ricette
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ███░░░░░░░   30%  — i18n IT+EN + selezione lingua completati; manca migrazione stringhe + ES/FR
-Fase 3       ░░░░░░░░░░    0%  — AI e Cloud
+Fase 3       █░░░░░░░░░    5%  — OCR scan istruzioni (scan_instructions_sheet) parzialmente implementato
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
 Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risolti; DT.2/5 aperti
 ```

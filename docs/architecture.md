@@ -31,10 +31,20 @@ patina/
 │   │       └── values/          # colors.xml, styles.xml
 │   ├── assets/
 │   │   ├── icon.png             # Icona app 1024x1024 (cluster esagoni)
-│   │   └── catalogs/            # JSON cataloghi vernici (bundled)
+│   │   └── catalogs/            # JSON cataloghi vernici (bundled, 13 file)
 │   │       ├── vallejo_model_color.json   (30 colori)
+│   │       ├── vallejo_model_air.json     (97 colori)
 │   │       ├── citadel_base.json          (20 colori)
-│   │       └── tamiya_xf.json             (28 colori)
+│   │       ├── tamiya_xf.json             (92 colori)
+│   │       ├── tamiya_x.json              (29 colori)
+│   │       ├── tamiya_lp.json             (76 colori)
+│   │       ├── tamiya_ts.json             (100 colori)
+│   │       ├── gunze_aqueous.json         (152 colori)
+│   │       ├── gunze_mr_color.json        (256 colori)
+│   │       ├── gunze_mr_metal.json        (9 colori)
+│   │       ├── humbrol_enamel.json        (195 colori)
+│   │       ├── lifecolor_ua.json          (139 colori)
+│   │       └── lifecolor_lc.json          (27 colori)
 │   ├── lib/
 │   │   ├── main.dart            # Entry point: init DB, catalogs, runApp
 │   │   ├── app/
@@ -53,15 +63,18 @@ patina/
 │   │   │   ├── onboarding/                  # Splash, onboarding 4 schermate
 │   │   │   ├── projects/
 │   │   │   │   ├── projects_screen.dart     # Archivio progetti
-│   │   │   │   ├── project_repository.dart  # CRUD progetti + foto + palette
+│   │   │   │   ├── project_repository.dart  # CRUD progetti + foto + palette + shopping
 │   │   │   │   ├── create_project/          # Wizard 3 step
 │   │   │   │   └── project_detail/
 │   │   │   │       ├── project_detail_screen.dart
-│   │   │   │       └── project_palette_sliver.dart  # Palette del kit
+│   │   │   │       ├── project_palette_sliver.dart  # Palette del kit
+│   │   │   │       └── scan_instructions_sheet.dart # OCR codici colore da foto
+│   │   │   ├── shopping/
+│   │   │   │   └── shopping_list_screen.dart  # Lista della spesa (auto + manuale)
 │   │   │   └── settings/
 │   │   │       └── settings_screen.dart     # Tema + lingua + info
 │   │   └── database/
-│   │       ├── app_database.dart            # Drift DB, schemaVersion 3
+│   │       ├── app_database.dart            # Drift DB, schemaVersion 4
 │   │       ├── app_database.g.dart          # Generato da build_runner
 │   │       └── tables/
 │   │           ├── projects.dart            # Projects, ProjectPhotos
@@ -127,10 +140,11 @@ Parametro `monoColor` forza colore singolo (usato in contesti icon-only).
 
 ## Schema Database (Drift/SQLite)
 
-Schema corrente: **v3**. Migrazione automatica in `app_database.dart`:
+Schema corrente: **v4**. Migrazione automatica in `app_database.dart`:
 - v1 → tabelle base
 - v2 → aggiunta `custom_paints`
 - v3 → aggiunta `project_paints`
+- v4 → aggiunta `shopping_items`
 
 I cataloghi sono asset JSON bundled, **non** precaricati nel DB — letti on-demand via `rootBundle`.
 
@@ -241,6 +255,17 @@ paint_id        INTEGER REFERENCES inventory_paints(id)
 percentage      REAL NOT NULL
 ```
 
+### `shopping_items` _(lista della spesa manuale — v4)_
+```
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+name            TEXT NOT NULL               -- descrizione libera (es. "Vallejo Black 70.950")
+checked         INTEGER NOT NULL DEFAULT 0  -- 0=da acquistare, 1=acquistato
+created_at      INTEGER NOT NULL
+```
+
+> Complementa la sezione "vernici mancanti" (calcolata automaticamente da `inventory_paints`
+> con quantità `low`/`empty`). Gli `shopping_items` sono voci libere aggiunte manualmente.
+
 ### `pins`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
@@ -261,16 +286,18 @@ notes           TEXT
 
 I cataloghi sono **bundled come asset JSON** in `app/assets/catalogs/` e letti on-demand tramite `rootBundle` — non vengono precaricati nel DB SQLite. Ogni aggiornamento dei cataloghi viene distribuito con una nuova release dell'app.
 
-**Versione corrente: 2024.1** — 11 cataloghi, ~1.000 colori totali.
+**Versione corrente: 2024.1** — 13 cataloghi, ~1.220 colori totali.
 
 | File | Marca | Linea (`line`) | Colori |
 |------|-------|----------------|--------|
-| `vallejo_model_color.json` | `vallejo` | `model_color` | 218 |
+| `vallejo_model_color.json` | `vallejo` | `model_color` | 30 |
 | `vallejo_model_air.json` | `vallejo` | `model_air` | 97 |
-| `citadel_base.json` | `citadel` | `base` | 31 |
+| `citadel_base.json` | `citadel` | `base` | 20 |
 | `tamiya_xf.json` | `tamiya` | `xf_flat` | 92 |
 | `tamiya_x.json` | `tamiya` | `x_gloss` | 29 |
-| `gunze_aqueous.json` | `gunze` | `aqueous` | 150 |
+| `tamiya_lp.json` | `tamiya` | `lp_lacquer` | 76 |
+| `tamiya_ts.json` | `tamiya` | `ts_spray` | 100 |
+| `gunze_aqueous.json` | `gunze` | `aqueous` | 152 |
 | `gunze_mr_color.json` | `gunze` | `mr_color` | 256 |
 | `gunze_mr_metal.json` | `gunze` | `mr_metal_color` | 9 |
 | `humbrol_enamel.json` | `humbrol` | `enamel` | 195 |

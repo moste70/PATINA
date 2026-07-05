@@ -31,7 +31,7 @@ app/lib/
   database/         # AppDatabase Drift + tabelle in tables/
   features/         # Schermate per feature (onboarding, projects, ...)
   shared/           # Widget e costanti condivisi
-assets/catalogs/    # 11 JSON cataloghi vernici (v2024.1, ~1.000 colori)
+assets/catalogs/    # 13 JSON cataloghi vernici (v2024.1, ~1.220 colori)
 docs/               # Documentazione: vision, features, architecture, roadmap
 ```
 
@@ -113,12 +113,13 @@ Breakpoint Material 3 adottati per PATINA:
 
 ## Versioning DB
 
-Schema corrente: **v3**
+Schema corrente: **v4**
 - v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
 - v2 → aggiunta `custom_paints` (vernici inserite manualmente dall'utente)
 - v3 → aggiunta `project_paints` (palette del kit — vernici associate a un progetto)
+- v4 → aggiunta `shopping_items` (lista della spesa manuale)
 
 ## Debito tecnico noto
 
 Vedere sezione "Debito Tecnico" in `docs/roadmap.md` per la lista completa.
-Issue più urgenti: DT.1 (CustomPaints non ancora nel .g.dart — serve build_runner), DT.2 (demo project / onboarding order).
+Issue più urgenti: DT.2 (demo project / onboarding order), DT.5 (note progetto: autosave vs bottoni).

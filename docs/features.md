@@ -490,6 +490,8 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Palette del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe per rimuovere |
 | Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, elimina con long-press |
 | Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app |
+| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica (vernici `low`/`empty`) + voci manuali, segna come acquistato |
+| Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — scatta/carica foto, MLKit OCR, riconosce codici colore, aggiunge a palette |
 | Vernici / Inventario | `/paints` | ⬜ Placeholder |
 | Ricette | `/recipes` | ⬜ Placeholder |
 
