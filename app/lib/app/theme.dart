@@ -189,7 +189,7 @@ class PatinaTheme {
           );
         }),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         // scheme.surfaceContainer = card bg (ex scheme.surface)
         color: scheme.surfaceContainer,
         surfaceTintColor: Colors.transparent,
