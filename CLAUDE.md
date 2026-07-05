@@ -70,6 +70,13 @@ Text(l.greeting(user.name))
 3. Le stringhe hardcoded esistenti si migrano gradualmente feature per feature
 4. Non usare mai stringhe hardcoded per testi nuovi
 
+## UX — Principio dei passi minimi
+
+Usare più passaggi **solo** se aumentano chiarezza o comprensione per l'utente.
+In tutti gli altri casi preferire sempre il minor numero di passaggi possibile:
+inserire, confermare o navigare in un tap solo quando fattibile, senza sheet o
+dialoghi intermedi non necessari.
+
 ## Convenzioni
 
 - **State management:** Riverpod con `StateNotifierProvider` e `Provider` scritti a mano (no codegen `@riverpod`)
