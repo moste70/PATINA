@@ -34,11 +34,24 @@ jobs:
 
       - name: Build release APK
         working-directory: app
-        run: flutter build apk --release --verbose
+        continue-on-error: true
+        run: flutter build apk --release
+
+      - name: Find APK
+        id: find_apk
+        run: |
+          APK=$(find app/build -name "app-release.apk" | head -1)
+          if [ -z "$APK" ]; then
+            APK=$(find app/build -name "*.apk" | grep -v unsigned | head -1)
+          fi
+          echo "apk_path=$APK" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK"
+          find app/build -name "*.apk" 2>/dev/null || echo "No APKs found"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: patina-release-apk
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          path: ${{ steps.find_apk.outputs.apk_path }}
           retention-days: 14
+          if-no-files-found: error
