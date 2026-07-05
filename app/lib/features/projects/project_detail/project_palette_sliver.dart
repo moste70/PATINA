@@ -21,8 +21,6 @@ class _CatalogPaint {
       required this.name,
       required this.hex});
 
-  factory _CatalogPaint.fromScan(ScanPaintResult r) =>
-      _CatalogPaint(brand: r.brand, code: r.code, name: r.name, hex: r.hex);
 }
 
 const _catalogAssets = [
@@ -164,15 +162,25 @@ class ProjectPaletteSliver extends ConsumerWidget {
       return;
     }
 
-    final preloaded = results.map(_CatalogPaint.fromScan).toList();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => _AddPaintSheet(
+    final repo = ref.read(projectRepositoryProvider);
+    for (final r in results) {
+      await repo.addProjectPaint(
         projectId: projectId,
-        initialResults: preloaded,
-      ),
-    );
+        brand: r.brand,
+        code: r.code,
+        name: r.name,
+        hex: r.hex,
+      );
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '${results.length} vernic${results.length == 1 ? 'e aggiunta' : 'i aggiunte'} alla palette.'),
+        ),
+      );
+    }
   }
 
   void _showAddSheet(BuildContext context, WidgetRef ref) {
@@ -405,8 +413,7 @@ class _StockBadge extends StatelessWidget {
 
 class _AddPaintSheet extends ConsumerStatefulWidget {
   final int projectId;
-  final List<_CatalogPaint>? initialResults;
-  const _AddPaintSheet({required this.projectId, this.initialResults});
+  const _AddPaintSheet({required this.projectId});
 
   @override
   ConsumerState<_AddPaintSheet> createState() => _AddPaintSheetState();
@@ -414,19 +421,7 @@ class _AddPaintSheet extends ConsumerStatefulWidget {
 
 class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   final _controller = TextEditingController();
-  late List<_CatalogPaint> _results;
-  bool _fromScan = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialResults != null && widget.initialResults!.isNotEmpty) {
-      _results = widget.initialResults!;
-      _fromScan = true;
-    } else {
-      _results = [];
-    }
-  }
+  List<_CatalogPaint> _results = [];
 
   @override
   void dispose() {
@@ -437,14 +432,10 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   void _search(String query, List<_CatalogPaint> all) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) {
-      setState(() {
-        _results = widget.initialResults ?? [];
-        _fromScan = widget.initialResults != null;
-      });
+      setState(() => _results = []);
       return;
     }
     setState(() {
-      _fromScan = false;
       _results = all
           .where((p) =>
               p.code.toLowerCase().contains(q) ||
@@ -494,22 +485,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
           // Title
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _fromScan ? 'Vernici trovate' : 'Aggiungi vernice',
-                    style: tt.titleMedium,
-                  ),
-                ),
-                if (_fromScan)
-                  Text(
-                    '${_results.length} riconosciute',
-                    style: tt.bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-              ],
-            ),
+            child: Text('Aggiungi vernice', style: tt.titleMedium),
           ),
           const SizedBox(height: 12),
           // Search field
@@ -522,9 +498,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                 controller: _controller,
                 autofocus: !_fromScan,
                 decoration: InputDecoration(
-                  hintText: _fromScan
-                      ? 'Cerca per aggiungere altre vernici…'
-                      : 'Cerca per codice, nome o marca…',
+                  hintText: 'Cerca per codice, nome o marca…',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
