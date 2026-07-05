@@ -40,13 +40,13 @@ jobs:
       - name: Find APK
         id: find_apk
         run: |
-          APK=$(find app/build -name "app-release.apk" | head -1)
+          APK=$(find app -name "app-release.apk" 2>/dev/null | head -1)
           if [ -z "$APK" ]; then
-            APK=$(find app/build -name "*.apk" | grep -v unsigned | head -1)
+            APK=$(find app -name "*.apk" 2>/dev/null | grep -v unsigned | head -1)
           fi
           echo "apk_path=$APK" >> $GITHUB_OUTPUT
           echo "Found APK: $APK"
-          find app/build -name "*.apk" 2>/dev/null || echo "No APKs found"
+          find app -name "*.apk" 2>/dev/null || echo "No APKs found anywhere in app/"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
