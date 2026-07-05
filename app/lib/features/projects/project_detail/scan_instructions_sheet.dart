@@ -547,6 +547,10 @@ class _ScanSheetState extends State<_ScanSheet> {
 }
 
 // ── Crop page ─────────────────────────────────────────────────────────────────
+//
+// La selezione è memorizzata come Rect in coordinate RELATIVE [0..1]×[0..1]
+// rispetto all'immagine. In questo modo è sempre valida (nessun postFrameCallback
+// o dipendenza dalla dimensione del widget), ed è pronta non appena _image è caricata.
 
 enum _Corner { tl, tr, bl, br }
 
@@ -560,14 +564,12 @@ class _CropPage extends StatefulWidget {
 
 class _CropPageState extends State<_CropPage> {
   ui.Image? _image;
-  Rect _selection = Rect.zero;
-  Rect _imgRect = Rect.zero;
-  Size _lastSize = Size.zero;
-  bool _initialized = false;
+  // Selezione in coordinate relative [0..1] — inizializzata con 8% di inset
+  Rect _relSel = const Rect.fromLTRB(0.08, 0.08, 0.92, 0.92);
   bool _cropping = false;
 
-  static const double _handleRadius = 14;
-  static const double _minSel = 60;
+  static const double _handleRadius = 16;
+  static const double _minRel = 0.05; // dimensione minima selezione (5% per lato)
 
   @override
   void initState() {
@@ -582,8 +584,9 @@ class _CropPageState extends State<_CropPage> {
     if (mounted) setState(() => _image = frame.image);
   }
 
-  Rect _computeImgRect(Size ws) {
-    final img = _image!;
+  /// Restituisce il Rect (in coordinate widget) in cui l'immagine è effettivamente
+  /// renderizzata con BoxFit.contain, data la dimensione del widget [ws].
+  Rect _imgRect(ui.Image img, Size ws) {
     final ia = img.width / img.height;
     final wa = ws.width / ws.height;
     if (ia > wa) {
@@ -595,50 +598,45 @@ class _CropPageState extends State<_CropPage> {
     }
   }
 
-  void _initForSize(Size ws) {
-    _imgRect = _computeImgRect(ws);
-    final ix = _imgRect.width * 0.08;
-    final iy = _imgRect.height * 0.08;
-    _selection = Rect.fromLTRB(
-      _imgRect.left + ix,
-      _imgRect.top + iy,
-      _imgRect.right - ix,
-      _imgRect.bottom - iy,
-    );
-    _initialized = true;
-    _lastSize = ws;
-  }
+  /// Converte _relSel in coordinate assolute del widget dati imgRect.
+  Rect _displaySel(Rect ir) => Rect.fromLTWH(
+        ir.left + _relSel.left * ir.width,
+        ir.top + _relSel.top * ir.height,
+        _relSel.width * ir.width,
+        _relSel.height * ir.height,
+      );
 
-  void _onCornerDrag(_Corner c, DragUpdateDetails d) {
+  void _onCornerDrag(_Corner c, DragUpdateDetails d, Rect ir) {
     setState(() {
-      double l = _selection.left, t = _selection.top,
-          r = _selection.right, b = _selection.bottom;
+      final dxR = d.delta.dx / ir.width;
+      final dyR = d.delta.dy / ir.height;
+      double l = _relSel.left, t = _relSel.top,
+          r = _relSel.right, b = _relSel.bottom;
       switch (c) {
         case _Corner.tl:
-          l = (l + d.delta.dx).clamp(_imgRect.left, r - _minSel);
-          t = (t + d.delta.dy).clamp(_imgRect.top, b - _minSel);
+          l = (l + dxR).clamp(0.0, r - _minRel);
+          t = (t + dyR).clamp(0.0, b - _minRel);
         case _Corner.tr:
-          r = (r + d.delta.dx).clamp(l + _minSel, _imgRect.right);
-          t = (t + d.delta.dy).clamp(_imgRect.top, b - _minSel);
+          r = (r + dxR).clamp(l + _minRel, 1.0);
+          t = (t + dyR).clamp(0.0, b - _minRel);
         case _Corner.bl:
-          l = (l + d.delta.dx).clamp(_imgRect.left, r - _minSel);
-          b = (b + d.delta.dy).clamp(t + _minSel, _imgRect.bottom);
+          l = (l + dxR).clamp(0.0, r - _minRel);
+          b = (b + dyR).clamp(t + _minRel, 1.0);
         case _Corner.br:
-          r = (r + d.delta.dx).clamp(l + _minSel, _imgRect.right);
-          b = (b + d.delta.dy).clamp(t + _minSel, _imgRect.bottom);
+          r = (r + dxR).clamp(l + _minRel, 1.0);
+          b = (b + dyR).clamp(t + _minRel, 1.0);
       }
-      _selection = Rect.fromLTRB(l, t, r, b);
+      _relSel = Rect.fromLTRB(l, t, r, b);
     });
   }
 
-  void _onCenterDrag(DragUpdateDetails d) {
+  void _onCenterDrag(DragUpdateDetails d, Rect ir) {
     setState(() {
-      final nl = (_selection.left + d.delta.dx)
-          .clamp(_imgRect.left, _imgRect.right - _selection.width);
-      final nt = (_selection.top + d.delta.dy)
-          .clamp(_imgRect.top, _imgRect.bottom - _selection.height);
-      _selection = _selection.translate(
-          nl - _selection.left, nt - _selection.top);
+      final dxR = d.delta.dx / ir.width;
+      final dyR = d.delta.dy / ir.height;
+      final nl = (_relSel.left + dxR).clamp(0.0, 1.0 - _relSel.width);
+      final nt = (_relSel.top + dyR).clamp(0.0, 1.0 - _relSel.height);
+      _relSel = _relSel.translate(nl - _relSel.left, nt - _relSel.top);
     });
   }
 
@@ -647,30 +645,24 @@ class _CropPageState extends State<_CropPage> {
     setState(() => _cropping = true);
 
     final img = _image!;
-    final scaleX = img.width / _imgRect.width;
-    final scaleY = img.height / _imgRect.height;
+    // Converti selezione relativa in pixel dell'immagine reale
     final px = Rect.fromLTWH(
-      (_selection.left - _imgRect.left) * scaleX,
-      (_selection.top - _imgRect.top) * scaleY,
-      _selection.width * scaleX,
-      _selection.height * scaleY,
+      _relSel.left * img.width,
+      _relSel.top * img.height,
+      _relSel.width * img.width,
+      _relSel.height * img.height,
     );
 
     final recorder = ui.PictureRecorder();
     Canvas(recorder).drawImageRect(
-      img,
-      px,
-      Rect.fromLTWH(0, 0, px.width, px.height),
-      Paint(),
-    );
-    final cropped = await recorder.endRecording()
+        img, px, Rect.fromLTWH(0, 0, px.width, px.height), Paint());
+    final cropped = await recorder
+        .endRecording()
         .toImage(px.width.round(), px.height.round());
-    final data =
-        await cropped.toByteData(format: ui.ImageByteFormat.png);
+    final data = await cropped.toByteData(format: ui.ImageByteFormat.png);
 
     final dir = File(widget.imagePath).parent.path;
-    final out =
-        '$dir/crop_${DateTime.now().millisecondsSinceEpoch}.png';
+    final out = '$dir/crop_${DateTime.now().millisecondsSinceEpoch}.png';
     await File(out).writeAsBytes(data!.buffer.asUint8List());
 
     if (mounted) Navigator.pop(context, out);
@@ -686,15 +678,15 @@ class _CropPageState extends State<_CropPage> {
         automaticallyImplyLeading: false,
         leading: TextButton(
           onPressed: () => Navigator.pop(context, null),
-          child: const Text('Annulla',
-              style: TextStyle(color: Colors.white70)),
+          child:
+              const Text('Annulla', style: TextStyle(color: Colors.white70)),
         ),
         leadingWidth: 90,
         title: const Text('Seleziona area',
             style: TextStyle(color: Colors.white, fontSize: 16)),
         actions: [
           TextButton(
-            onPressed: _cropping ? null : _confirm,
+            onPressed: _cropping || _image == null ? null : _confirm,
             child: _cropping
                 ? const SizedBox(
                     width: 18,
@@ -703,8 +695,7 @@ class _CropPageState extends State<_CropPage> {
                         strokeWidth: 2, color: Colors.white))
                 : const Text('Analizza',
                     style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700)),
+                        color: Colors.white, fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 8),
         ],
@@ -713,45 +704,37 @@ class _CropPageState extends State<_CropPage> {
           ? const Center(
               child: CircularProgressIndicator(color: Colors.white))
           : LayoutBuilder(builder: (ctx, constraints) {
-              final ws =
-                  Size(constraints.maxWidth, constraints.maxHeight);
-              if (!_initialized || _lastSize != ws) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _initForSize(ws));
-                });
-                return const Center(
-                    child:
-                        CircularProgressIndicator(color: Colors.white));
-              }
+              final ws = Size(constraints.maxWidth, constraints.maxHeight);
+              final ir = _imgRect(_image!, ws);
+              final sel = _displaySel(ir);
               return Stack(children: [
-                // Image
+                // Immagine
                 Positioned.fill(
                   child: Image.file(File(widget.imagePath),
                       fit: BoxFit.contain),
                 ),
-                // Darkened overlay + border
+                // Overlay scurito + bordo selezione
                 Positioned.fill(
-                  child: CustomPaint(
-                      painter: _CropOverlayPainter(_selection)),
+                  child: CustomPaint(painter: _CropOverlayPainter(sel)),
                 ),
-                // Center drag
+                // Area centrale: sposta l'intera selezione
                 Positioned(
-                  left: _selection.left + _handleRadius,
-                  top: _selection.top + _handleRadius,
-                  width: _selection.width - _handleRadius * 2,
-                  height: _selection.height - _handleRadius * 2,
+                  left: sel.left + _handleRadius,
+                  top: sel.top + _handleRadius,
+                  width: (sel.width - _handleRadius * 2).clamp(0, double.infinity),
+                  height: (sel.height - _handleRadius * 2).clamp(0, double.infinity),
                   child: GestureDetector(
-                    onPanUpdate: _onCenterDrag,
+                    onPanUpdate: (d) => _onCenterDrag(d, ir),
                     behavior: HitTestBehavior.opaque,
                   ),
                 ),
-                // Corner handles
+                // Handle angoli
                 for (final c in _Corner.values)
                   _CornerHandle(
                     corner: c,
-                    selection: _selection,
+                    selection: sel,
                     radius: _handleRadius,
-                    onDrag: (d) => _onCornerDrag(c, d),
+                    onDrag: (d) => _onCornerDrag(c, d, ir),
                   ),
               ]);
             }),
@@ -761,8 +744,8 @@ class _CropPageState extends State<_CropPage> {
           child: Text(
             'Trascina gli angoli per inquadrare solo la tabella colori',
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: Colors.white.withOpacity(0.7), fontSize: 13),
+            style:
+                TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
           ),
         ),
       ),
@@ -800,12 +783,11 @@ class _CornerHandle extends StatelessWidget {
       child: GestureDetector(
         onPanUpdate: onDrag,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black45, blurRadius: 4, spreadRadius: 1)
+            boxShadow: [
+              BoxShadow(color: Colors.black45, blurRadius: 4, spreadRadius: 1)
             ],
           ),
         ),
@@ -821,12 +803,10 @@ class _CropOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final dark = Paint()..color = Colors.black.withOpacity(0.6);
-    canvas.drawRect(
-        Rect.fromLTRB(0, 0, size.width, sel.top), dark);
+    canvas.drawRect(Rect.fromLTRB(0, 0, size.width, sel.top), dark);
     canvas.drawRect(
         Rect.fromLTRB(0, sel.bottom, size.width, size.height), dark);
-    canvas.drawRect(
-        Rect.fromLTRB(0, sel.top, sel.left, sel.bottom), dark);
+    canvas.drawRect(Rect.fromLTRB(0, sel.top, sel.left, sel.bottom), dark);
     canvas.drawRect(
         Rect.fromLTRB(sel.right, sel.top, size.width, sel.bottom), dark);
     canvas.drawRect(
