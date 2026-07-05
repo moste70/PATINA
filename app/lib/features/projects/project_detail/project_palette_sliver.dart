@@ -496,7 +496,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
               error: (_, __) => const SizedBox.shrink(),
               data: (all) => TextField(
                 controller: _controller,
-                autofocus: !_fromScan,
+                autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'Cerca per codice, nome o marca…',
                   prefixIcon: const Icon(Icons.search, size: 20),

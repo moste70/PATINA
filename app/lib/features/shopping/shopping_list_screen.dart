@@ -79,7 +79,7 @@ class ShoppingListScreen extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                         child: Text(
-                          (item as String).toUpperCase(),
+                          item.toUpperCase(),
                           style: tt.labelSmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                             letterSpacing: 1.0,
