@@ -54,14 +54,16 @@ const _catalogAssets = <(String, String)>[
 // ── Regex patterns ────────────────────────────────────────────────────────────
 
 final _patterns = <({RegExp re, int group, String brand})>[
-  (re: RegExp(r'\bXF-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
-  (re: RegExp(r'\bAS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
-  (re: RegExp(r'\bTS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
-  (re: RegExp(r'\bLP-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
-  (re: RegExp(r'\bX-\d{1,3}\b',  caseSensitive: false),  group: 0, brand: 'tamiya'),
+  // XF, X, AS, LP: max 2 cifre (XF-90, X-35, AS-30, LP-80).
+  // \d{1,2} evita falsi positivi da errori OCR tipo "XF-855" invece di "XF-85".
+  (re: RegExp(r'\bXF-\d{1,2}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bAS-\d{1,2}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bTS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'), // TS arriva a 100+
+  (re: RegExp(r'\bLP-\d{1,2}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bX-\d{1,2}\b',  caseSensitive: false),  group: 0, brand: 'tamiya'),
   (re: RegExp(r'\b(70|71|72|73|74|75|76|77|78|79)\.\d{3}\b'), group: 0, brand: 'vallejo'),
-  (re: RegExp(r'\bC\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'),
-  (re: RegExp(r'\bH\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'),
+  (re: RegExp(r'\bC\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'), // Mr.Color C1–C512
+  (re: RegExp(r'\bH\d{1,2}\b',   caseSensitive: false),  group: 0, brand: 'gunze'), // Aqueous H1–H90
   (re: RegExp(r'\bHumbrol\s+(\d{1,3})\b', caseSensitive: false), group: 1, brand: 'humbrol'),
   (re: RegExp(r'\bLC-?\d{1,3}\b', caseSensitive: false), group: 0, brand: 'lifecolor'),
   (re: RegExp(r'\bUA-?\d{1,3}\b', caseSensitive: false), group: 0, brand: 'lifecolor'),
