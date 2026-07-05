@@ -12,6 +12,9 @@ final _shoppingItemsProvider = StreamProvider<List<ShoppingItem>>((ref) {
   return ref.watch(projectRepositoryProvider).watchShoppingItems();
 });
 
+// Stato in-memory per le vernici automatiche spuntate (brand+code)
+final _checkedPaintsProvider = StateProvider<Set<String>>((ref) => {});
+
 class ShoppingListScreen extends ConsumerWidget {
   const ShoppingListScreen({super.key});
 
@@ -19,6 +22,7 @@ class ShoppingListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paintsAsync = ref.watch(_shoppingListProvider);
     final itemsAsync = ref.watch(_shoppingItemsProvider);
+    final checkedPaints = ref.watch(_checkedPaintsProvider);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -64,15 +68,18 @@ class ShoppingListScreen extends ConsumerWidget {
                   ),
                 );
               }
-              // Group by project name
+              // Unchecked prima, checked in fondo
+              final sorted = [
+                ...entries.where((e) => !checkedPaints.contains('${e.brand}+${e.code}')),
+                ...entries.where((e) => checkedPaints.contains('${e.brand}+${e.code}')),
+              ];
               final grouped = <String, List<ShoppingEntry>>{};
-              for (final e in entries) {
+              for (final e in sorted) {
                 grouped.putIfAbsent(e.projectName, () => []).add(e);
               }
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    // flatten grouped into a header+row list
                     final flat = _flattenGroups(grouped);
                     final item = flat[index];
                     if (item is String) {
@@ -88,7 +95,21 @@ class ShoppingListScreen extends ConsumerWidget {
                       );
                     }
                     final e = item as ShoppingEntry;
-                    return _PaintRow(entry: e, scheme: scheme, tt: tt);
+                    final key = '${e.brand}+${e.code}';
+                    final checked = checkedPaints.contains(key);
+                    return _PaintRow(
+                      entry: e,
+                      scheme: scheme,
+                      tt: tt,
+                      checked: checked,
+                      onToggle: (v) {
+                        ref.read(_checkedPaintsProvider.notifier).update((s) {
+                          final next = Set<String>.from(s);
+                          if (v) next.add(key); else next.remove(key);
+                          return next;
+                        });
+                      },
+                    );
                   },
                   childCount: _flattenGroups(grouped).length,
                 ),
@@ -220,23 +241,37 @@ class _PaintRow extends StatelessWidget {
   final ShoppingEntry entry;
   final ColorScheme scheme;
   final TextTheme tt;
-  const _PaintRow(
-      {required this.entry, required this.scheme, required this.tt});
+  final bool checked;
+  final ValueChanged<bool> onToggle;
+  const _PaintRow({
+    required this.entry,
+    required this.scheme,
+    required this.tt,
+    required this.checked,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
+        color: checked
+            ? scheme.surfaceContainerHigh.withOpacity(0.5)
+            : scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
+          Checkbox(
+            value: checked,
+            onChanged: (v) => onToggle(v ?? false),
+            visualDensity: VisualDensity.compact,
+          ),
           Container(
-            width: 28,
-            height: 28,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
               color: _hexColor(entry.hex),
               shape: BoxShape.circle,
@@ -244,7 +279,7 @@ class _PaintRow extends StatelessWidget {
                   Border.all(color: scheme.outline.withOpacity(0.4), width: 1),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,12 +289,19 @@ class _PaintRow extends StatelessWidget {
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+                    color: checked ? scheme.onSurfaceVariant : scheme.onSurface,
                     letterSpacing: 0.3,
+                    decoration: checked ? TextDecoration.lineThrough : null,
                   ),
                 ),
-                Text(entry.name,
-                    style: tt.bodySmall, overflow: TextOverflow.ellipsis),
+                Text(
+                  entry.name,
+                  style: tt.bodySmall?.copyWith(
+                    color: checked ? scheme.onSurfaceVariant.withOpacity(0.6) : null,
+                    decoration: checked ? TextDecoration.lineThrough : null,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
