@@ -110,15 +110,52 @@ class ScanStateError extends ScanState {
   ScanStateError(this.message);
 }
 
+// ── Pre-processing immagine per OCR ──────────────────────────────────────────
+//
+// Converte l'immagine in scala di grigi ad alto contrasto prima di passarla
+// a MLKit. Su fogli di istruzioni B&N (font piccoli, layout denso) questo
+// aumenta la nitidezza percepita dal motore OCR.
+
+Future<String> _preprocessForOcr(String imagePath) async {
+  final bytes = await File(imagePath).readAsBytes();
+  final codec = await ui.instantiateImageCodec(bytes);
+  final frame = await codec.getNextFrame();
+  final img = frame.image;
+
+  final recorder = ui.PictureRecorder();
+  // Grayscale + contrasto +30: scurisce il testo, schiarisce lo sfondo.
+  Canvas(recorder).drawImage(
+    img,
+    Offset.zero,
+    Paint()
+      ..colorFilter = const ColorFilter.matrix([
+        0.299, 0.587, 0.114, 0, 30,
+        0.299, 0.587, 0.114, 0, 30,
+        0.299, 0.587, 0.114, 0, 30,
+        0,     0,     0,     1, 0,
+      ]),
+  );
+  final processed =
+      await recorder.endRecording().toImage(img.width, img.height);
+  final data = await processed.toByteData(format: ui.ImageByteFormat.png);
+
+  final dir = File(imagePath).parent.path;
+  final out = '$dir/ocr_pre_${DateTime.now().millisecondsSinceEpoch}.png';
+  await File(out).writeAsBytes(data!.buffer.asUint8List());
+  return out;
+}
+
 // ── Stream producer ───────────────────────────────────────────────────────────
 
 Stream<ScanState> _runScan(String imagePath) async* {
   yield ScanStateOcr();
 
+  String? preprocessedPath;
   try {
+    preprocessedPath = await _preprocessForOcr(imagePath);
     final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
-    final result =
-        await recognizer.processImage(InputImage.fromFilePath(imagePath));
+    final result = await recognizer
+        .processImage(InputImage.fromFilePath(preprocessedPath));
     recognizer.close();
 
     final codeMap = _extractCodesWithBrand(result.text); // code → brand
@@ -177,6 +214,10 @@ Stream<ScanState> _runScan(String imagePath) async* {
     yield ScanStateDone(matched);
   } catch (e) {
     yield ScanStateError(e.toString());
+  } finally {
+    if (preprocessedPath != null) {
+      try { File(preprocessedPath).deleteSync(); } catch (_) {}
+    }
   }
 }
 
