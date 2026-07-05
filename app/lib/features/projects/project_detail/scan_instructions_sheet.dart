@@ -13,11 +13,15 @@ class ScanPaintResult {
   final String code;
   final String name;
   final String hex;
-  const ScanPaintResult(
-      {required this.brand,
-      required this.code,
-      required this.name,
-      required this.hex});
+  /// true se il codice è stato riconosciuto ma non è presente nel catalogo
+  final bool unknownInCatalog;
+  const ScanPaintResult({
+    required this.brand,
+    required this.code,
+    required this.name,
+    required this.hex,
+    this.unknownInCatalog = false,
+  });
 }
 
 const supportedBrands = [
@@ -47,23 +51,31 @@ const _catalogAssets = <(String, String)>[
 
 // ── Regex patterns ────────────────────────────────────────────────────────────
 
-final _patterns = <({RegExp re, int group})>[
-  (re: RegExp(r'\b(XF|AS|TS|LP)-\d{1,3}\b', caseSensitive: false), group: 0),
-  (re: RegExp(r'\bX-\d{1,3}\b', caseSensitive: false), group: 0),
-  (re: RegExp(r'\b(70|71|72|73|74|75|76|77|78|79)\.\d{3}\b'), group: 0),
-  (re: RegExp(r'\b[CH]\d{1,3}\b', caseSensitive: false), group: 0),
-  (re: RegExp(r'\bHumbrol\s+(\d{1,3})\b', caseSensitive: false), group: 1),
-  (re: RegExp(r'\b(LC|UA)-?\d{1,3}\b', caseSensitive: false), group: 0),
+final _patterns = <({RegExp re, int group, String brand})>[
+  (re: RegExp(r'\bXF-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bAS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bTS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bLP-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\bX-\d{1,3}\b',  caseSensitive: false),  group: 0, brand: 'tamiya'),
+  (re: RegExp(r'\b(70|71|72|73|74|75|76|77|78|79)\.\d{3}\b'), group: 0, brand: 'vallejo'),
+  (re: RegExp(r'\bC\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'),
+  (re: RegExp(r'\bH\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'),
+  (re: RegExp(r'\bHumbrol\s+(\d{1,3})\b', caseSensitive: false), group: 1, brand: 'humbrol'),
+  (re: RegExp(r'\bLC-?\d{1,3}\b', caseSensitive: false), group: 0, brand: 'lifecolor'),
+  (re: RegExp(r'\bUA-?\d{1,3}\b', caseSensitive: false), group: 0, brand: 'lifecolor'),
 ];
 
-Set<String> _extractCodes(String text) {
-  final codes = <String>{};
+// code → brand
+Map<String, String> _extractCodesWithBrand(String text) {
+  final codes = <String, String>{};
   for (final p in _patterns) {
     for (final m in p.re.allMatches(text)) {
       final raw = (p.group == 0 ? m.group(0) : m.group(p.group))
           ?.toUpperCase()
           .trim();
-      if (raw != null) codes.add(raw);
+      if (raw != null && !codes.containsKey(raw)) {
+        codes[raw] = p.brand;
+      }
     }
   }
   return codes;
@@ -72,26 +84,23 @@ Set<String> _extractCodes(String text) {
 // ── Scan state (streamed) ─────────────────────────────────────────────────────
 
 sealed class ScanState {}
-
 class ScanStateOcr extends ScanState {}
-
 class ScanStateCatalog extends ScanState {
   final String catalogName;
   final int current;
   final int total;
   final List<ScanPaintResult> found;
-  ScanStateCatalog(
-      {required this.catalogName,
-      required this.current,
-      required this.total,
-      required this.found});
+  ScanStateCatalog({
+    required this.catalogName,
+    required this.current,
+    required this.total,
+    required this.found,
+  });
 }
-
 class ScanStateDone extends ScanState {
   final List<ScanPaintResult> results;
   ScanStateDone(this.results);
 }
-
 class ScanStateError extends ScanState {
   final String message;
   ScanStateError(this.message);
@@ -108,8 +117,8 @@ Stream<ScanState> _runScan(String imagePath) async* {
         await recognizer.processImage(InputImage.fromFilePath(imagePath));
     recognizer.close();
 
-    final codes = _extractCodes(result.text);
-    final found = <ScanPaintResult>[];
+    final codeMap = _extractCodesWithBrand(result.text); // code → brand
+    final matched = <ScanPaintResult>[];
     final seen = <String>{};
 
     for (var i = 0; i < _catalogAssets.length; i++) {
@@ -118,7 +127,7 @@ Stream<ScanState> _runScan(String imagePath) async* {
         catalogName: label,
         current: i + 1,
         total: _catalogAssets.length,
-        found: List.unmodifiable(found),
+        found: List.unmodifiable(matched),
       );
 
       try {
@@ -128,28 +137,40 @@ Stream<ScanState> _runScan(String imagePath) async* {
         for (final p in data['paints'] as List<dynamic>) {
           final code = (p['code'] as String).toUpperCase();
           final key = '${brand.toUpperCase()}|$code';
-          if (codes.contains(code) && !seen.contains(key)) {
-            found.add(ScanPaintResult(
+          if (codeMap.containsKey(code) && !seen.contains(key)) {
+            matched.add(ScanPaintResult(
               brand: brand,
               code: p['code'] as String,
               name: p['name'] as String,
               hex: p['hex'] as String,
             ));
             seen.add(key);
+            // mark as resolved
+            codeMap.remove(code);
           }
         }
       } catch (_) {}
 
-      // Emit updated state with new matches
       yield ScanStateCatalog(
         catalogName: label,
         current: i + 1,
         total: _catalogAssets.length,
-        found: List.unmodifiable(found),
+        found: List.unmodifiable(matched),
       );
     }
 
-    yield ScanStateDone(found);
+    // Codici riconosciuti ma non trovati in nessun catalogo
+    for (final entry in codeMap.entries) {
+      matched.add(ScanPaintResult(
+        brand: entry.value,
+        code: entry.key,
+        name: 'Non in catalogo',
+        hex: '#808080',
+        unknownInCatalog: true,
+      ));
+    }
+
+    yield ScanStateDone(matched);
   } catch (e) {
     yield ScanStateError(e.toString());
   }
@@ -157,12 +178,18 @@ Stream<ScanState> _runScan(String imagePath) async* {
 
 // ── Public entry point ────────────────────────────────────────────────────────
 
-/// Apre la fotocamera e mostra il bottom sheet di scansione progressiva.
-/// Chiama [onComplete] con i risultati trovati quando finisce.
 Future<void> showScanSheet(
   BuildContext context, {
   required Future<void> Function(List<ScanPaintResult>) onComplete,
 }) async {
+  // Prima mostra le istruzioni su come scattare la foto
+  final proceed = await showModalBottomSheet<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (ctx) => const _TipsSheet(),
+  );
+  if (proceed != true || !context.mounted) return;
+
   final picker = ImagePicker();
   final file = await picker.pickImage(
     source: ImageSource.camera,
@@ -181,6 +208,121 @@ Future<void> showScanSheet(
       onComplete: onComplete,
     ),
   );
+}
+
+// ── Tips sheet ────────────────────────────────────────────────────────────────
+
+class _TipsSheet extends StatelessWidget {
+  const _TipsSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: scheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text('Come fotografare il foglio', style: tt.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            'Per ottenere il miglior riconoscimento automatico dei colori:',
+            style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 16),
+          _Tip(
+            icon: Icons.stay_current_portrait,
+            label: 'Tieni il telefono verticale',
+            detail: 'Orienta il dispositivo in portrait — le tabelle colori sono solitamente orizzontali sul foglio e leggibili meglio così.',
+            scheme: scheme, tt: tt,
+          ),
+          _Tip(
+            icon: Icons.crop_free,
+            label: 'Inquadra solo la tabella colori',
+            detail: 'Avvicinati fino a far occupare la tabella l\'intera schermata. Meno testo inutile = meno errori.',
+            scheme: scheme, tt: tt,
+          ),
+          _Tip(
+            icon: Icons.wb_sunny_outlined,
+            label: 'Buona illuminazione, senza riflessi',
+            detail: 'Evita ombre sul foglio e riflessi della luce. La luce naturale o una lampada da tavolo funzionano bene.',
+            scheme: scheme, tt: tt,
+          ),
+          _Tip(
+            icon: Icons.warning_amber_outlined,
+            label: 'Marche riconosciute',
+            detail: 'Tamiya (XF, X, LP, TS) · Vallejo · Gunze · Humbrol · Lifecolor.\nCitadel usa nomi testuali e non viene riconosciuta automaticamente.',
+            scheme: scheme, tt: tt,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              icon: const Icon(Icons.camera_alt_outlined),
+              label: const Text('Scatta foto'),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Tip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String detail;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _Tip({
+    required this.icon,
+    required this.label,
+    required this.detail,
+    required this.scheme,
+    required this.tt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: scheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: tt.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(detail,
+                    style: tt.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Scan progress bottom sheet ────────────────────────────────────────────────
@@ -205,9 +347,7 @@ class _ScanSheetState extends State<_ScanSheet> {
     _sub = _runScan(widget.imagePath).listen((state) {
       if (!mounted) return;
       setState(() => _state = state);
-      if (state is ScanStateDone) {
-        _finalize(state.results);
-      }
+      if (state is ScanStateDone) _finalize(state.results);
     });
   }
 
@@ -229,124 +369,94 @@ class _ScanSheetState extends State<_ScanSheet> {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.4,
-        maxChildSize: 0.85,
-        expand: false,
-        builder: (ctx, scrollCtrl) => Column(
-          children: [
-            // Handle
-            Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 8),
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.outline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      minChildSize: 0.4,
+      maxChildSize: 0.85,
+      expand: false,
+      builder: (ctx, scrollCtrl) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: scheme.outline,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-              child: _buildHeader(scheme, tt),
-            ),
-            const Divider(height: 1),
-            // Found paints list
-            Expanded(
-              child: _buildResultsList(scheme, tt, scrollCtrl),
-            ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+            child: _buildHeader(scheme, tt),
+          ),
+          const Divider(height: 1),
+          Expanded(child: _buildResultsList(scheme, tt, scrollCtrl)),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(ColorScheme scheme, TextTheme tt) {
     return switch (_state) {
-      ScanStateOcr() => Row(
-          children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: scheme.primary),
-            ),
-            const SizedBox(width: 12),
-            Text('Analisi del testo…', style: tt.titleSmall),
-          ],
-        ),
+      ScanStateOcr() => Row(children: [
+          SizedBox(
+            width: 18, height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Text('Analisi del testo…', style: tt.titleSmall),
+        ]),
       ScanStateCatalog(
         catalogName: final label,
         current: final cur,
         total: final tot,
         found: final found,
       ) =>
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: scheme.primary,
-                    value: cur / tot,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Ricerca in $label…',
-                    style: tt.titleSmall,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  '$cur/$tot',
-                  style: tt.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-            if (found.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                '${found.length} vernic${found.length == 1 ? 'e trovata' : 'i trovate'}',
-                style: tt.bodySmall
-                    ?.copyWith(color: const Color(0xFF2F8F57)),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            SizedBox(
+              width: 18, height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: scheme.primary,
+                value: cur / tot,
               ),
-            ],
-          ],
-        ),
-      ScanStateDone(results: final r) => Row(
-          children: [
-            Icon(Icons.check_circle_outline,
-                color: const Color(0xFF2F8F57), size: 20),
-            const SizedBox(width: 10),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('Ricerca in $label…',
+                  style: tt.titleSmall, overflow: TextOverflow.ellipsis),
+            ),
+            Text('$cur/$tot',
+                style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+          ]),
+          if (found.isNotEmpty) ...[
+            const SizedBox(height: 4),
             Text(
-              r.isEmpty
-                  ? 'Nessun codice riconosciuto'
-                  : '${r.length} vernic${r.length == 1 ? 'e aggiunta' : 'i aggiunte'}',
-              style: tt.titleSmall,
+              '${found.length} vernic${found.length == 1 ? 'e trovata' : 'i trovate'}',
+              style: tt.bodySmall?.copyWith(color: const Color(0xFF2F8F57)),
             ),
           ],
-        ),
-      ScanStateError(message: final msg) => Row(
-          children: [
-            Icon(Icons.error_outline, color: scheme.error, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-                child: Text('Errore: $msg',
-                    style: tt.bodySmall?.copyWith(color: scheme.error))),
-          ],
-        ),
+        ]),
+      ScanStateDone(results: final r) => Row(children: [
+          Icon(Icons.check_circle_outline,
+              color: const Color(0xFF2F8F57), size: 20),
+          const SizedBox(width: 10),
+          Text(
+            r.isEmpty
+                ? 'Nessun codice riconosciuto'
+                : '${r.length} vernic${r.length == 1 ? 'e aggiunta' : 'i aggiunte'}',
+            style: tt.titleSmall,
+          ),
+        ]),
+      ScanStateError(message: final msg) => Row(children: [
+          Icon(Icons.error_outline, color: scheme.error, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text('Errore: $msg',
+                  style: tt.bodySmall?.copyWith(color: scheme.error))),
+        ]),
       _ => const SizedBox.shrink(),
     };
   }
@@ -364,7 +474,7 @@ class _ScanSheetState extends State<_ScanSheet> {
         child: Text(
           _state is ScanStateOcr
               ? 'Lettura del foglio in corso…'
-              : 'Nessuna corrispondenza nei cataloghi supportati',
+              : 'Nessuna corrispondenza trovata',
           style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
@@ -379,21 +489,35 @@ class _ScanSheetState extends State<_ScanSheet> {
         return ListTile(
           dense: true,
           leading: Container(
-            width: 28,
-            height: 28,
+            width: 28, height: 28,
             decoration: BoxDecoration(
               color: _hexColor(p.hex),
               shape: BoxShape.circle,
-              border:
-                  Border.all(color: scheme.outline.withOpacity(0.4), width: 1),
+              border: Border.all(
+                color: p.unknownInCatalog
+                    ? scheme.outline
+                    : scheme.outline.withOpacity(0.4),
+                width: 1,
+              ),
             ),
+            child: p.unknownInCatalog
+                ? Icon(Icons.question_mark, size: 14, color: scheme.onSurfaceVariant)
+                : null,
           ),
           title: Text(
             '${p.code}  ${p.name}',
             style: GoogleFonts.jetBrainsMono(
-                fontSize: 12, fontWeight: FontWeight.w500),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: p.unknownInCatalog ? scheme.onSurfaceVariant : null,
+            ),
           ),
-          subtitle: Text(p.brand, style: tt.bodySmall),
+          subtitle: Text(
+            p.unknownInCatalog ? '${p.brand} · non in catalogo' : p.brand,
+            style: tt.bodySmall?.copyWith(
+              color: p.unknownInCatalog ? scheme.error.withOpacity(0.7) : null,
+            ),
+          ),
         );
       },
     );
