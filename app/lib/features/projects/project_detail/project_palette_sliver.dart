@@ -26,6 +26,8 @@ class _CatalogPaint {
 const _catalogAssets = [
   'assets/catalogs/tamiya_xf.json',
   'assets/catalogs/tamiya_x.json',
+  'assets/catalogs/tamiya_lp.json',
+  'assets/catalogs/tamiya_ts.json',
   'assets/catalogs/vallejo_model_color.json',
   'assets/catalogs/vallejo_model_air.json',
   'assets/catalogs/citadel_base.json',

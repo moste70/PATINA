@@ -33,6 +33,8 @@ const supportedBrands = [
 const _catalogAssets = <(String, String)>[
   ('assets/catalogs/tamiya_xf.json',          'Tamiya XF'),
   ('assets/catalogs/tamiya_x.json',           'Tamiya X'),
+  ('assets/catalogs/tamiya_lp.json',          'Tamiya LP'),
+  ('assets/catalogs/tamiya_ts.json',          'Tamiya TS'),
   ('assets/catalogs/vallejo_model_color.json','Vallejo Model Color'),
   ('assets/catalogs/vallejo_model_air.json',  'Vallejo Model Air'),
   ('assets/catalogs/gunze_mr_color.json',     'Gunze Mr. Color'),
@@ -173,6 +175,7 @@ Future<void> showScanSheet(
     isScrollControlled: true,
     isDismissible: false,
     enableDrag: false,
+    useRootNavigator: true,
     builder: (ctx) => _ScanSheet(
       imagePath: file.path,
       onComplete: onComplete,
