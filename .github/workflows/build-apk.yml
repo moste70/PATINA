@@ -34,7 +34,7 @@ jobs:
 
       - name: Build release APK
         working-directory: app
-        run: flutter build apk --release
+        run: flutter build apk --release --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
