@@ -28,6 +28,9 @@ dependencies:
   # Immagini
   image_picker: ^1.1.2
 
+  # OCR locale (scansione foglio istruzioni)
+  google_mlkit_text_recognition: ^0.13.1
+
   # Permessi
   permission_handler: ^11.3.1
 

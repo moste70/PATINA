@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'scan_instructions_sheet.dart';
 import '../../../database/app_database.dart';
 import '../project_repository.dart';
 
@@ -101,6 +102,12 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   GestureDetector(
                     onTap: () => context.push('/shopping'),
                     child: Icon(Icons.shopping_cart_outlined,
+                        color: scheme.primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => showScanInstructionsSheet(context, ref, projectId),
+                    child: Icon(Icons.document_scanner_outlined,
                         color: scheme.primary, size: 20),
                   ),
                   const SizedBox(width: 12),
