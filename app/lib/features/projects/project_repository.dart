@@ -78,7 +78,29 @@ class ProjectRepository {
     return row != null;
   }
 
-  // ── Lista della spesa ───────────────────────────────────────���────────────
+  // ── Lista della spesa — voci manuali ─────────────────────────────────────
+
+  Stream<List<ShoppingItem>> watchShoppingItems() =>
+      (_db.select(_db.shoppingItems)
+            ..orderBy([(t) => OrderingTerm.asc(t.done),
+                       (t) => OrderingTerm.asc(t.createdAt)]))
+          .watch();
+
+  Future<void> addShoppingItem(String label, {String? notes}) =>
+      _db.into(_db.shoppingItems).insert(ShoppingItemsCompanion(
+            label: Value(label),
+            notes: Value(notes),
+            createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+          ));
+
+  Future<void> toggleShoppingItem(int id, bool done) =>
+      (_db.update(_db.shoppingItems)..where((t) => t.id.equals(id)))
+          .write(ShoppingItemsCompanion(done: Value(done)));
+
+  Future<void> deleteShoppingItem(int id) =>
+      (_db.delete(_db.shoppingItems)..where((t) => t.id.equals(id))).go();
+
+  // ── Lista della spesa — vernici automatiche ───────────────────────────────
   // Tutte le project_paints non presenti in inventory_paints, con il nome
   // del progetto. Si aggiorna automaticamente quando cambia inventario o palette.
   Stream<List<ShoppingEntry>> watchShoppingList() {

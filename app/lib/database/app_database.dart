@@ -18,12 +18,13 @@ part 'app_database.g.dart';
   Recipes,
   RecipeIngredients,
   Pins,
+  ShoppingItems,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -33,8 +34,10 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(customPaints);
       }
       if (from < 3) {
-        // v3: palette del kit — vernici associate a un progetto
         await m.createTable(projectPaints);
+      }
+      if (from < 4) {
+        await m.createTable(shoppingItems);
       }
     },
   );

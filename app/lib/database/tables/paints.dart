@@ -50,6 +50,15 @@ class ProjectPaints extends Table {
       ];
 }
 
+// Voci manuali nella lista della spesa (pennelli, diluenti, materiali, ecc.).
+class ShoppingItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get label => text()();
+  TextColumn get notes => text().nullable()();
+  BoolColumn get done => boolean().withDefault(const Constant(false))();
+  IntColumn get createdAt => integer()();
+}
+
 // L'inventario referenzia le vernici tramite brand+code (chiave naturale),
 // non tramite ID autoincrement, per restare stabile agli aggiornamenti catalogo.
 // Se catalogBrand/catalogCode sono valorizzati → vernice da catalogo ufficiale.
