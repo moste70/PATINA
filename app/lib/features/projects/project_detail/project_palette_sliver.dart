@@ -95,28 +95,39 @@ class ProjectPaletteSliver extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    'PALETTE DEL KIT',
+                    'COLORI DEL KIT',
                     style: tt.labelSmall?.copyWith(
                       color: scheme.primary,
                       letterSpacing: 1.2,
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () => context.push('/shopping'),
-                    child: Icon(Icons.shopping_cart_outlined,
-                        color: scheme.primary, size: 20),
+                  _HeaderIconButton(
+                    icon: Icons.shopping_cart_outlined,
+                    tooltip: 'Lista della spesa',
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      context.push('/shopping');
+                    },
+                    color: scheme.primary,
                   ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => _scan(context, ref),
-                    child: Icon(Icons.document_scanner_outlined,
-                        color: scheme.primary, size: 20),
+                  _HeaderIconButton(
+                    icon: Icons.camera_alt_outlined,
+                    tooltip: 'Scansiona istruzioni',
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _scan(context, ref);
+                    },
+                    color: scheme.primary,
                   ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => _showAddSheet(context, ref),
-                    child: Icon(Icons.add, color: scheme.primary, size: 20),
+                  _HeaderIconButton(
+                    icon: Icons.add,
+                    tooltip: 'Aggiungi vernice',
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _showAddSheet(context, ref);
+                    },
+                    color: scheme.primary,
                   ),
                 ],
               ),
@@ -186,6 +197,36 @@ class ProjectPaletteSliver extends ConsumerWidget {
   }
 }
 
+// ── Header icon button ────────────────────────────────────────────────────────
+
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color color;
+  const _HeaderIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: color, size: 24),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Empty palette state ───────────────────────────────────────────────────────
 
 class _EmptyPalette extends StatelessWidget {
@@ -217,7 +258,7 @@ class _EmptyPalette extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.document_scanner_outlined,
+                Icon(Icons.camera_alt_outlined,
                     color: scheme.primary, size: 22),
                 const SizedBox(width: 12),
                 Expanded(
