@@ -186,6 +186,7 @@ Future<void> showScanSheet(
   final proceed = await showModalBottomSheet<bool>(
     context: context,
     useRootNavigator: true,
+    isScrollControlled: true,
     builder: (ctx) => const _TipsSheet(),
   );
   if (proceed != true || !context.mounted) return;
@@ -220,9 +221,10 @@ class _TipsSheet extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-      child: Column(
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -277,6 +279,7 @@ class _TipsSheet extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
