@@ -149,38 +149,30 @@ class ProjectPaletteSliver extends ConsumerWidget {
   }
 
   Future<void> _scan(BuildContext context, WidgetRef ref) async {
-    final results = await scanKitInstructions(context);
-    if (results == null || !context.mounted) return;
-
-    if (results.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Nessun codice riconosciuto. Riprova con una foto più nitida.'),
-        ),
-      );
-      return;
-    }
-
     final repo = ref.read(projectRepositoryProvider);
-    for (final r in results) {
-      await repo.addProjectPaint(
-        projectId: projectId,
-        brand: r.brand,
-        code: r.code,
-        name: r.name,
-        hex: r.hex,
-      );
-    }
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              '${results.length} vernic${results.length == 1 ? 'e aggiunta' : 'i aggiunte'} alla palette.'),
-        ),
-      );
-    }
+    await showScanSheet(
+      context,
+      onComplete: (results) async {
+        for (final r in results) {
+          await repo.addProjectPaint(
+            projectId: projectId,
+            brand: r.brand,
+            code: r.code,
+            name: r.name,
+            hex: r.hex,
+          );
+        }
+        if (context.mounted && results.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${results.length} vernic${results.length == 1 ? 'e aggiunta' : 'i aggiunte'} alla palette.',
+              ),
+            ),
+          );
+        }
+      },
+    );
   }
 
   void _showAddSheet(BuildContext context, WidgetRef ref) {
