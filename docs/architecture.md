@@ -5,7 +5,7 @@
 | Layer | Tecnologia | Versione / Note |
 |-------|-----------|-----------------|
 | Framework | Flutter (Dart) | Cross-platform Android/iOS, UI ricca, grafica custom |
-| State Management | Riverpod + riverpod_generator | Reattivo, testabile, supporto async nativo |
+| State Management | Riverpod (`StateNotifierProvider`, `Provider`) | Reattivo, testabile, supporto async nativo — senza codegen |
 | Database locale | Drift (SQLite) via drift_flutter | Type-safe, query reattive, dati relazionali |
 | Navigazione | Go Router | Dichiarativo, ShellRoute per bottom nav, deep linking |
 | Immagini | image_picker + cached_network_image | Selezione da galleria/camera, cache efficiente |
@@ -31,10 +31,20 @@ patina/
 │   │       └── values/          # colors.xml, styles.xml
 │   ├── assets/
 │   │   ├── icon.png             # Icona app 1024x1024 (cluster esagoni)
-│   │   └── catalogs/            # JSON cataloghi vernici (bundled)
+│   │   └── catalogs/            # JSON cataloghi vernici (bundled, 13 file)
 │   │       ├── vallejo_model_color.json   (30 colori)
+│   │       ├── vallejo_model_air.json     (97 colori)
 │   │       ├── citadel_base.json          (20 colori)
-│   │       └── tamiya_xf.json             (28 colori)
+│   │       ├── tamiya_xf.json             (92 colori)
+│   │       ├── tamiya_x.json              (29 colori)
+│   │       ├── tamiya_lp.json             (76 colori)
+│   │       ├── tamiya_ts.json             (100 colori)
+│   │       ├── gunze_aqueous.json         (152 colori)
+│   │       ├── gunze_mr_color.json        (256 colori)
+│   │       ├── gunze_mr_metal.json        (9 colori)
+│   │       ├── humbrol_enamel.json        (195 colori)
+│   │       ├── lifecolor_ua.json          (139 colori)
+│   │       └── lifecolor_lc.json          (27 colori)
 │   ├── lib/
 │   │   ├── main.dart            # Entry point: init DB, catalogs, runApp
 │   │   ├── app/
@@ -42,25 +52,38 @@ patina/
 │   │   │   └── theme.dart       # PatinaColors, PatinaFonts, PatinaTheme
 │   │   ├── shared/
 │   │   │   ├── widgets/
-│   │   │   │   └── placeholder_screen.dart  # Schermo placeholder con icona Patina
+│   │   │   │   ├── placeholder_screen.dart  # Schermo placeholder
+│   │   │   │   ├── patina_logo.dart         # PatinaMark (7 esagoni)
+│   │   │   │   └── nav_icons.dart           # CustomPainter icone bottom nav
 │   │   │   ├── utils/
 │   │   │   │   └── permissions.dart         # Gestione permessi camera/storage
 │   │   │   └── constants/
 │   │   │       └── app_constants.dart       # Categorie, stati, marche, quantità
+│   │   ├── features/
+│   │   │   ├── onboarding/                  # Splash, onboarding 4 schermate
+│   │   │   ├── projects/
+│   │   │   │   ├── projects_screen.dart     # Archivio progetti
+│   │   │   │   ├── project_repository.dart  # CRUD progetti + foto + palette + shopping
+│   │   │   │   ├── create_project/          # Wizard 3 step
+│   │   │   │   └── project_detail/
+│   │   │   │       ├── project_detail_screen.dart
+│   │   │   │       ├── project_palette_sliver.dart  # Palette del kit
+│   │   │   │       └── scan_instructions_sheet.dart # OCR codici colore da foto
+│   │   │   ├── shopping/
+│   │   │   │   └── shopping_list_screen.dart  # Lista della spesa (auto + manuale)
+│   │   │   └── settings/
+│   │   │       └── settings_screen.dart     # Tema + lingua + info
 │   │   └── database/
-│   │       ├── app_database.dart            # Drift DB + initializeCatalogs()
+│   │       ├── app_database.dart            # Drift DB, schemaVersion 4
 │   │       ├── app_database.g.dart          # Generato da build_runner
 │   │       └── tables/
 │   │           ├── projects.dart            # Projects, ProjectPhotos
-│   │           ├── paints.dart              # CatalogPaints, InventoryPaints
+│   │           ├── paints.dart              # CatalogPaints, CustomPaints, InventoryPaints, ProjectPaints
 │   │           ├── recipes.dart             # Recipes, RecipeIngredients
 │   │           └── pins.dart                # Pins
 │   └── pubspec.yaml
 └── docs/                        # Documentazione di progetto
 ```
-
-> **Nota:** La cartella `features/` contiene `projects/` (wizard + scheda + archivio) e `onboarding/`.
-> Le cartelle `paints/`, `recipes/`, `pins/` verranno popolate durante la Fase 1B–1D.
 
 ---
 
@@ -94,29 +117,36 @@ Tipografia: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo).
 
 L'app usa un `ShellRoute` con `NavigationBar` a 4 voci:
 
-| Tab | Percorso | Icona outline | Icona selected |
-|-----|----------|--------------|----------------|
-| Progetti | `/projects` | `view_module_outlined` | `view_module` |
-| Vernici | `/paints` | `palette_outlined` | `palette` |
-| Ricette | `/recipes` | `science_outlined` | `science` |
-| Impostazioni | `/settings` | `settings_outlined` | `settings` |
+| Tab | Percorso | Icona (CustomPainter) |
+|-----|----------|-----------------------|
+| Progetti | `/projects` | Griglia 2×2 con taglio angolare 60° — `ProjectsIcon` |
+| Vernici | `/paints` | Tavolozza da pittore con foro pollice e 5 punti colore — `PaintsIcon` |
+| Ricette | `/recipes` | Matraccio da laboratorio con bolla — `RecipesIcon` |
+| Impostazioni | `/settings` | Ingranaggio 6 denti a geometria 60° — `SettingsIcon` |
+
+Le icone sono definite in `app/lib/shared/widgets/nav_icons.dart` come `CustomPainter`.
+Il colore attivo/inattivo viene letto dall'`IconTheme` del `NavigationBar` — il tono Ottone `#D99B3E` è impostato nel `NavigationBarThemeData` del tema.
 
 Rotta aggiuntiva: `/projects/:id` — scheda progetto (non nel tab, navigata dalla lista).
 I pin su foto sono accessibili dalla scheda progetto, non tramite tab dedicato.
 
 ### Icona Patina (in-app)
 
-`PlaceholderScreen` mostra nell'AppBar un'icona custom (`_HexPainter`):
-esagono outline con punto centrale, disegnato via `CustomPainter` in colore `primary`.
-Questa è l'icona di brand usata nell'interfaccia — distinta dall'icona launcher.
+`PatinaMark` in `app/lib/shared/widgets/patina_logo.dart`: cluster di 7 esagoni flat-top
+con la stessa palette della splash screen. Usata nell'onboarding e come placeholder.
+Parametro `monoColor` forza colore singolo (usato in contesti icon-only).
 
 ---
 
 ## Schema Database (Drift/SQLite)
 
-Il database è inizializzato al primo avvio (`schemaVersion: 1`).
-I cataloghi vengono caricati dagli asset JSON una sola volta (`initializeCatalogs()`
-verifica se la tabella è già popolata prima di procedere).
+Schema corrente: **v4**. Migrazione automatica in `app_database.dart`:
+- v1 → tabelle base
+- v2 → aggiunta `custom_paints`
+- v3 → aggiunta `project_paints`
+- v4 → aggiunta `shopping_items`
+
+I cataloghi sono asset JSON bundled, **non** precaricati nel DB — letti on-demand via `rootBundle`.
 
 ### `projects`
 ```
@@ -124,7 +154,7 @@ id              INTEGER PRIMARY KEY AUTOINCREMENT
 name            TEXT NOT NULL
 brand           TEXT
 scale           TEXT                        -- es. "1/35"
-category        TEXT                        -- tank|aircraft|figure|ship|diorama|other
+category        TEXT                        -- tank|aircraft|figure|ship|car|motorcycle|diorama|other
 cover_photo     TEXT                        -- path locale
 status          TEXT DEFAULT 'todo'         -- todo|in_progress|completed
 notes           TEXT
@@ -141,11 +171,28 @@ caption         TEXT
 taken_at        INTEGER
 ```
 
+### `project_paints` _(palette del kit — v3)_
+```
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+project_id      INTEGER NOT NULL REFERENCES projects(id)
+brand           TEXT NOT NULL               -- es. "tamiya"
+code            TEXT NOT NULL               -- es. "XF-85"
+name            TEXT NOT NULL               -- denormalizzato per display offline
+hex             TEXT NOT NULL               -- es. "#3A3A3A"
+added_at        INTEGER NOT NULL
+UNIQUE (project_id, brand, code)
+```
+
+> Usa `brand+code` come chiave naturale, compatibile con `catalog_paints` e `custom_paints`.
+> Il campo `name` e `hex` sono denormalizzati per evitare JOIN in lettura — aggiornati solo
+> se il catalogo viene rigenerato. Il badge "In magazzino" viene calcolato live confrontando
+> con `inventory_paints.catalog_brand + catalog_code`.
+
 ### `catalog_paints`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
-brand           TEXT NOT NULL               -- vallejo|citadel|tamiya
-line            TEXT NOT NULL               -- model_color|base|xf|…
+brand           TEXT NOT NULL               -- vallejo|citadel|tamiya|gunze|humbrol|lifecolor
+line            TEXT NOT NULL               -- model_color|base|xf_flat|x_gloss|…
 code            TEXT NOT NULL
 name            TEXT NOT NULL
 hex             TEXT NOT NULL               -- es. "#4A3728"
@@ -208,6 +255,17 @@ paint_id        INTEGER REFERENCES inventory_paints(id)
 percentage      REAL NOT NULL
 ```
 
+### `shopping_items` _(lista della spesa manuale — v4)_
+```
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+name            TEXT NOT NULL               -- descrizione libera (es. "Vallejo Black 70.950")
+checked         INTEGER NOT NULL DEFAULT 0  -- 0=da acquistare, 1=acquistato
+created_at      INTEGER NOT NULL
+```
+
+> Complementa la sezione "vernici mancanti" (calcolata automaticamente da `inventory_paints`
+> con quantità `low`/`empty`). Gli `shopping_items` sono voci libere aggiunte manualmente.
+
 ### `pins`
 ```
 id              INTEGER PRIMARY KEY AUTOINCREMENT
@@ -226,15 +284,25 @@ notes           TEXT
 
 ## Cataloghi Vernici
 
-I cataloghi sono bundled come asset JSON e caricati in SQLite al primo avvio.
+I cataloghi sono **bundled come asset JSON** in `app/assets/catalogs/` e letti on-demand tramite `rootBundle` — non vengono precaricati nel DB SQLite. Ogni aggiornamento dei cataloghi viene distribuito con una nuova release dell'app.
 
-**Cataloghi inclusi in Fase 1** (verificati, dati reali presenti negli asset):
+**Versione corrente: 2024.1** — 13 cataloghi, ~1.220 colori totali.
 
 | File | Marca | Linea (`line`) | Colori |
 |------|-------|----------------|--------|
 | `vallejo_model_color.json` | `vallejo` | `model_color` | 30 |
+| `vallejo_model_air.json` | `vallejo` | `model_air` | 97 |
 | `citadel_base.json` | `citadel` | `base` | 20 |
-| `tamiya_xf.json` | `tamiya` | `xf` | 28 |
+| `tamiya_xf.json` | `tamiya` | `xf_flat` | 92 |
+| `tamiya_x.json` | `tamiya` | `x_gloss` | 29 |
+| `tamiya_lp.json` | `tamiya` | `lp_lacquer` | 76 |
+| `tamiya_ts.json` | `tamiya` | `ts_spray` | 100 |
+| `gunze_aqueous.json` | `gunze` | `aqueous` | 152 |
+| `gunze_mr_color.json` | `gunze` | `mr_color` | 256 |
+| `gunze_mr_metal.json` | `gunze` | `mr_metal_color` | 9 |
+| `humbrol_enamel.json` | `humbrol` | `enamel` | 195 |
+| `lifecolor_ua.json` | `lifecolor` | `ua_camouflage` | 139 |
+| `lifecolor_lc.json` | `lifecolor` | `lc_basic_gloss` | 27 |
 
 **Formato JSON:**
 ```json
@@ -248,8 +316,122 @@ I cataloghi sono bundled come asset JSON e caricati in SQLite al primo avvio.
 }
 ```
 
-Espansione cataloghi (Vallejo Game Color/Air/Panzer Aces, Citadel Layer/Shade/Contrast,
-Tamiya X/LP, AK Interactive, Ammo by Mig, Humbrol, Mr. Color) pianificata in Fase 2.
+Espansione cataloghi (Vallejo Game Color/Panzer Aces, Citadel Layer/Shade/Contrast/Air,
+Tamiya LP, AK Interactive, Ammo by Mig, Scale75) pianificata tramite Catalog Tool (repo separato).
+
+---
+
+## Splash Screen (Ibrido Native + Flutter)
+
+L'avvio dell'app usa una strategia **ibrida** per garantire fluidità su Android 12+ e massima espressività visiva.
+
+### Architettura
+
+```
+Avvio app
+  │
+  ├─ [Android OS] Native Splash Screen (API 31+)
+  │     Sfondo: #1C1A16 (Fondo)
+  │     Icona: marchio PATINA flat (WindowSplashScreenAnimatedIcon)
+  │     Durata: ~180ms (fino a Flutter ready)
+  │     Sfondo identico → transizione impercettibile
+  │
+  └─ [Flutter] SplashScreen widget
+        Animazione: assemblaggio esagoni orario + wordmark
+        Durata totale: 3.4s poi context.go('/projects')
+```
+
+### Timeline animazione Flutter
+
+| Fase | Start | Durata | Descrizione |
+|------|-------|--------|-------------|
+| Ring hex 0 — top | 0ms | 360ms | Primo esagono in alto |
+| Ring hex 1 — top-right | 320ms | 360ms | +320ms (STEP) |
+| Ring hex 2 — bot-right | 640ms | 360ms | |
+| Ring hex 3 — bottom | 960ms | 360ms | |
+| Ring hex 4 — bot-left | 1280ms | 360ms | |
+| Ring hex 5 — top-left | 1600ms | 360ms | |
+| Centrale | 2120ms | 360ms | STEP×6 + 200ms di pausa |
+| Wordmark fade+slide | 2600ms | 500ms | +480ms dopo centrale |
+| Navigazione | 4000ms | — | `context.go('/projects')` |
+| Idle breathing | loop | 4000ms | Pulse glow Ottone (sin wave) |
+
+### Parametri tecnici
+
+```dart
+// Timing
+const _kTotalMs      = 3400;   // durata AnimationController principale
+const _kStep         = 320;    // ms tra ogni hex dell'anello
+const _kHexDur       = 360;    // ms durata ingresso singolo hex
+const _kCentralDelay = 2120;   // _kStep * 6 + 200
+const _kTextStart    = 2600;   // _kCentralDelay + 480
+const _kTextDur      = 500;
+const _kNavigateDelay = 4000;  // _kTotalMs + 600
+
+// Mark sizing
+final markPx = min(screenW, screenH) * 0.38;
+final s = markPx / 120.0;       // scala dallo spazio 120×120
+
+// Scala ingresso hex: rimbalzo
+scale = 0.45 + 0.55 * easeOutBack(t);
+
+// Breathing idle (sin wave)
+pulse = 0.055 * sin(breatheT * 2π);
+glowAlpha = 0.20 + pulse * 0.7;  // range ~0.08–0.26 (clamped)
+glowRadius = markPx * (0.8 + pulse * 0.5);
+```
+
+### Curve di animazione
+
+| Curva | Uso |
+|-------|-----|
+| `Curves.easeOut` | Alpha fade-in di ogni hex, wordmark |
+| `_EaseOutBack` (custom) | Scale ingresso hex — leggero rimbalzo `c1=1.70158` |
+| `sin(t × 2π)` | Breathing glow idle |
+
+### Palette esagoni (posizione → colore)
+
+| Posizione | Hex | Note |
+|-----------|-----|------|
+| top (0) | `#D8CFBE` | Pallido — luce diretta |
+| top-right (1) | `#DEC295` | Chiaro |
+| bot-right (2) | `#EC9C26` | Oro caldo |
+| bottom (3) | `#EF8E08` | Più saturo — profondo |
+| bot-left (4) | `#E7A848` | Oro medio |
+| top-left (5) | `#E4B56E` | Caldo chiaro — ritorno |
+| centrale (6) | `#D99B3E` | Accent Ottone |
+
+### Rendering esagoni (doppio passaggio)
+
+Per giunture uniformi tra esagoni adiacenti il `CustomPainter` usa due passaggi separati:
+
+1. **Fill pass** — tutti e 7 gli esagoni disegnati con:
+   - Fill base col colore posizionale
+   - Gradiente direzionale lineare: `topLeft(rgba 255,255,255 × 0.20)` → `(rgba 255,255,255 × 0.04 @40%)` → `bottomRight(rgba 0,0,0 × 0.28)`
+2. **Stroke pass** — stroke uniforme su tutti: `rgba(0,0,0, 0.50)`, `strokeWidth=1.4`, `strokeJoin=round`
+
+Un singolo passaggio causerebbe stroke doppi non uniformi sugli spigoli condivisi.
+
+### File coinvolti
+
+```
+app/lib/features/onboarding/splash_screen.dart   ✅ implementato
+app/android/app/src/main/res/values/styles.xml   ⬜ native splash config (da fare)
+app/android/app/src/main/res/drawable/           ⬜ ic_splash_foreground.xml (da fare)
+app/lib/app/router.dart                          ⬜ aggiungere rotta /splash (da fare)
+```
+
+### Integrazione router (da fare)
+
+```dart
+// In router.dart — aggiungere prima delle rotte principali
+GoRoute(
+  path: '/splash',
+  builder: (context, state) => const SplashScreen(),
+),
+```
+
+In `main.dart` impostare `initialLocation: '/splash'` oppure usare un `redirect` che porta a `/splash` solo al primo avvio.
 
 ---
 

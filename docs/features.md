@@ -27,15 +27,16 @@ Campi:
 | Campo | Tipo | Obbligatorio | Note |
 |-------|------|:---:|-------|
 | Nome modello | TextField | ✅ | es. "Tiger I Ausf. E" — max 80 caratteri |
-| Marca kit | TextField | ❌ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
-| Scala | TextField | ❌ | es. "1/35", "1/72" — testo libero con suggerimenti chip: 1/35 · 1/48 · 1/72 · 1/100 · 1/144 · Altra |
-| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Diorama · Altro |
+| Marca kit | TextField | ✅ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
+| Scala | TextField | ✅ | Formato `1/N` obbligatorio (es. "1/35"). Chip suggerimento: 1/12 · 1/24 · 1/35 · 1/48 · 1/72 · 1/100 · 1/144 |
+| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Auto · Moto · Diorama · Altro |
 
 Comportamento:
 - Il campo **Nome** riceve il focus automaticamente all'apertura (tastiera aperta)
-- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo
+- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo testo
 - La **categoria** mostra icone + etichette, selezione con tap, chip selezionato in `primary`
-- Bottone **Avanti** attivo solo se Nome e Categoria sono compilati
+- La label **Categoria** diventa rossa se si preme Avanti senza selezionarne una
+- Bottone **Avanti** è sempre toccabile; al tap mostra gli errori sui campi non compilati o non validi
 
 ---
 
@@ -93,7 +94,10 @@ Projects(
 ```
 
 ##### Validazioni
-- Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
+- **Nome** vuoto o solo spazi → errore mostrato al tap su Avanti
+- **Marca** vuota → errore "La marca è obbligatoria" mostrato al tap su Avanti
+- **Scala** vuota o formato non valido (non corrisponde a `1/\d+`) → errore mostrato al tap su Avanti
+- **Categoria** non selezionata → label "Categoria" diventa rossa al tap su Avanti
 - Nome > 80 caratteri → contatore caratteri visibile, input bloccato a 80
 - Foto > 10MB → ridimensionamento automatico trasparente prima del salvataggio
   (riduzione progressiva di risoluzione e qualità JPEG fino a ≤ 10MB).
@@ -224,20 +228,21 @@ Il FAB `+` è sempre visibile anche sull'empty state.
 Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 
 **Contenuto di ogni card progetto:**
-- Foto di copertina (o placeholder con icona categoria)
-- Nome del modello
+- Miniatura 80×80 della foto di copertina (placeholder con icona se assente)
+- Nome del modello (grassetto)
 - Categoria + scala (es. "Carro Armato · 1/35")
-- Chip stato colorato (`Da iniziare` grigio · `In corso` arancio · `Completato` verde)
-- Data ultima modifica (es. "3 giorni fa")
+- Badge stato colorato: `Da iniziare` grigio · `In corso` arancio `#C87A20` · `Completato` verde `#2F8F57`
 
-**Funzionalità:**
+**Funzionalità implementate:**
 - FAB `+` per aprire il wizard creazione
-- Modifica di tutti i campi dalla scheda progetto
-- Archiviazione progetti completati (rimangono consultabili)
-- Eliminazione con dialog di conferma
-- Ricerca per nome, categoria o stato
-- Ordinamento per: ultima modifica, data inizio, nome, stato
+- Filter bar orizzontale in cima: chip *Tutti / Da iniziare / In corso / Completato* — filtra la lista in tempo reale; stato vuoto dedicato se nessun progetto corrisponde
+- Eliminazione con dialog di conferma (dal menu `⋮` nella scheda progetto)
+
+**Funzionalità future:**
+- Ricerca per nome
+- Ordinamento per ultima modifica, data inizio, nome, stato
 - Toggle vista griglia (2 colonne) / lista
+- Archiviazione progetti completati
 
 #### 1.2 Scheda Principale Progetto (`/projects/:id`)
 
@@ -251,24 +256,25 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 ##### Sezione 1 — Header (SliverAppBar)
 
 **Espanso** (foto visibile, altezza ~260dp):
-- Foto di copertina a schermo pieno con gradiente scuro in basso
-- In overlay sul gradiente: chip stato colorato (in alto a sinistra) + menu `⋮` (in alto a destra)
-- In basso sull'overlay: nome progetto (DM Serif Display, 24sp), marca + scala in grigio
+- Foto di copertina a schermo pieno con gradiente scuro in basso (stops: 0.35 → 1.0)
+- In overlay sul gradiente (riga sopra il titolo): chip stato colorato + brand · scala (bianco70)
+- In basso: nome progetto (bianco pieno)
+- Menu `⋮` in alto a destra
 
 **Collassato** (solo AppBar, altezza standard):
-- Back arrow + nome progetto (Inter 600, troncato) + menu `⋮`
+- Back arrow + nome progetto (troncato) + menu `⋮`
 - La foto scompare, sfondo `surface`
 
 **Chip stato — colori:**
 | Stato | Colore sfondo | Testo |
 |-------|--------------|-------|
-| Da iniziare | `outline` (grigio) | `onSurface` |
+| Da iniziare | `outline` (grigio) | bianco |
 | In corso | `#C87A20` (arancio) | bianco |
-| Completato | `primary` (#7CB87C) | nero |
+| Completato | `primary` (`#D99B3E` ottone) | nero |
 
 **Menu `⋮` azioni:**
-- Modifica progetto → apre wizard in modalità edit (campi pre-compilati)
-- Archivia / Riattiva
+- Cambia stato → bottom sheet con le tre opzioni
+- Cambia foto copertina → bottom sheet Fotocamera / Galleria
 - Elimina → dialog conferma "Elimina progetto? L'azione è irreversibile."
 
 ---
@@ -276,41 +282,62 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 ##### Sezione 2 — Galleria Foto
 
 Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
-Ultima cella è il bottone `+` con icona fotocamera.
+Prima cella è il bottone `+` con icona `add_photo_alternate`.
 
 **Tap su miniatura:**
 - Apre viewer foto a schermo intero (InteractiveViewer, zoom/pan)
-- Se la foto ha pin → mostra overlay pin
-- Swipe orizzontale per navigare tra le foto del progetto
+- AppBar scura con pulsante cestino in alto a destra
+- Il cestino mostra dialog di conferma → alla conferma torna alla galleria ed elimina
 
 **Tap su `+`:**
 - Bottom sheet: Fotocamera · Galleria · Annulla
 - Foto salvata nella cartella privata dell'app (non nella galleria pubblica)
 
-**Long press su miniatura:**
-- Modalità selezione multipla → azioni: elimina
+**Funzionalità future:**
+- Se la foto ha pin → mostra overlay pin
+- Swipe orizzontale per navigare tra le foto nel viewer
 
 ---
 
-##### Sezione 4 — Vernici Usate
+##### Sezione 2b — Colori del Kit (Palette)
 
-Lista compatta delle vernici dell'inventario collegate a questo progetto
-(tramite i pin di tipo `color` sulla foto).
+Lista delle vernici selezionate per questo progetto, indipendente dai pin.
+Intestazione sezione: label **"COLORI DEL KIT"** + tre pulsanti icona a destra (area tap 40×40dp, ripple, haptic feedback):
+
+| Icona | Azione |
+|-------|--------|
+| `shopping_cart_outlined` | Apre `/shopping` (lista della spesa) |
+| `camera_alt_outlined` | Avvia scansione OCR foglio istruzioni |
+| `add` | Apre bottom sheet ricerca manuale |
 
 **Struttura riga:**
 ```
-[chip hex esagonale] Vallejo 70.950 · Black           [→ pin]
+[●  chip colore]  XF-85  Rubber Black        [ In magazzino ✓ ]
+[●  chip colore]  XF-63  German Grey         [ Da acquistare  ]
 ```
-- Chip esagonale con colore reale
-- Marca + codice + nome
-- Contatore pin che usano questa vernice (`→ 3 pin`)
-- Tap: apre scheda vernice nell'inventario
+- Cerchio con colore HEX reale (da catalogo)
+- Codice vernice in JetBrains Mono + nome
+- Badge **"In magazzino"** (verde `#2F8F57`) se presente nell'inventario personale
+- Badge **"Da acquistare"** (neutro) se non nell'inventario
+- **Swipe da destra** sulla riga → sfondo rosso con icona cestino → elimina dalla palette
 
-**Empty state:** "Nessuna vernice collegata — aggiungi pin colore alle foto"
+**Bottom sheet "Aggiungi vernice":**
+- Campo di ricerca full-text su tutti i 13 cataloghi JSON in bundle
+- Ricerca per codice (es. `XF-85`), nome (es. `rubber`) o marca (es. `tamiya`)
+- Ogni risultato: chip colore + codice + nome + marca
+- Tap su risultato → aggiunge alla palette (duplicati ignorati)
+
+**Empty state:** due tile — "Caricamento automatico" (OCR, icona `camera_alt`) e "Cerca nel catalogo" (icona `search`)
+
+**Nota:** la palette del kit è indipendente dall'inventario — puoi aggiungere qualsiasi vernice dal catalogo senza possederla fisicamente. Il badge indica solo lo stato magazzino attuale.
 
 ---
 
-##### Sezione 5 — Note Progetto
+##### Sezione 3 — Galleria Foto
+
+_(invariata — vedi Sezione 2 sopra)_
+
+##### Sezione 4 — Note Progetto
 
 Campo testo espandibile. In visualizzazione mostra max 4 righe con bottone "Mostra tutto".
 Tap attiva editing inline (diventa TextField multiline con autofocus).
@@ -320,12 +347,12 @@ Placeholder: "Aggiungi note, riferimenti, obiettivi del progetto…"
 
 ---
 
-##### Sezione 6 — Info Progetto
+##### Sezione 5 — Date (footer discreto)
 
-Row compatta con metadati:
+Riga di testo piccolo al 35% di opacità in fondo alla pagina, senza intestazione separata:
 
 ```
-Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
+Creato il 01 giu 2026  ·  Modificato 3 giorni fa
 ```
 
 ---
@@ -464,12 +491,46 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Schermata | Percorso | Stato |
 |-----------|----------|-------|
 | Onboarding | `/onboarding` | ✅ Implementato — 4 schermate (Benvenuto, Funzionalità, Permessi, Pronto) |
-| Archivio Progetti | `/projects` | ✅ Implementato — lista, empty state, FAB, navigazione alla scheda |
-| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto) |
-| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile, galleria (placeholder), note, info |
+| Archivio Progetti | `/projects` | ✅ Implementato — card con foto+badge stato, filter bar per stato, FAB, empty state |
+| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto); brand+scala obbligatori, validazione on-press |
+| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile con brand/scala in overlay, palette, galleria, note |
+| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe-to-delete, pulsanti header con haptic |
+| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, tap → viewer fullscreen con zoom, elimina dall'AppBar |
+| Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app |
+| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (checkbox in-memory) + voci manuali (DB), swipe-to-delete |
+| Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — crop manuale, preprocessing scala di grigi, MLKit OCR, riconosce codici, aggiunge a palette |
 | Vernici / Inventario | `/paints` | ⬜ Placeholder |
 | Ricette | `/recipes` | ⬜ Placeholder |
-| Impostazioni | `/settings` | ⬜ Placeholder |
+
+---
+
+---
+
+### 1.3 Impostazioni (`/settings`)
+
+Schermata accessibile dal tab Impostazioni nella bottom nav.
+
+#### Sezione Aspetto
+
+| Voce | Tipo | Comportamento |
+|------|------|--------------|
+| Tema | Tile con valore corrente | Bottom sheet: Scuro · Chiaro · Sistema (default) |
+
+Il tema viene persistito in `SharedPreferences` (chiave `theme_mode`) e applicato immediatamente a `MaterialApp` tramite `ThemeModeNotifier` (Riverpod).
+
+#### Sezione Lingua
+
+| Voce | Tipo | Comportamento |
+|------|------|--------------|
+| Lingua dell'app | Tile con valore corrente | Bottom sheet: Italiano · English · Sistema (default) |
+
+La lingua viene persistita in `SharedPreferences` (chiave `app_locale`) e applicata tramite `LocaleNotifier`. La `Locale` viene passata a `MaterialApp.locale` — il cambio è live senza riavvio. I testi dell'app usano `AppL10n.of(context)` (flutter_localizations + file `.arb`).
+
+#### Sezione Info
+
+| Voce | Valore |
+|------|--------|
+| Versione | `1.0.0-beta.1` (hardcoded, aggiornato a ogni release) |
 
 ---
 
@@ -480,7 +541,6 @@ di poter essere inserite nella roadmap.
 
 | Area | Note |
 |------|------|
-| **Profilo / Impostazioni** | `/settings` placeholder — contenuto da definire: tema dark/light toggle, lingua, backup/restore, info app, versione |
 | **Backup e ripristino** | Export ZIP (DB + foto) e import ZIP. Le foto sono nella memoria interna privata dell'app — senza backup vengono perse alla disinstallazione. Configurare anche le regole backup Android (`backup_rules.xml`) per il backup automatico Google One. |
 | **Paywall** | Modello monetizzazione Fase 2: crediti, subscription o one-time — da decidere prima dell'implementazione AI |
 | **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../database/app_database.dart';
 import '../../../shared/constants/app_constants.dart';
 import '../project_repository.dart';
+import 'project_palette_sliver.dart';
 
 // Provider per il singolo progetto
 final projectByIdProvider = StreamProvider.autoDispose.family<Project, int>(
@@ -216,24 +217,27 @@ class _ProjectDetailContentState
                   if (v == 'cover') _updateCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
                       value: 'status', child: Text('Cambia stato')),
-                  PopupMenuItem(
+                  const PopupMenuItem(
                       value: 'cover',
                       child: Text('Cambia foto copertina')),
-                  PopupMenuDivider(),
+                  const PopupMenuDivider(),
                   PopupMenuItem(
                       value: 'delete',
-                      child:
-                          Text('Elimina', style: TextStyle(color: Colors.red))),
+                      child: Builder(
+                        builder: (ctx) => Text(
+                          'Elimina',
+                          style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                        ),
+                      )),
                 ],
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
-              titlePadding:
-                  const EdgeInsets.fromLTRB(16, 0, 56, 52),
+              titlePadding: const EdgeInsets.fromLTRB(16, 0, 56, 16),
               title: Text(
                 p.name,
                 style: tt.titleMedium?.copyWith(
@@ -256,7 +260,7 @@ class _ProjectDetailContentState
                       ? Image.file(File(p.coverPhoto!),
                           fit: BoxFit.cover)
                       : Container(
-                          color: scheme.surfaceVariant,
+                          color: scheme.surfaceContainerHigh,
                           child: Icon(Icons.view_module_outlined,
                               size: 64,
                               color: scheme.onSurface.withOpacity(0.2)),
@@ -267,39 +271,46 @@ class _ProjectDetailContentState
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: [0.4, 1.0],
+                        stops: [0.35, 1.0],
                         colors: [Colors.transparent, Colors.black87],
                       ),
                     ),
                   ),
-                  // Chip stato in alto a sinistra
+                  // Overlay info: status chip + brand/scala sopra il titolo
                   Positioned(
-                    top: 56,
+                    bottom: 44,
                     left: 16,
-                    child: _StatusChip(status: p.status),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Barra avanzamento + brand/scala ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (p.brand != null || p.scale != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        [p.brand, p.scale]
-                            .whereType<String>()
-                            .join(' · '),
-                        style: tt.bodySmall,
-                      ),
+                    right: 16,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _StatusChip(
+                          status: p.status,
+                          onTap: _showStatusSheet,
+                        ),
+                        if (p.brand != null || p.scale != null) ...[
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              [p.brand, p.scale]
+                                  .whereType<String>()
+                                  .join(' · '),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                shadows: [
+                                  Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 6)
+                                ],
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
@@ -307,19 +318,7 @@ class _ProjectDetailContentState
 
           // ── Galleria Foto ──
           _SectionHeader(title: 'Galleria'),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 88,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  // Bottone aggiungi
-                  _PhotoAddButton(onTap: () {}),
-                ],
-              ),
-            ),
-          ),
+          _GallerySliver(projectId: widget.project.id),
 
           // ── Note Progetto ──
           _SectionHeader(title: 'Note'),
@@ -365,7 +364,7 @@ class _ProjectDetailContentState
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: scheme.surfaceVariant,
+                          color: scheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -385,14 +384,17 @@ class _ProjectDetailContentState
             ),
           ),
 
-          // ── Info Progetto ──
-          _SectionHeader(title: 'Info'),
+          // ── Palette del kit ──
+          ProjectPaletteSliver(projectId: widget.project.id),
+
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
               child: Text(
-                'Creato il ${_formatDate(p.createdAt)}  ·  Ultima modifica ${_timeAgo(p.updatedAt)}',
-                style: tt.bodySmall,
+                'Creato il ${_formatDate(p.createdAt)}  ·  Modificato ${_timeAgo(p.updatedAt)}',
+                style: tt.bodySmall?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.35),
+                ),
               ),
             ),
           ),
@@ -438,7 +440,8 @@ class _ProjectDetailContentState
 
 class _StatusChip extends StatelessWidget {
   final String status;
-  const _StatusChip({required this.status});
+  final VoidCallback? onTap;
+  const _StatusChip({required this.status, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -460,20 +463,32 @@ class _StatusChip extends StatelessWidget {
         ),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: status == 'todo'
-            ? Border.all(color: Colors.white54)
-            : null,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          border: status == 'todo'
+              ? Border.all(color: Colors.white54)
+              : Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    color: fg,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.expand_more, color: fg, size: 14),
+            ],
+          ],
+        ),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: fg,
-              fontSize: 12,
-              fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -499,6 +514,178 @@ class _SectionHeader extends StatelessWidget {
             Expanded(
                 child: Divider(color: scheme.outline, thickness: 1)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+final _projectPhotosProvider =
+    StreamProvider.autoDispose.family<List<ProjectPhoto>, int>(
+  (ref, projectId) =>
+      ref.watch(projectRepositoryProvider).watchProjectPhotos(projectId),
+);
+
+class _GallerySliver extends ConsumerWidget {
+  final int projectId;
+  const _GallerySliver({required this.projectId});
+
+  Future<void> _addPhoto(BuildContext context, WidgetRef ref) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Fotocamera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Galleria'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Annulla'),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    try {
+      final file = await ImagePicker().pickImage(source: source, imageQuality: 85);
+      if (file != null) {
+        await ref.read(projectRepositoryProvider).addProjectPhoto(projectId, file.path);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _deletePhoto(BuildContext context, WidgetRef ref, int photoId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminare la foto?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await ref.read(projectRepositoryProvider).deleteProjectPhoto(photoId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photosAsync = ref.watch(_projectPhotosProvider(projectId));
+    final photos = photosAsync.valueOrNull ?? [];
+
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 88,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            _PhotoAddButton(onTap: () => _addPhoto(context, ref)),
+            ...photos.map((photo) => _PhotoThumbnail(
+              photo: photo,
+              onDelete: () => _deletePhoto(context, ref, photo.id),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoThumbnail extends StatelessWidget {
+  final ProjectPhoto photo;
+  final VoidCallback onDelete;
+  const _PhotoThumbnail({required this.photo, required this.onDelete});
+
+  void _openFullscreen(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _PhotoFullscreenPage(photo: photo, onDelete: onDelete),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openFullscreen(context),
+      child: Container(
+        width: 80,
+        height: 80,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            image: FileImage(File(photo.path)),
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoFullscreenPage extends StatelessWidget {
+  final ProjectPhoto photo;
+  final VoidCallback onDelete;
+  const _PhotoFullscreenPage({required this.photo, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Elimina foto',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Eliminare la foto?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Annulla')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Elimina',
+                          style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                Navigator.of(context).pop();
+                onDelete();
+              }
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.file(File(photo.path), fit: BoxFit.contain),
         ),
       ),
     );

@@ -1,6 +1,6 @@
 class AppConstants {
   static const List<String> projectCategories = [
-    'tank', 'aircraft', 'figure', 'ship', 'diorama', 'other',
+    'tank', 'aircraft', 'figure', 'ship', 'car', 'motorcycle', 'diorama', 'other',
   ];
 
   static const List<String> projectStatuses = [
@@ -18,6 +18,8 @@ class AppConstants {
     'aircraft': 'Aereo',
     'figure': 'Figura',
     'ship': 'Nave',
+    'car': 'Auto',
+    'motorcycle': 'Moto',
     'diorama': 'Diorama',
     'other': 'Altro',
   };

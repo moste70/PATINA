@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'tables/projects.dart';
 import 'tables/paints.dart';
 import 'tables/recipes.dart';
@@ -15,16 +12,35 @@ part 'app_database.g.dart';
   Projects,
   ProjectPhotos,
   CatalogPaints,
+  CustomPaints,
   InventoryPaints,
+  ProjectPaints,
   Recipes,
   RecipeIngredients,
   Pins,
+  ShoppingItems,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 4;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(customPaints);
+      }
+      if (from < 3) {
+        await m.createTable(projectPaints);
+      }
+      if (from < 4) {
+        await m.createTable(shoppingItems);
+      }
+    },
+  );
 
   Future<void> initializeDemoProject() async {
     final existing = await (select(projects)..limit(1)).get();
@@ -70,54 +86,9 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  static const String _catalogVersion = '2024.1';
-  static const String _catalogVersionKey = 'catalog_version';
-
-  Future<void> initializeCatalogs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final storedVersion = prefs.getString(_catalogVersionKey);
-    if (storedVersion == _catalogVersion) return;
-
-    // Nuova versione catalogo: svuota e ricarica (non tocca inventory)
-    await delete(catalogPaints).go();
-
-    final catalogFiles = [
-      'assets/catalogs/vallejo_model_color.json',
-      'assets/catalogs/vallejo_model_air.json',
-      'assets/catalogs/citadel_base.json',
-      'assets/catalogs/tamiya_xf.json',
-      'assets/catalogs/tamiya_x.json',
-      'assets/catalogs/gunze_aqueous.json',
-      'assets/catalogs/gunze_mr_color.json',
-      'assets/catalogs/gunze_mr_metal.json',
-      'assets/catalogs/humbrol_enamel.json',
-      'assets/catalogs/lifecolor_ua.json',
-      'assets/catalogs/lifecolor_lc.json',
-    ];
-
-    await batch((b) async {
-      for (final path in catalogFiles) {
-        try {
-          final raw = await rootBundle.loadString(path);
-          final data = json.decode(raw) as Map<String, dynamic>;
-          final brand = data['brand'] as String;
-          final line = data['line'] as String;
-          final paints = data['paints'] as List<dynamic>;
-          for (final paint in paints) {
-            b.insert(catalogPaints, CatalogPaintsCompanion(
-              brand: Value(brand),
-              line: Value(line),
-              code: Value(paint['code'] as String),
-              name: Value(paint['name'] as String),
-              hex: Value(paint['hex'] as String),
-            ));
-          }
-        } catch (_) {}
-      }
-    });
-
-    await prefs.setString(_catalogVersionKey, _catalogVersion);
-  }
+  // I cataloghi sono letti direttamente dagli asset JSON (rootBundle) on-demand.
+  // Non vengono precaricati nel DB: ogni aggiornamento arriva con una nuova release app.
+  // Vedere: app/assets/catalogs/ — 11 file JSON, versione 2024.1
 }
 
 final databaseProvider = Provider<AppDatabase>(

@@ -33,6 +33,32 @@ class CustomPaints extends Table {
       ];
 }
 
+// Vernici associate a un progetto (palette del kit).
+// Usa brand+code come la chiave naturale di CatalogPaints/CustomPaints.
+class ProjectPaints extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get projectId => integer()();
+  TextColumn get brand => text()();   // es. "tamiya"
+  TextColumn get code => text()();    // es. "XF-85"
+  TextColumn get name => text()();    // denormalizzato per display offline
+  TextColumn get hex => text()();     // es. "#3A3A3A"
+  IntColumn get addedAt => integer()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {projectId, brand, code},
+      ];
+}
+
+// Voci manuali nella lista della spesa (pennelli, diluenti, materiali, ecc.).
+class ShoppingItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get label => text()();
+  TextColumn get notes => text().nullable()();
+  BoolColumn get done => boolean().withDefault(const Constant(false))();
+  IntColumn get createdAt => integer()();
+}
+
 // L'inventario referenzia le vernici tramite brand+code (chiave naturale),
 // non tramite ID autoincrement, per restare stabile agli aggiornamenti catalogo.
 // Se catalogBrand/catalogCode sono valorizzati → vernice da catalogo ufficiale.

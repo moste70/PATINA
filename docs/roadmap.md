@@ -11,13 +11,14 @@
 | 0.3 | Configurazione dipendenze (Riverpod, Drift, Go Router, image_picker) | ✅ Completato |
 | 0.4 | Gestione permessi Android (camera, storage) | ✅ Completato |
 | 0.5 | Setup database Drift con tutte le tabelle (schemaVersion 1) | ✅ Completato |
-| 0.6 | Caricamento cataloghi JSON in SQLite al primo avvio (`initializeCatalogs`) | ✅ Completato |
+| 0.6 | Cataloghi vernici — 13 file JSON bundled in `assets/catalogs/`, letti on-demand da `rootBundle`. ~1.220 colori totali (versione 2024.1). Inclusi Tamiya LP (lacquer, 76) e Tamiya TS (spray, 100) aggiunti dopo il lancio iniziale. | ✅ Completato |
 | 0.7 | Design system: palette dark/light (`PatinaColors`), tipografia, tema Flutter | ✅ Completato |
 | 0.8 | Navigazione con Go Router — ShellRoute, 4 tab, placeholder screens | ✅ Completato |
 | 0.9 | CI/CD GitHub Actions — build APK debug e release | ✅ Completato |
 | 0.10 | `AppConstants` — categorie, stati, fasi predefinite, marche, quantità | ✅ Completato |
 | 0.11 | Icona launcher Android (cluster esagoni) + fix NormalTheme AndroidManifest | ✅ Completato |
-| 0.12 | Font Google Fonts: Inter (UI) + DM Serif Display (heading) via `PatinaFonts` | ✅ Completato |
+| 0.12 | Font: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo) via `PatinaFonts` | ✅ Completato |
+| 0.13 | Icone custom bottom navigation bar — `CustomPainter` per Progetti (griglia), Vernici (tavolozza), Ricette (matraccio), Impostazioni (ingranaggio 60°) | ✅ Completato |
 
 ---
 
@@ -39,13 +40,13 @@
 
 | Task | Priorità | Descrizione | Stato |
 |------|----------|-------------|-------|
-| 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ⬜ Da fare |
-| 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ⬜ Da fare |
-| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ⬜ Da fare |
-| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ⬜ Da fare |
+| 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ✅ Completato |
+| 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ✅ Completato |
+| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — card con miniatura cover photo 80×80, badge stato colorato, filter bar chip per stato | ✅ Completato |
+| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, miniature, viewer fullscreen con zoom (InteractiveViewer), elimina dall'AppBar | ✅ Completato |
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
 | 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
-| 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) | ⬜ Da fare |
+| 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) — filtro per stato ✅ implementato; ricerca per nome ⬜ da fare | 🔶 Parziale |
 
 ---
 
@@ -60,7 +61,7 @@
 | 1B.3 | Inventario personale — griglia chip esagonali / lista | ⬜ Da fare |
 | 1B.4 | Aggiunta vernice da catalogo o manuale | ⬜ Da fare |
 | 1B.5 | Modifica quantità con tap rapido | ⬜ Da fare |
-| 1B.6 | Lista della spesa automatica (vernici finite/quasi finite) | ⬜ Da fare |
+| 1B.6 | Lista della spesa — sezione automatica (vernici palette kit non in inventario, checkbox in-memory, ordine checked-in-fondo) + voci manuali (DB, checkbox persistito, swipe-to-delete, FAB); schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
 | 1B.7 | Equivalenze tra marche | ⬜ Da fare |
 
 ---
@@ -105,12 +106,45 @@
 |------|-------------|-------|
 | 1E.1 | Export backup ZIP (tutti i dati + foto) | ⬜ Da fare |
 | 1E.2 | Import backup | ⬜ Da fare |
-| 1E.3 | Impostazioni app (tema dark/light, lingua) | ⬜ Da fare |
+| 1E.3 | Impostazioni app (tema dark/light, lingua) | ✅ Completato |
 | 1E.4 | Empty state e onboarding primo avvio | ⬜ Da fare |
 | 1E.5 | Test su dispositivi reali | ⬜ Da fare |
 | 1E.6 | Ottimizzazione performance (immagini, DB) | ⬜ Da fare |
 | 1E.7 | Preparazione store listing Google Play | ⬜ Da fare |
 | 1E.8 | Release beta (Google Play Internal Testing) | ⬜ Da fare |
+
+### ✅ Checklist pre-rilascio — comandi da eseguire
+
+Eseguire nell'ordine prima di ogni build di rilascio:
+
+```bash
+cd app
+
+# 1. Dipendenze aggiornate
+flutter pub get
+
+# 2. Rigenera codice Drift (obbligatorio se sono cambiate le tabelle)
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# 3. Test cataloghi (nessun codegen necessario)
+flutter test test/catalogs/
+
+# 4. Test database (richiede il .g.dart generato al passo 2)
+flutter test test/database/
+
+# 5. Analisi statica
+flutter analyze
+
+# 6. Build APK release
+flutter build apk --release
+
+# 7. Verifica versionCode e versionName in android/app/build.gradle
+#    → incrementare versionCode di 1 ad ogni upload su Play Console
+```
+
+> Tutti i test devono passare prima di procedere con il caricamento su Google Play Console.
+
+---
 
 ### Note pre-lancio — Adempimenti amministrativi
 
@@ -156,20 +190,67 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ---
 
+## Fase 1F — Supporto Tablet
+
+**Obiettivo:** far funzionare bene l'app su schermi medi e grandi (tablet Android da 8" a 12"+), sfruttando lo spazio extra senza stravolgere il codice esistente.
+
+> Nota: Flutter usa i **Material 3 Window Size Classes** come riferimento:
+> - **Compact** — larghezza < 600 dp (smartphone in verticale) → layout attuale
+> - **Medium** — 600–840 dp (tablet piccolo, smartphone landscape) → NavigationRail + colonne
+> - **Expanded** — > 840 dp (tablet grande, foldable aperto) → pannello maestro-dettaglio
+
+### Fondamenta (da fare prima di qualsiasi altra cosa)
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1F.1 | 🔴 Alta | Crea `AdaptiveLayout` helper — `LayoutBuilder` con breakpoint `compact / medium / expanded`; espone un `WindowSizeClass` usabile ovunque tramite `InheritedWidget` o provider Riverpod | ⬜ Da fare |
+| 1F.2 | 🔴 Alta | **Navigazione adattiva** — sostituisce `BottomNavigationBar` con `NavigationRail` su Medium/Expanded; ShellRoute in Go Router rimane invariato, cambia solo il widget shell | ⬜ Da fare |
+| 1F.3 | 🔴 Alta | **Max-width constraint globale** — avvolge il contenuto delle schermate principali in un `Center` + `ConstrainedBox(maxWidth: 840)` per evitare layout spalmati su schermi da 12" | ⬜ Da fare |
+
+### Layout adattivi per feature
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1F.4 | 🟡 Media | **Archivio progetti — pannello maestro-dettaglio** — su Expanded, lista progetto a sinistra (330 dp) e scheda dettaglio a destra nella stessa schermata; Go Router aggiorna l'URL normalmente | ⬜ Da fare |
+| 1F.5 | 🟡 Media | **Griglia archivio adattiva** — `crossAxisCount` dinamico: 2 su Compact, 3 su Medium, 4 su Expanded | ⬜ Da fare |
+| 1F.6 | 🟡 Media | **Wizard nuovo progetto** — su Expanded, layout a due colonne (form a sinistra, anteprima/info a destra) invece di PageView lineare | ⬜ Da fare |
+| 1F.7 | 🟡 Media | **Inventario vernici** (Fase 1B) — griglia esagonale con `crossAxisCount` adattivo; sidebar filtri permanente su Expanded | ⬜ Da fare |
+| 1F.8 | 🟢 Bassa | **Pin su foto** (Fase 1D) — pannello pin-list a fianco del viewer foto su Expanded | ⬜ Da fare |
+
+### Ottimizzazioni e polish
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1F.9 | 🟡 Media | Supporto tastiera fisica — shortcut `Ctrl+N` (nuovo progetto), `Escape` (chiudi/indietro), frecce nella lista | ⬜ Da fare |
+| 1F.10 | 🟢 Bassa | Hover state sui card — `MouseRegion` + elevazione / highlight on hover per uso con mouse/trackpad | ⬜ Da fare |
+| 1F.11 | 🟢 Bassa | Drag & drop foto nella galleria progetto — riordino con `ReorderableListView` | ⬜ Da fare |
+| 1F.12 | 🟢 Bassa | Test su emulatori tablet (Pixel Tablet, Pixel Fold) e screenshot Google Play per il form factor tablet | ⬜ Da fare |
+
+### Note implementative
+
+- **Non usare `MediaQuery.of(context).size.width` raw** — passare sempre per `AdaptiveLayout` / `WindowSizeClass` per evitare magic numbers sparsi nel codice.
+- **Go Router** funziona già bene: su Expanded il pannello maestro-dettaglio viene gestito con una `ShellRoute` che renderizza entrambi i rami, non con due route separate.
+- **`NavigationRail`** su Medium/Expanded usa le stesse voci del `BottomNavigationBar` attuale — i label si mostrano solo su Expanded (`.extended = true`).
+- Breakpoint consigliati per PATINA (adattati al contenuto grafico): Compact < 600 dp · Medium 600–900 dp · Expanded > 900 dp.
+
+---
+
 ## Fase 2 — Internazionalizzazione
 
 **Obiettivo:** rendere l'app accessibile ai mercati internazionali con le maggiori community di modellismo.
 
 > Prerequisito: completamento Fase 1E (release italiana stabile).
+> L'infrastruttura (flutter_localizations + intl + file .arb IT/EN) è già predisposta nella Fase 0.
 
 | Task | Priorità | Descrizione | Stato |
 |------|----------|-------------|-------|
-| 2.1 | 🔴 Alta | Setup `flutter_localizations` + `intl` — struttura `.arb` files, estrazione tutte le stringhe UI | ⬜ Da fare |
-| 2.2 | 🔴 Alta | Traduzione inglese (EN) — testi UI, onboarding, store listing Google Play | ⬜ Da fare |
-| 2.3 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
-| 2.4 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
-| 2.5 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
-| 2.6 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ⬜ Da fare |
+| 2.1 | 🔴 Alta | Setup `flutter_localizations` + `intl` — struttura `.arb` files, delegate in MaterialApp | ✅ Completato |
+| 2.2 | 🔴 Alta | Chiavi IT/EN per azioni comuni, validazione, onboarding, categorie, stati, galleria | ✅ Completato |
+| 2.3 | 🔴 Alta | Migrazione stringhe hardcoded esistenti → `AppL10n.of(context).*` (feature per feature) | ⬜ Da fare |
+| 2.4 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
+| 2.5 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
+| 2.6 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
+| 2.7 | 🟢 Bassa | Selezione lingua manuale nelle Impostazioni (override locale di sistema) | ✅ Completato |
 
 ---
 
@@ -234,22 +315,47 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ---
 
+## Debito Tecnico e Bug Noti
+
+> Emersi dall'audit codice/documentazione del 2025-07-03. Risolvere prima o durante la Fase 1B.
+
+| Task | Priorità | Descrizione | Come risolvere | Stato |
+|------|----------|-------------|----------------|-------|
+| DT.1 | 🔴 Alta | `CustomPaints` non registrata in `@DriftDatabase` — la tabella non viene creata nel DB SQLite, tutto il flusso vernici manuali è non funzionante a runtime | Aggiungere `CustomPaints` alla lista tables in `app_database.dart` e incrementare `schemaVersion` a 2 con migrazione | ✅ Risolto (serve `build_runner build` per rigenerare .g.dart) |
+| DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ⬜ Da fare |
+| DT.3 | 🟡 Media | `colorScheme.background` / `onBackground` / `surfaceVariant` deprecati in Flutter 3.18+ — genera warning in build | Migrazione completa: `background→surface`, `onBackground→onSurface`, `surface→surfaceContainer`, `surfaceVariant→surfaceContainerHigh` in tutti i file dart | ✅ Risolto |
+| DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ✅ Risolto |
+| DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ⬜ Da fare |
+| DT.6 | 🟡 Media | Campo `phaseId` orfano in `Pins` — non referenzia nessuna tabella, non documentato, mai popolato dall'UI | Riservato per Fase 1D (fasi di lavorazione) — documentato con commento in `tables/pins.dart`. Aggiungere FK e migrazione quando si implementerà la tabella `phases` | ✅ Documentato |
+| DT.7 | 🟡 Media | Campo `catalogId` in `RecipeIngredients` non documentato — doppio riferimento a inventory e catalog non spiegato | Documentato con commento in `tables/recipes.dart`: `paintId` = percorso principale (inventario), `catalogId` = alternativo (vernice non ancora in inventario) | ✅ Documentato |
+| DT.8 | 🟢 Bassa | Dipendenze inutilizzate in `pubspec.yaml`: `cached_network_image`, `uuid`, `dio`, `path_provider`, `path`, `intl`, `riverpod_annotation`, `riverpod_generator` | Rimuovere ora, reintrodurre quando effettivamente necessarie | ✅ Risolto |
+| DT.9 | 🟢 Bassa | `docs/architecture.md` documenta solo 3 cataloghi (Vallejo MC, Citadel, Tamiya XF) — nella realtà sono 11 con ~1.000 colori | Aggiornare la sezione cataloghi in architecture.md | ✅ Risolto |
+| DT.10 | 🟢 Bassa | `CLAUDE.md` mancante — nessuna guida per Claude Code su comandi build, codegen Drift, convenzioni naming | Creare `CLAUDE.md` alla radice con: `cd app && flutter pub get`, `flutter pub run build_runner build`, convenzioni progetto | ✅ Risolto |
+
+---
+
 ## Stato Attuale
 
 ```
-Fase 0       ██████████  100%  — completata
-Fase 1       ░░░░░░░░░░    0%  — in corso: 1A (doc → Creazione Progetto, Scheda Progetto, Onboarding)
-Fase 2       ░░░░░░░░░░    0%  — Internazionalizzazione (EN + ES + FR)
-Fase 3       ░░░░░░░░░░    0%  — AI e Cloud
+Fase 0       ██████████  100%  — completata (incl. icone nav custom)
+Fase 1A      █████████░   93%  — card+foto+badge+filtro stato OK; viewer foto OK; manca modifica progetto, ricerca per nome
+Fase 1B      █░░░░░░░░░   14%  — lista della spesa (1B.6) completata; catalogo + inventario da fare
+Fase 1C      ░░░░░░░░░░    0%  — Ricette
+Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
+Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
+Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
+Fase 2       ███░░░░░░░   30%  — i18n IT+EN + selezione lingua completati; manca migrazione stringhe + ES/FR
+Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
+Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risolti; DT.2/5 aperti
 ```
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🔴 `1A-DOC.1` — Spec scheda creazione progetto
-2. 🔴 `1A-DOC.2` — Spec scheda principale progetto
-3. 🟡 `1A-DOC.3` — Spec onboarding
-4. 🔴 `1A.1` — Dev scheda creazione (dipende da DOC.1)
-5. 🔴 `1A.2` — Dev scheda principale (dipende da DOC.2)
-6. 🟡 `1A.3` — Dev dashboard archivio
-7. 🟡 `1A.5` — Dev onboarding (dipende da DOC.3)
+1. 🔴 `DT.2` — Fix ordine demo project / onboarding
+2. 🟡 `1A.6` — Modifica, archiviazione, eliminazione progetto
+3. 🟡 `2.3` — Migrazione stringhe hardcoded → `AppL10n` (feature per feature)
+4. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
+5. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
+6. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
+7. 🟢 `1A.7` — Ricerca per nome nell'archivio (filtro stato già fatto)

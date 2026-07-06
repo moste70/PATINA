@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/onboarding/onboarding_screen.dart';
+import '../features/onboarding/splash_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/projects/project_detail/project_detail_screen.dart';
 import '../shared/widgets/placeholder_screen.dart';
+import '../shared/widgets/nav_icons.dart';
+import '../features/settings/settings_screen.dart';
+import '../features/shopping/shopping_list_screen.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -16,8 +20,17 @@ final routerProvider = Provider<GoRouter>((ref) {
   final onboardingDone = ref.watch(onboardingCompletedProvider);
 
   return GoRouter(
-    initialLocation: onboardingDone ? '/projects' : '/onboarding',
+    // Lo splash decide sempre lui dove andare dopo l'animazione
+    initialLocation: '/splash',
     routes: [
+      // Splash — fuori dallo ShellRoute, niente bottom nav
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => SplashScreen(
+          onboardingCompleted: onboardingDone,
+        ),
+      ),
       // Onboarding — fuori dallo ShellRoute (no bottom nav)
       GoRoute(
         path: '/onboarding',
@@ -61,10 +74,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/settings',
             name: 'settings',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Impostazioni',
-              icon: Icons.settings_outlined,
-            ),
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/shopping',
+            name: 'shopping',
+            builder: (context, state) => const ShoppingListScreen(),
           ),
         ],
       ),
@@ -82,7 +97,7 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
 
     return Scaffold(
-      backgroundColor: scheme.background,
+      backgroundColor: scheme.surface,
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -91,25 +106,25 @@ class AppShell extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: _indexFromPath(location),
           onDestinationSelected: (index) => _navigateTo(context, index),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.view_module_outlined),
-              selectedIcon: Icon(Icons.view_module),
+              icon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
+              selectedIcon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
               label: 'Progetti',
             ),
             NavigationDestination(
-              icon: Icon(Icons.palette_outlined),
-              selectedIcon: Icon(Icons.palette),
+              icon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
+              selectedIcon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
               label: 'Vernici',
             ),
             NavigationDestination(
-              icon: Icon(Icons.science_outlined),
-              selectedIcon: Icon(Icons.science),
+              icon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
+              selectedIcon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
               label: 'Ricette',
             ),
             NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
+              icon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
+              selectedIcon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
               label: 'Impostazioni',
             ),
           ],
@@ -132,5 +147,17 @@ class AppShell extends StatelessWidget {
       case 2: context.go('/recipes');
       case 3: context.go('/settings');
     }
+  }
+}
+
+// Reads icon color from the surrounding IconTheme (set by NavigationBar).
+class _NavIcon extends StatelessWidget {
+  final Widget Function(Color color) builder;
+  const _NavIcon({required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = IconTheme.of(context).color ?? Theme.of(context).colorScheme.onSurface;
+    return builder(color);
   }
 }

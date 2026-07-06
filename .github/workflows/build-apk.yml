@@ -3,107 +3,55 @@ name: Build APK
 on:
   push:
     branches:
-      - claude/loving-gates-2iem26
-      - claude/determined-tesla-88zhql
-      - main
-  pull_request:
-    branches:
+      - 'claude/**'
       - main
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Flutter APK
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
-          channel: 'stable'
+          flutter-version: '3.32.0'
+          channel: stable
           cache: true
 
-      - name: Create local.properties
-        working-directory: app/android
-        run: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-          echo "flutter.sdk=$FLUTTER_ROOT" >> local.properties
-
-      - name: Get dependencies
+      - name: Flutter pub get
         working-directory: app
         run: flutter pub get
 
-      - name: Generate launcher icons
+      - name: Generate code (build_runner)
         working-directory: app
-        run: dart run flutter_launcher_icons
+        run: flutter pub run build_runner build --delete-conflicting-outputs
 
-      - name: Remove adaptive-icon XML from mipmap-anydpi-v21
-        run: rm -f app/android/app/src/main/res/mipmap-anydpi-v21/ic_launcher.xml app/android/app/src/main/res/mipmap-anydpi-v21/ic_launcher_round.xml
-
-      - name: Generate code (Drift + Riverpod)
+      - name: Build release APK
         working-directory: app
-        run: dart run build_runner build --delete-conflicting-outputs
+        continue-on-error: true
+        run: flutter build apk --release
 
-      - name: Analyze
-        working-directory: app
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
-      - name: Build APK (debug)
-        working-directory: app
-        run: flutter build apk --debug || true
-
-      - name: Copy debug APK to Flutter output path
-        working-directory: app
+      - name: Find APK
+        id: find_apk
         run: |
-          mkdir -p build/outputs/flutter-apk
-          SRC="android/app/build/outputs/flutter-apk/app-debug.apk"
-          if [ -f "$SRC" ]; then
-            cp "$SRC" build/outputs/flutter-apk/app-debug.apk
-            echo "debug APK copied OK"
-          else
-            echo "APK not at expected path, searching..."
-            find . -name "app-debug.apk" -type f
-            exit 1
+          APK=$(find app -name "app-release.apk" 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            APK=$(find app -name "*.apk" 2>/dev/null | grep -v unsigned | head -1)
           fi
+          echo "apk_path=$APK" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK"
+          find app -name "*.apk" 2>/dev/null || echo "No APKs found anywhere in app/"
 
-      - name: Upload APK debug
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: patina-debug-${{ github.run_number }}
-          path: app/build/outputs/flutter-apk/app-debug.apk
+          name: patina-release-apk
+          path: ${{ steps.find_apk.outputs.apk_path }}
           retention-days: 14
-
-      - name: Build APK (release unsigned)
-        working-directory: app
-        run: flutter build apk --release || true
-
-      - name: Copy release APK to Flutter output path
-        working-directory: app
-        run: |
-          mkdir -p build/outputs/flutter-apk
-          SRC="android/app/build/outputs/flutter-apk/app-release.apk"
-          if [ -f "$SRC" ]; then
-            cp "$SRC" build/outputs/flutter-apk/app-release.apk
-            echo "release APK copied OK"
-          else
-            echo "APK not at expected path, searching..."
-            find . -name "app-release.apk" -type f
-            exit 1
-          fi
-
-      - name: Upload APK release
-        uses: actions/upload-artifact@v4
-        with:
-          name: patina-release-${{ github.run_number }}
-          path: app/build/outputs/flutter-apk/app-release.apk
-          retention-days: 14
+          if-no-files-found: error

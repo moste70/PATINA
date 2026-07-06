@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Marchio PATINA — 7 esagoni flat-top, spazio 120×120, R=20.
+  Monocromatico Ottone (#D99B3E) per il native splash Android 12+.
+  Ordine: 6 esagoni anello + 1 centrale (condivide un lato con ognuno dei 6).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- top -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M40,25.36 L50,8.04 L70,8.04 L80,25.36 L70,42.68 L50,42.68 Z" />
+    <!-- top-right -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M70,42.68 L80,25.36 L100,25.36 L110,42.68 L100,60 L80,60 Z" />
+    <!-- bot-right -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M70,77.32 L80,60 L100,60 L110,77.32 L100,94.64 L80,94.64 Z" />
+    <!-- bottom -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M40,94.64 L50,77.32 L70,77.32 L80,94.64 L70,111.96 L50,111.96 Z" />
+    <!-- bot-left -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M10,77.32 L20,60 L40,60 L50,77.32 L40,94.64 L20,94.64 Z" />
+    <!-- top-left -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M10,42.68 L20,25.36 L40,25.36 L50,42.68 L40,60 L20,60 Z" />
+    <!-- centrale -->
+    <path
+        android:fillColor="#D99B3E"
+        android:pathData="M40,60 L50,42.68 L70,42.68 L80,60 L70,77.32 L50,77.32 Z" />
+
+</vector>
