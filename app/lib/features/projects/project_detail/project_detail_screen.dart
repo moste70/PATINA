@@ -237,8 +237,7 @@ class _ProjectDetailContentState
             ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
-              titlePadding:
-                  const EdgeInsets.fromLTRB(16, 0, 56, 52),
+              titlePadding: const EdgeInsets.fromLTRB(16, 0, 56, 16),
               title: Text(
                 p.name,
                 style: tt.titleMedium?.copyWith(
@@ -272,42 +271,46 @@ class _ProjectDetailContentState
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: [0.4, 1.0],
+                        stops: [0.35, 1.0],
                         colors: [Colors.transparent, Colors.black87],
                       ),
                     ),
                   ),
-                  // Chip stato — sopra il titolo, tappabile per cambiare stato
+                  // Overlay info: status chip + brand/scala sopra il titolo
                   Positioned(
-                    bottom: 80,
+                    bottom: 44,
                     left: 16,
-                    child: _StatusChip(
-                      status: p.status,
-                      onTap: _showStatusSheet,
+                    right: 16,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _StatusChip(
+                          status: p.status,
+                          onTap: _showStatusSheet,
+                        ),
+                        if (p.brand != null || p.scale != null) ...[
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              [p.brand, p.scale]
+                                  .whereType<String>()
+                                  .join(' · '),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                shadows: [
+                                  Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 6)
+                                ],
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Barra avanzamento + brand/scala ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (p.brand != null || p.scale != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        [p.brand, p.scale]
-                            .whereType<String>()
-                            .join(' · '),
-                        style: tt.bodySmall,
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -384,14 +387,14 @@ class _ProjectDetailContentState
           // ── Palette del kit ──
           ProjectPaletteSliver(projectId: widget.project.id),
 
-          // ── Info Progetto ──
-          _SectionHeader(title: 'Info'),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
               child: Text(
-                'Creato il ${_formatDate(p.createdAt)}  ·  Ultima modifica ${_timeAgo(p.updatedAt)}',
-                style: tt.bodySmall,
+                'Creato il ${_formatDate(p.createdAt)}  ·  Modificato ${_timeAgo(p.updatedAt)}',
+                style: tt.bodySmall?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.35),
+                ),
               ),
             ),
           ),
