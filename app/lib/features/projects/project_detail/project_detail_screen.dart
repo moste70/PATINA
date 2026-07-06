@@ -596,7 +596,7 @@ class _GallerySliver extends ConsumerWidget {
             _PhotoAddButton(onTap: () => _addPhoto(context, ref)),
             ...photos.map((photo) => _PhotoThumbnail(
               photo: photo,
-              onLongPress: () => _deletePhoto(context, ref, photo.id),
+              onDelete: () => _deletePhoto(context, ref, photo.id),
             )),
           ],
         ),
@@ -607,13 +607,22 @@ class _GallerySliver extends ConsumerWidget {
 
 class _PhotoThumbnail extends StatelessWidget {
   final ProjectPhoto photo;
-  final VoidCallback onLongPress;
-  const _PhotoThumbnail({required this.photo, required this.onLongPress});
+  final VoidCallback onDelete;
+  const _PhotoThumbnail({required this.photo, required this.onDelete});
+
+  void _openFullscreen(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _PhotoFullscreenPage(photo: photo, onDelete: onDelete),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPress: onLongPress,
+      onTap: () => _openFullscreen(context),
       child: Container(
         width: 80,
         height: 80,
@@ -624,6 +633,56 @@ class _PhotoThumbnail extends StatelessWidget {
             image: FileImage(File(photo.path)),
             fit: BoxFit.cover,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoFullscreenPage extends StatelessWidget {
+  final ProjectPhoto photo;
+  final VoidCallback onDelete;
+  const _PhotoFullscreenPage({required this.photo, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Elimina foto',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Eliminare la foto?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Annulla')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Elimina',
+                          style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                Navigator.of(context).pop();
+                onDelete();
+              }
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.file(File(photo.path), fit: BoxFit.contain),
         ),
       ),
     );
