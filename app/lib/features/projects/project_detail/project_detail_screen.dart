@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../database/app_database.dart';
 import '../../../shared/constants/app_constants.dart';
 import '../project_repository.dart';
+import '../create_project/create_project_wizard.dart';
 import 'project_palette_sliver.dart';
 
 // Provider per il singolo progetto
@@ -136,6 +137,15 @@ class _ProjectDetailContentState
     } catch (_) {}
   }
 
+  void _editProject() {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CreateProjectWizard(project: widget.project),
+      ),
+    );
+  }
+
   Future<void> _deleteProject() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -213,11 +223,15 @@ class _ProjectDetailContentState
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
+                  if (v == 'edit') _editProject();
                   if (v == 'status') _showStatusSheet();
                   if (v == 'cover') _updateCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
                 itemBuilder: (_) => [
+                  const PopupMenuItem(
+                      value: 'edit', child: Text('Modifica progetto')),
+                  const PopupMenuDivider(),
                   const PopupMenuItem(
                       value: 'status', child: Text('Cambia stato')),
                   const PopupMenuItem(

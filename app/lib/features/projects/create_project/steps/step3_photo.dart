@@ -7,7 +7,8 @@ import '../wizard_state.dart';
 class Step3Photo extends ConsumerWidget {
   final VoidCallback onBack;
   final Future<void> Function() onSave;
-  const Step3Photo({super.key, required this.onBack, required this.onSave});
+  final String? saveLabel;
+  const Step3Photo({super.key, required this.onBack, required this.onSave, this.saveLabel});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -118,7 +119,7 @@ class Step3Photo extends ConsumerWidget {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Crea Progetto'),
+                    : Text(saveLabel ?? 'Crea Progetto'),
               ),
             ),
           ],
