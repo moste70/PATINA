@@ -42,11 +42,11 @@
 |------|----------|-------------|-------|
 | 1A.1 | 🔴 Alta | Sviluppa **Scheda Creazione Progetto** — wizard multi-step: nome, categoria/scala, stato, foto cover | ✅ Completato |
 | 1A.2 | 🔴 Alta | Sviluppa **Scheda Principale Progetto** (`/projects/:id`) — header, galleria foto, fasi di lavorazione, info | ✅ Completato |
-| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — griglia/lista card progetto con stato e avanzamento | ✅ Completato |
-| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, gestione immagini, collega a fase | ✅ Completato |
+| 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — card con miniatura cover photo 80×80, badge stato colorato, filter bar chip per stato | ✅ Completato |
+| 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, miniature, viewer fullscreen con zoom (InteractiveViewer), elimina dall'AppBar | ✅ Completato |
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
 | 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
-| 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) | ⬜ Da fare |
+| 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) — filtro per stato ✅ implementato; ricerca per nome ⬜ da fare | 🔶 Parziale |
 
 ---
 
@@ -61,7 +61,7 @@
 | 1B.3 | Inventario personale — griglia chip esagonali / lista | ⬜ Da fare |
 | 1B.4 | Aggiunta vernice da catalogo o manuale | ⬜ Da fare |
 | 1B.5 | Modifica quantità con tap rapido | ⬜ Da fare |
-| 1B.6 | Lista della spesa — sezione automatica (vernici `low`/`empty` dall'inventario) + voci manuali libere; schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
+| 1B.6 | Lista della spesa — sezione automatica (vernici palette kit non in inventario, checkbox in-memory, ordine checked-in-fondo) + voci manuali (DB, checkbox persistito, swipe-to-delete, FAB); schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
 | 1B.7 | Equivalenze tra marche | ⬜ Da fare |
 
 ---
@@ -338,14 +338,14 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ```
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
-Fase 1A      █████████░   90%  — galleria foto OK; mancano modifica/elimina progetto, ricerca
+Fase 1A      █████████░   93%  — card+foto+badge+filtro stato OK; viewer foto OK; manca modifica progetto, ricerca per nome
 Fase 1B      █░░░░░░░░░   14%  — lista della spesa (1B.6) completata; catalogo + inventario da fare
 Fase 1C      ░░░░░░░░░░    0%  — Ricette
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ███░░░░░░░   30%  — i18n IT+EN + selezione lingua completati; manca migrazione stringhe + ES/FR
-Fase 3       █░░░░░░░░░    5%  — OCR scan istruzioni (scan_instructions_sheet) parzialmente implementato
+Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
 Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risolti; DT.2/5 aperti
 ```
@@ -358,4 +358,4 @@ Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risol
 4. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
 5. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
 6. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
-7. 🟢 `1A.7` — Ricerca e filtri nell'archivio (nome, categoria, stato)
+7. 🟢 `1A.7` — Ricerca per nome nell'archivio (filtro stato già fatto)

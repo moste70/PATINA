@@ -228,20 +228,21 @@ Il FAB `+` è sempre visibile anche sull'empty state.
 Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 
 **Contenuto di ogni card progetto:**
-- Foto di copertina (o placeholder con icona categoria)
-- Nome del modello
+- Miniatura 80×80 della foto di copertina (placeholder con icona se assente)
+- Nome del modello (grassetto)
 - Categoria + scala (es. "Carro Armato · 1/35")
-- Chip stato colorato (`Da iniziare` grigio · `In corso` arancio · `Completato` verde)
-- Data ultima modifica (es. "3 giorni fa")
+- Badge stato colorato: `Da iniziare` grigio · `In corso` arancio `#C87A20` · `Completato` verde `#2F8F57`
 
-**Funzionalità:**
+**Funzionalità implementate:**
 - FAB `+` per aprire il wizard creazione
-- Modifica di tutti i campi dalla scheda progetto
-- Archiviazione progetti completati (rimangono consultabili)
-- Eliminazione con dialog di conferma
-- Ricerca per nome, categoria o stato
-- Ordinamento per: ultima modifica, data inizio, nome, stato
+- Filter bar orizzontale in cima: chip *Tutti / Da iniziare / In corso / Completato* — filtra la lista in tempo reale; stato vuoto dedicato se nessun progetto corrisponde
+- Eliminazione con dialog di conferma (dal menu `⋮` nella scheda progetto)
+
+**Funzionalità future:**
+- Ricerca per nome
+- Ordinamento per ultima modifica, data inizio, nome, stato
 - Toggle vista griglia (2 colonne) / lista
+- Archiviazione progetti completati
 
 #### 1.2 Scheda Principale Progetto (`/projects/:id`)
 
@@ -255,24 +256,25 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 ##### Sezione 1 — Header (SliverAppBar)
 
 **Espanso** (foto visibile, altezza ~260dp):
-- Foto di copertina a schermo pieno con gradiente scuro in basso
-- In overlay sul gradiente: chip stato colorato (in alto a sinistra) + menu `⋮` (in alto a destra)
-- In basso sull'overlay: nome progetto (DM Serif Display, 24sp), marca + scala in grigio
+- Foto di copertina a schermo pieno con gradiente scuro in basso (stops: 0.35 → 1.0)
+- In overlay sul gradiente (riga sopra il titolo): chip stato colorato + brand · scala (bianco70)
+- In basso: nome progetto (bianco pieno)
+- Menu `⋮` in alto a destra
 
 **Collassato** (solo AppBar, altezza standard):
-- Back arrow + nome progetto (Inter 600, troncato) + menu `⋮`
+- Back arrow + nome progetto (troncato) + menu `⋮`
 - La foto scompare, sfondo `surface`
 
 **Chip stato — colori:**
 | Stato | Colore sfondo | Testo |
 |-------|--------------|-------|
-| Da iniziare | `outline` (grigio) | `onSurface` |
+| Da iniziare | `outline` (grigio) | bianco |
 | In corso | `#C87A20` (arancio) | bianco |
-| Completato | `primary` (#7CB87C) | nero |
+| Completato | `primary` (`#D99B3E` ottone) | nero |
 
 **Menu `⋮` azioni:**
-- Modifica progetto → apre wizard in modalità edit (campi pre-compilati)
-- Archivia / Riattiva
+- Cambia stato → bottom sheet con le tre opzioni
+- Cambia foto copertina → bottom sheet Fotocamera / Galleria
 - Elimina → dialog conferma "Elimina progetto? L'azione è irreversibile."
 
 ---
@@ -280,26 +282,33 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 ##### Sezione 2 — Galleria Foto
 
 Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
-Ultima cella è il bottone `+` con icona fotocamera.
+Prima cella è il bottone `+` con icona `add_photo_alternate`.
 
 **Tap su miniatura:**
 - Apre viewer foto a schermo intero (InteractiveViewer, zoom/pan)
-- Se la foto ha pin → mostra overlay pin
-- Swipe orizzontale per navigare tra le foto del progetto
+- AppBar scura con pulsante cestino in alto a destra
+- Il cestino mostra dialog di conferma → alla conferma torna alla galleria ed elimina
 
 **Tap su `+`:**
 - Bottom sheet: Fotocamera · Galleria · Annulla
 - Foto salvata nella cartella privata dell'app (non nella galleria pubblica)
 
-**Long press su miniatura:**
-- Modalità selezione multipla → azioni: elimina
+**Funzionalità future:**
+- Se la foto ha pin → mostra overlay pin
+- Swipe orizzontale per navigare tra le foto nel viewer
 
 ---
 
-##### Sezione 2b — Palette del Kit
+##### Sezione 2b — Colori del Kit (Palette)
 
 Lista delle vernici selezionate per questo progetto, indipendente dai pin.
-Viene mostrata tra l'header e la galleria foto.
+Intestazione sezione: label **"COLORI DEL KIT"** + tre pulsanti icona a destra (area tap 40×40dp, ripple, haptic feedback):
+
+| Icona | Azione |
+|-------|--------|
+| `shopping_cart_outlined` | Apre `/shopping` (lista della spesa) |
+| `camera_alt_outlined` | Avvia scansione OCR foglio istruzioni |
+| `add` | Apre bottom sheet ricerca manuale |
 
 **Struttura riga:**
 ```
@@ -310,17 +319,15 @@ Viene mostrata tra l'header e la galleria foto.
 - Codice vernice in JetBrains Mono + nome
 - Badge **"In magazzino"** (verde `#2F8F57`) se presente nell'inventario personale
 - Badge **"Da acquistare"** (neutro) se non nell'inventario
-- Swipe a sinistra sulla riga per eliminare dalla palette
-- Bottone `+` in intestazione sezione → apre bottom sheet ricerca
+- **Swipe da destra** sulla riga → sfondo rosso con icona cestino → elimina dalla palette
 
 **Bottom sheet "Aggiungi vernice":**
-- Campo di ricerca full-text su tutti gli 11 cataloghi JSON in bundle
+- Campo di ricerca full-text su tutti i 13 cataloghi JSON in bundle
 - Ricerca per codice (es. `XF-85`), nome (es. `rubber`) o marca (es. `tamiya`)
 - Ogni risultato: chip colore + codice + nome + marca
-- Tap su risultato o su `+` → aggiunge alla palette (duplicati ignorati)
-- Il bottom sheet è `DraggableScrollableSheet` (85% → 95% schermo)
+- Tap su risultato → aggiunge alla palette (duplicati ignorati)
 
-**Empty state:** "Nessuna vernice aggiunta. Tocca + per cercare nei cataloghi."
+**Empty state:** due tile — "Caricamento automatico" (OCR, icona `camera_alt`) e "Cerca nel catalogo" (icona `search`)
 
 **Nota:** la palette del kit è indipendente dall'inventario — puoi aggiungere qualsiasi vernice dal catalogo senza possederla fisicamente. Il badge indica solo lo stato magazzino attuale.
 
@@ -340,12 +347,12 @@ Placeholder: "Aggiungi note, riferimenti, obiettivi del progetto…"
 
 ---
 
-##### Sezione 5 — Info Progetto
+##### Sezione 5 — Date (footer discreto)
 
-Row compatta con metadati:
+Riga di testo piccolo al 35% di opacità in fondo alla pagina, senza intestazione separata:
 
 ```
-Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
+Creato il 01 giu 2026  ·  Modificato 3 giorni fa
 ```
 
 ---
@@ -484,14 +491,14 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Schermata | Percorso | Stato |
 |-----------|----------|-------|
 | Onboarding | `/onboarding` | ✅ Implementato — 4 schermate (Benvenuto, Funzionalità, Permessi, Pronto) |
-| Archivio Progetti | `/projects` | ✅ Implementato — lista, empty state, FAB, navigazione alla scheda |
+| Archivio Progetti | `/projects` | ✅ Implementato — card con foto+badge stato, filter bar per stato, FAB, empty state |
 | Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto); brand+scala obbligatori, validazione on-press |
-| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile, palette del kit, galleria foto, note, info |
-| Palette del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe per rimuovere |
-| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, elimina con long-press |
+| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile con brand/scala in overlay, palette, galleria, note |
+| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe-to-delete, pulsanti header con haptic |
+| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, tap → viewer fullscreen con zoom, elimina dall'AppBar |
 | Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app |
-| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica (vernici `low`/`empty`) + voci manuali, segna come acquistato |
-| Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — scatta/carica foto, MLKit OCR, riconosce codici colore, aggiunge a palette |
+| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (checkbox in-memory) + voci manuali (DB), swipe-to-delete |
+| Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — crop manuale, preprocessing scala di grigi, MLKit OCR, riconosce codici, aggiunge a palette |
 | Vernici / Inventario | `/paints` | ⬜ Placeholder |
 | Ricette | `/recipes` | ⬜ Placeholder |
 

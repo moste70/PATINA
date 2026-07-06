@@ -111,6 +111,13 @@ Breakpoint Material 3 adottati per PATINA:
 - Font: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo)
 - Chip colore: forma **esagonale** (flat-top), via `CustomPainter`
 
+## UX — Pattern consolidati
+
+- **Swipe-to-delete:** usare `Dismissible` (swipe da destra) con sfondo `scheme.error` e icona `delete_outline` per eliminare voci da liste (palette kit, voci manuali shopping, foto galleria)
+- **Pulsanti header sezione:** usare `_HeaderIconButton` (InkWell + padding 8dp → area tap 40×40dp, Tooltip) con `HapticFeedback.lightImpact()` — non usare `GestureDetector` nudo con icone piccole
+- **Viewer foto fullscreen:** `MaterialPageRoute(fullscreenDialog: true)` + `InteractiveViewer` + AppBar scura con azione elimina — non long-press
+- **Overlay su immagine:** testo bianco con `Shadow(color: Colors.black54, blurRadius: 6)` sul gradiente scuro; opacità `Colors.white70` per testo secondario
+
 ## Versioning DB
 
 Schema corrente: **v4**
