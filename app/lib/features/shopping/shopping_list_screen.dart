@@ -207,7 +207,7 @@ class ShoppingListScreen extends ConsumerWidget {
       if (paints.isNotEmpty) buf.writeln();
       buf.writeln('ALTRO');
       for (final item in items) {
-        final done = item.checked ? '✓' : '○';
+        final done = item.done ? '✓' : '○';
         buf.writeln('  $done ${item.label}');
         if (item.notes != null && item.notes!.isNotEmpty) {
           buf.writeln('     ${item.notes}');
