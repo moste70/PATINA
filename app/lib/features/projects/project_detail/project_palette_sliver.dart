@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'scan_instructions_sheet.dart';
 import '../../../database/app_database.dart';
+import '../../../shared/widgets/hex_color_chip.dart';
 import '../project_repository.dart';
 
 // ── Catalog search ────────────────────────────────────────────────────────────
@@ -357,15 +358,9 @@ class _PaletteRow extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _hexColor(paint.hex),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: scheme.outline.withOpacity(0.4), width: 1),
-                  ),
+                HexColorChip(
+                  color: _hexColor(paint.hex),
+                  size: 32,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -628,15 +623,9 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                     final p = _results[i];
                     final sel = _selected.contains(p);
                     return ListTile(
-                      leading: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: _hexColor(p.hex),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: scheme.outline.withOpacity(0.4)),
-                        ),
+                      leading: HexColorChip(
+                        color: _hexColor(p.hex),
+                        size: 32,
                       ),
                       title: Text(
                         '${p.code}  ${p.name}',

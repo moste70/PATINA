@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../shared/widgets/hex_color_chip.dart';
 
 // ── Public result type ────────────────────────────────────────────────────────
 
@@ -545,20 +546,11 @@ class _ScanSheetState extends State<_ScanSheet> {
         final p = found[i];
         return ListTile(
           dense: true,
-          leading: Container(
-            width: 28, height: 28,
-            decoration: BoxDecoration(
-              color: _hexColor(p.hex),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: p.unknownInCatalog
-                    ? scheme.outline
-                    : scheme.outline.withOpacity(0.4),
-                width: 1,
-              ),
-            ),
+          leading: HexColorChip(
+            color: _hexColor(p.hex),
+            size: 28,
             child: p.unknownInCatalog
-                ? Icon(Icons.question_mark, size: 14, color: scheme.onSurfaceVariant)
+                ? Icon(Icons.question_mark, size: 12, color: scheme.onSurfaceVariant)
                 : null,
           ),
           title: Text(

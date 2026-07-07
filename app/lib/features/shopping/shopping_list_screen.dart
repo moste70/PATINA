@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../projects/project_repository.dart';
 import '../../database/app_database.dart';
+import '../../shared/widgets/hex_color_chip.dart';
 
 final _shoppingListProvider = StreamProvider<List<ShoppingEntry>>((ref) {
   return ref.watch(projectRepositoryProvider).watchShoppingList();
@@ -29,6 +31,17 @@ class ShoppingListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lista della spesa'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'Condividi lista',
+            onPressed: () => _shareList(
+              paints: paintsAsync.value ?? [],
+              items: itemsAsync.value ?? [],
+              checkedPaints: checkedPaints,
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddItemSheet(context, ref),
@@ -167,6 +180,48 @@ class ShoppingListScreen extends ConsumerWidget {
     return flat;
   }
 
+  void _shareList({
+    required List<ShoppingEntry> paints,
+    required List<ShoppingItem> items,
+    required Set<String> checkedPaints,
+  }) {
+    final buf = StringBuffer();
+    buf.writeln('🎨 Lista della spesa — PATINA\n');
+
+    if (paints.isNotEmpty) {
+      buf.writeln('VERNICI DA ACQUISTARE');
+      final byProject = <String, List<ShoppingEntry>>{};
+      for (final e in paints) {
+        byProject.putIfAbsent(e.projectName, () => []).add(e);
+      }
+      for (final project in byProject.keys) {
+        buf.writeln('\n$project');
+        for (final e in byProject[project]!) {
+          final done = checkedPaints.contains('${e.brand}+${e.code}') ? '✓' : '○';
+          buf.writeln('  $done ${e.brand}  ${e.code}  ${e.name}');
+        }
+      }
+    }
+
+    if (items.isNotEmpty) {
+      if (paints.isNotEmpty) buf.writeln();
+      buf.writeln('ALTRO');
+      for (final item in items) {
+        final done = item.checked ? '✓' : '○';
+        buf.writeln('  $done ${item.label}');
+        if (item.notes != null && item.notes!.isNotEmpty) {
+          buf.writeln('     ${item.notes}');
+        }
+      }
+    }
+
+    if (paints.isEmpty && items.isEmpty) {
+      buf.writeln('La lista è vuota.');
+    }
+
+    SharePlus.instance.share(ShareParams(text: buf.toString()));
+  }
+
   void _showAddItemSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -269,15 +324,9 @@ class _PaintRow extends StatelessWidget {
             onChanged: (v) => onToggle(v ?? false),
             visualDensity: VisualDensity.compact,
           ),
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: _hexColor(entry.hex),
-              shape: BoxShape.circle,
-              border:
-                  Border.all(color: scheme.outline.withOpacity(0.4), width: 1),
-            ),
+          HexColorChip(
+            color: _hexColor(entry.hex),
+            size: 26,
           ),
           const SizedBox(width: 10),
           Expanded(

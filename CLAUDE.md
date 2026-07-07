@@ -113,10 +113,12 @@ Breakpoint Material 3 adottati per PATINA:
 
 ## UX — Pattern consolidati
 
+- **Chip colore esagonale:** usare sempre `HexColorChip` (`app/lib/shared/widgets/hex_color_chip.dart`) per rappresentare un colore vernice — in liste, palette kit, risultati OCR, shopping list. Non usare `BoxShape.circle` per i chip colore. Eccezione: elementi decorativi UI non legati a una vernice specifica (es. avatar, icone) possono restare circolari se è la forma più appropriata.
 - **Swipe-to-delete:** usare `Dismissible` (swipe da destra) con sfondo `scheme.error` e icona `delete_outline` per eliminare voci da liste (palette kit, voci manuali shopping, foto galleria)
 - **Pulsanti header sezione:** usare `_HeaderIconButton` (InkWell + padding 8dp → area tap 40×40dp, Tooltip) con `HapticFeedback.lightImpact()` — non usare `GestureDetector` nudo con icone piccole
 - **Viewer foto fullscreen:** `MaterialPageRoute(fullscreenDialog: true)` + `InteractiveViewer` + AppBar scura con azione elimina — non long-press
 - **Overlay su immagine:** testo bianco con `Shadow(color: Colors.black54, blurRadius: 6)` sul gradiente scuro; opacità `Colors.white70` per testo secondario
+- **Condivisione lista:** usare `SharePlus.instance.share(ShareParams(text: ...))` di `share_plus` per esporre testo tramite lo share sheet nativo Android/iOS
 
 ## Versioning DB
 
