@@ -472,6 +472,8 @@ class _AddPaintSheet extends ConsumerStatefulWidget {
 class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   final _controller = TextEditingController();
   List<_CatalogPaint> _results = [];
+  final Set<_CatalogPaint> _selected = {};
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -496,14 +498,30 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
     });
   }
 
-  Future<void> _add(_CatalogPaint p) async {
-    await ref.read(projectRepositoryProvider).addProjectPaint(
-          projectId: widget.projectId,
-          brand: p.brand,
-          code: p.code,
-          name: p.name,
-          hex: p.hex,
-        );
+  void _toggle(_CatalogPaint p) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_selected.contains(p)) {
+        _selected.remove(p);
+      } else {
+        _selected.add(p);
+      }
+    });
+  }
+
+  Future<void> _confirm() async {
+    if (_selected.isEmpty) return;
+    setState(() => _isSaving = true);
+    final repo = ref.read(projectRepositoryProvider);
+    for (final p in _selected) {
+      await repo.addProjectPaint(
+        projectId: widget.projectId,
+        brand: p.brand,
+        code: p.code,
+        name: p.name,
+        hex: p.hex,
+      );
+    }
     if (mounted) Navigator.pop(context);
   }
 
@@ -512,6 +530,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final catalogAsync = ref.watch(_catalogProvider);
+    final count = _selected.length;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -532,10 +551,29 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
               ),
             ),
           ),
-          // Title
+          // Title row
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-            child: Text('Aggiungi vernice', style: tt.titleMedium),
+            child: Row(
+              children: [
+                Expanded(child: Text('Aggiungi vernici', style: tt.titleMedium)),
+                if (count > 0)
+                  FilledButton(
+                    onPressed: _isSaving ? null : _confirm,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text('Aggiungi $count'),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           // Search field
@@ -588,6 +626,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                   itemCount: _results.length,
                   itemBuilder: (_, i) {
                     final p = _results[i];
+                    final sel = _selected.contains(p);
                     return ListTile(
                       leading: Container(
                         width: 32,
@@ -605,11 +644,19 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                             fontSize: 13, fontWeight: FontWeight.w500),
                       ),
                       subtitle: Text(p.brand, style: tt.bodySmall),
-                      trailing: IconButton(
-                        icon: Icon(Icons.add, color: scheme.primary),
-                        onPressed: () => _add(p),
+                      trailing: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        child: sel
+                            ? Icon(Icons.check_circle,
+                                key: const ValueKey('checked'),
+                                color: scheme.primary, size: 24)
+                            : Icon(Icons.radio_button_unchecked,
+                                key: const ValueKey('unchecked'),
+                                color: scheme.outline, size: 24),
                       ),
-                      onTap: () => _add(p),
+                      selected: sel,
+                      selectedTileColor: scheme.primary.withOpacity(0.08),
+                      onTap: () => _toggle(p),
                     );
                   },
                 );
