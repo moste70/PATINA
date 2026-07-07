@@ -26,12 +26,8 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
   void initState() {
     super.initState();
     if (_isEditing) {
-      // Pre-popola lo stato del provider con i dati del progetto esistente
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(createProjectProvider.notifier)
-            .initFromProject(widget.project!);
-      });
+      // Popola il provider prima che i figli leggano il loro initState
+      ref.read(createProjectProvider.notifier).initFromProject(widget.project!);
     }
   }
 
