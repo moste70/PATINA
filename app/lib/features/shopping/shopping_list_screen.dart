@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:share_plus/share_plus.dart' show Share;
 import '../projects/project_repository.dart';
 import '../../database/app_database.dart';
 import '../../shared/widgets/hex_color_chip.dart';
@@ -219,7 +219,7 @@ class ShoppingListScreen extends ConsumerWidget {
       buf.writeln('La lista è vuota.');
     }
 
-    SharePlus.instance.share(ShareParams(text: buf.toString()));
+    Share.share(buf.toString());
   }
 
   void _showAddItemSheet(BuildContext context, WidgetRef ref) {
