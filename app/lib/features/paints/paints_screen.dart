@@ -217,11 +217,17 @@ class PaintsScreen extends ConsumerStatefulWidget {
 class _PaintsScreenState extends ConsumerState<PaintsScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  int _tabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() => _tabIndex = _tabController.index);
+      }
+    });
   }
 
   @override
@@ -230,13 +236,9 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
     super.dispose();
   }
 
-  void _showAddSheet() {
+  void _goToCatalog() {
     HapticFeedback.lightImpact();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _AddFromCatalogSheet(),
-    );
+    _tabController.animateTo(1);
   }
 
   @override
@@ -267,11 +269,13 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
           tabs: const [Tab(text: 'INVENTARIO'), Tab(text: 'CATALOGO')],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddSheet,
-        tooltip: 'Aggiungi vernice',
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _tabIndex == 0
+          ? FloatingActionButton(
+              onPressed: _goToCatalog,
+              tooltip: 'Vai al catalogo per aggiungere vernici',
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 840),
@@ -1034,224 +1038,6 @@ class _PaintDetailSheet extends ConsumerWidget {
   }
 }
 
-// ── Add from catalog sheet ────────────────────────────────────────────────────
-
-class _AddFromCatalogSheet extends ConsumerStatefulWidget {
-  const _AddFromCatalogSheet();
-
-  @override
-  ConsumerState<_AddFromCatalogSheet> createState() =>
-      _AddFromCatalogSheetState();
-}
-
-class _AddFromCatalogSheetState
-    extends ConsumerState<_AddFromCatalogSheet> {
-  final _ctrl     = TextEditingController();
-  List<_CatalogEntry> _results = [];
-  final Set<String> _selected  = {}; // "brand+code" keys
-  bool _isSaving               = false;
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _search(String q, Map<String, _CatalogEntry> catalog) {
-    final t = q.trim().toLowerCase();
-    if (t.isEmpty) {
-      setState(() => _results = []);
-      return;
-    }
-    setState(() {
-      _results = catalog.values
-          .where((e) =>
-              e.code.toLowerCase().contains(t) ||
-              e.name.toLowerCase().contains(t) ||
-              e.brand.toLowerCase().contains(t))
-          .take(40)
-          .toList();
-    });
-  }
-
-  Future<void> _confirm() async {
-    if (_selected.isEmpty) return;
-    setState(() => _isSaving = true);
-    final repo = ref.read(paintsRepositoryProvider);
-    for (final key in _selected) {
-      final sep   = key.indexOf('+');
-      final brand = key.substring(0, sep);
-      final code  = key.substring(sep + 1);
-      await repo.addInventoryPaint(brand: brand, code: code);
-    }
-    if (mounted) Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme       = Theme.of(context).colorScheme;
-    final tt           = Theme.of(context).textTheme;
-    final catalogAsync = ref.watch(_catalogIndexProvider);
-    final count        = _selected.length;
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (ctx, scrollCtrl) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 8),
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: scheme.outline,
-                  borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-            child: Row(
-              children: [
-                Expanded(
-                    child: Text('Aggiungi all\'inventario',
-                        style: tt.titleMedium)),
-                if (count > 0)
-                  FilledButton(
-                    onPressed: _isSaving ? null : _confirm,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 36),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16),
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2),
-                          )
-                        : Text('Aggiungi $count'),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: catalogAsync.when(
-              loading: () =>
-                  const LinearProgressIndicator(),
-              error: (_, __) =>
-                  const SizedBox.shrink(),
-              data: (catalog) => TextField(
-                controller: _ctrl,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Cerca per codice, nome o marca…',
-                  prefixIcon:
-                      const Icon(Icons.search, size: 20),
-                  suffixIcon: _ctrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear,
-                              size: 18),
-                          onPressed: () {
-                            _ctrl.clear();
-                            _search('', catalog);
-                          },
-                        )
-                      : null,
-                ),
-                onChanged: (q) => _search(q, catalog),
-              ),
-            ),
-          ),
-          Expanded(
-            child: catalogAsync.when(
-              loading: () => const Center(
-                  child: CircularProgressIndicator()),
-              error: (_, __) => const Center(
-                  child:
-                      Text('Errore caricamento catalogo')),
-              data: (_) {
-                if (_results.isEmpty &&
-                    _ctrl.text.isEmpty) {
-                  return Center(
-                    child: Text(
-                        'Cerca per trovare una vernice',
-                        style: tt.bodySmall),
-                  );
-                }
-                if (_results.isEmpty) {
-                  return Center(
-                    child: Text('Nessun risultato',
-                        style: tt.bodySmall),
-                  );
-                }
-                return ListView.builder(
-                  controller: scrollCtrl,
-                  itemCount: _results.length,
-                  itemBuilder: (_, i) {
-                    final p   = _results[i];
-                    final key = '${p.brand}+${p.code}';
-                    final sel = _selected.contains(key);
-                    return ListTile(
-                      leading: HexColorChip(
-                          color: _hexColor(p.hex),
-                          size: 32),
-                      title: Text(
-                        '${p.code}  ${p.name}',
-                        style: GoogleFonts.jetBrainsMono(
-                            fontSize: 13,
-                            fontWeight:
-                                FontWeight.w500),
-                      ),
-                      subtitle: Text(
-                          _brandLabel(p.brand),
-                          style: tt.bodySmall),
-                      trailing: AnimatedSwitcher(
-                        duration: const Duration(
-                            milliseconds: 180),
-                        child: sel
-                            ? Icon(Icons.check_circle,
-                                key: const ValueKey(
-                                    'c'),
-                                color: scheme.primary,
-                                size: 24)
-                            : Icon(
-                                Icons
-                                    .radio_button_unchecked,
-                                key: const ValueKey(
-                                    'u'),
-                                color: scheme.outline,
-                                size: 24),
-                      ),
-                      selected: sel,
-                      selectedTileColor:
-                          scheme.primary.withOpacity(0.08),
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          if (sel) {
-                            _selected.remove(key);
-                          } else {
-                            _selected.add(key);
-                          }
-                        });
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Catalog tab ───────────────────────────────────────────────────────────────
 
