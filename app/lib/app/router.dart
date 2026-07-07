@@ -9,6 +9,7 @@ import '../shared/widgets/placeholder_screen.dart';
 import '../shared/widgets/nav_icons.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shopping/shopping_list_screen.dart';
+import '../features/paints/paints_screen.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -58,10 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/paints',
             name: 'paints',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Vernici',
-              icon: Icons.palette_outlined,
-            ),
+            builder: (context, state) => const PaintsScreen(),
           ),
           GoRoute(
             path: '/recipes',

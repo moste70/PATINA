@@ -1,0 +1,1399 @@
+import 'dart:convert';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+// `show` evita la collisione con il widget Flutter `CustomPaint`
+import '../../database/app_database.dart' show InventoryPaint, databaseProvider;
+import '../../shared/widgets/hex_color_chip.dart';
+import 'paints_repository.dart';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+enum _ViewMode { grid, list }
+
+class _CatalogEntry {
+  final String brand;
+  final String code;
+  final String name;
+  final String hex;
+  const _CatalogEntry({
+    required this.brand,
+    required this.code,
+    required this.name,
+    required this.hex,
+  });
+}
+
+class ResolvedPaint {
+  final InventoryPaint source;
+  final String brand;
+  final String code;
+  final String name;
+  final String hex;
+  const ResolvedPaint({
+    required this.source,
+    required this.brand,
+    required this.code,
+    required this.name,
+    required this.hex,
+  });
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const _kFull  = Color(0xFF2F8F57);
+const _kHalf  = Color(0xFFD99B3E);
+const _kLow   = Color(0xFFC87A20);
+const _kEmpty = Color(0xFF8F3030);
+
+const _kBrands = [
+  'tamiya', 'vallejo', 'citadel', 'gunze', 'humbrol', 'lifecolor',
+];
+
+const _kCatalogAssets = [
+  'assets/catalogs/tamiya_xf.json',
+  'assets/catalogs/tamiya_x.json',
+  'assets/catalogs/tamiya_lp.json',
+  'assets/catalogs/tamiya_ts.json',
+  'assets/catalogs/vallejo_model_color.json',
+  'assets/catalogs/vallejo_model_air.json',
+  'assets/catalogs/citadel_base.json',
+  'assets/catalogs/gunze_mr_color.json',
+  'assets/catalogs/gunze_aqueous.json',
+  'assets/catalogs/gunze_mr_metal.json',
+  'assets/catalogs/humbrol_enamel.json',
+  'assets/catalogs/lifecolor_lc.json',
+  'assets/catalogs/lifecolor_ua.json',
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+Color _quantityColor(String q) => switch (q) {
+  'full'  => _kFull,
+  'half'  => _kHalf,
+  'low'   => _kLow,
+  _       => _kEmpty,
+};
+
+String _quantityLabel(String q) => switch (q) {
+  'full'  => 'Piena',
+  'half'  => 'Metà',
+  'low'   => 'Quasi',
+  _       => 'Esaurita',
+};
+
+String _brandLabel(String b) => switch (b) {
+  'tamiya'    => 'Tamiya',
+  'vallejo'   => 'Vallejo',
+  'citadel'   => 'Citadel',
+  'gunze'     => 'Gunze',
+  'humbrol'   => 'Humbrol',
+  'lifecolor' => 'LifeColor',
+  _           => b,
+};
+
+Color _hexColor(String hex) {
+  try {
+    return Color(int.parse(hex.replaceFirst('#', '0xFF')));
+  } catch (_) {
+    return Colors.grey;
+  }
+}
+
+// ── Catalog loading ───────────────────────────────────────────────────────────
+
+Future<Map<String, _CatalogEntry>> _loadCatalogIndex() async {
+  final index = <String, _CatalogEntry>{};
+  for (final asset in _kCatalogAssets) {
+    try {
+      final raw = await rootBundle.loadString(asset);
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final brand = data['brand'] as String;
+      for (final p in data['paints'] as List) {
+        final code = p['code'] as String;
+        index['$brand+$code'] = _CatalogEntry(
+          brand: brand,
+          code: code,
+          name: p['name'] as String,
+          hex: p['hex'] as String,
+        );
+      }
+    } catch (_) {}
+  }
+  return index;
+}
+
+// ── Providers ─────────────────────────────────────────────────────────────────
+
+// Non-autoDispose: il catalogo non cambia, teniamolo in memoria
+final _catalogIndexProvider =
+    FutureProvider<Map<String, _CatalogEntry>>((_) => _loadCatalogIndex());
+
+final _rawInventoryProvider =
+    StreamProvider.autoDispose<List<InventoryPaint>>((ref) {
+  return ref.watch(paintsRepositoryProvider).watchInventoryPaints();
+});
+
+final _customIndexProvider =
+    StreamProvider.autoDispose<Map<String, CustomPaintRef>>((ref) {
+  return ref.watch(paintsRepositoryProvider).watchCustomPaintIndex();
+});
+
+final _selectedBrandProvider = StateProvider.autoDispose<String?>((ref) => null);
+final _searchQueryProvider   = StateProvider.autoDispose<String>((ref) => '');
+final _viewModeProvider      = StateProvider.autoDispose<_ViewMode>((ref) => _ViewMode.grid);
+
+final _resolvedInventoryProvider =
+    Provider.autoDispose<AsyncValue<List<ResolvedPaint>>>((ref) {
+  final catAsync = ref.watch(_catalogIndexProvider);
+  final invAsync = ref.watch(_rawInventoryProvider);
+  final cusAsync = ref.watch(_customIndexProvider);
+  final brand    = ref.watch(_selectedBrandProvider);
+  final query    = ref.watch(_searchQueryProvider).trim().toLowerCase();
+
+  if (catAsync is AsyncLoading || invAsync is AsyncLoading) {
+    return const AsyncValue.loading();
+  }
+  if (catAsync is AsyncError) {
+    return AsyncValue.error(catAsync.error!, catAsync.stackTrace!);
+  }
+  if (invAsync is AsyncError) {
+    return AsyncValue.error(invAsync.error!, invAsync.stackTrace!);
+  }
+
+  final catalog   = catAsync.value!;
+  final inventory = invAsync.value!;
+  final custom    = cusAsync.value ?? {};
+
+  final resolved = <ResolvedPaint>[];
+  for (final ip in inventory) {
+    String? b, c, n, h;
+    if (ip.catalogBrand != null && ip.catalogCode != null) {
+      final key   = '${ip.catalogBrand}+${ip.catalogCode}';
+      final entry = catalog[key];
+      b = ip.catalogBrand!;
+      c = ip.catalogCode!;
+      n = entry?.name ?? c;
+      h = entry?.hex  ?? '#808080';
+    } else if (ip.customBrand != null && ip.customCode != null) {
+      final key   = '${ip.customBrand}+${ip.customCode}';
+      final entry = custom[key];
+      b = ip.customBrand!;
+      c = ip.customCode!;
+      n = entry?.name ?? c;
+      h = entry?.hex  ?? '#808080';
+    } else {
+      continue;
+    }
+    resolved.add(ResolvedPaint(source: ip, brand: b, code: c, name: n, hex: h));
+  }
+
+  var out = resolved;
+  if (brand != null) {
+    out = out.where((p) => p.brand == brand).toList();
+  }
+  if (query.isNotEmpty) {
+    out = out
+        .where((p) =>
+            p.code.toLowerCase().contains(query) ||
+            p.name.toLowerCase().contains(query) ||
+            p.brand.toLowerCase().contains(query))
+        .toList();
+  }
+  return AsyncValue.data(out);
+});
+
+// ── PaintsScreen ──────────────────────────────────────────────────────────────
+
+class PaintsScreen extends ConsumerStatefulWidget {
+  const PaintsScreen({super.key});
+
+  @override
+  ConsumerState<PaintsScreen> createState() => _PaintsScreenState();
+}
+
+class _PaintsScreenState extends ConsumerState<PaintsScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _showAddSheet() {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const _AddFromCatalogSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Vernici'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            tooltip: 'Filtra',
+            onPressed: () => HapticFeedback.lightImpact(),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: scheme.primary,
+          indicatorWeight: 2,
+          labelColor: scheme.primary,
+          unselectedLabelColor: scheme.onSurfaceVariant,
+          labelStyle: GoogleFonts.jetBrainsMono(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1,
+          ),
+          tabs: const [Tab(text: 'INVENTARIO'), Tab(text: 'CATALOGO')],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddSheet,
+        tooltip: 'Aggiungi vernice',
+        child: const Icon(Icons.add),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 840),
+          child: Column(
+            children: [
+              const _SearchBar(),
+              const _BrandFilterChips(),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: const [_InventoryTab(), _CatalogTab()],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
+
+class _SearchBar extends ConsumerStatefulWidget {
+  const _SearchBar();
+
+  @override
+  ConsumerState<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends ConsumerState<_SearchBar> {
+  late final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: TextField(
+        controller: _ctrl,
+        decoration: InputDecoration(
+          hintText: 'Cerca per codice, nome o marca…',
+          prefixIcon: const Icon(Icons.search, size: 20),
+          suffixIcon: _ctrl.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 18),
+                  onPressed: () {
+                    _ctrl.clear();
+                    ref.read(_searchQueryProvider.notifier).state = '';
+                    setState(() {});
+                  },
+                )
+              : null,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        ),
+        onChanged: (v) {
+          ref.read(_searchQueryProvider.notifier).state = v;
+          setState(() {});
+        },
+      ),
+    );
+  }
+}
+
+// ── Brand filter chips ────────────────────────────────────────────────────────
+
+class _BrandFilterChips extends ConsumerWidget {
+  const _BrandFilterChips();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme   = Theme.of(context).colorScheme;
+    final selected = ref.watch(_selectedBrandProvider);
+
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        scrollDirection: Axis.horizontal,
+        children: [
+          _BrandChip(
+            label: 'Tutti',
+            active: selected == null,
+            scheme: scheme,
+            onTap: () {
+              HapticFeedback.lightImpact();
+              ref.read(_selectedBrandProvider.notifier).state = null;
+            },
+          ),
+          ..._kBrands.map((b) => _BrandChip(
+                label: _brandLabel(b),
+                active: selected == b,
+                scheme: scheme,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(_selectedBrandProvider.notifier).state = b;
+                },
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+class _BrandChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final ColorScheme scheme;
+  final VoidCallback onTap;
+  const _BrandChip({
+    required this.label,
+    required this.active,
+    required this.scheme,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: active
+                ? scheme.primary.withOpacity(0.18)
+                : scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: active ? scheme.primary : Colors.transparent,
+            ),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+              color: active ? scheme.primary : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Inventory tab ─────────────────────────────────────────────────────────────
+
+class _InventoryTab extends ConsumerWidget {
+  const _InventoryTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final resolvedAsync = ref.watch(_resolvedInventoryProvider);
+    final viewMode      = ref.watch(_viewModeProvider);
+
+    return Column(
+      children: [
+        resolvedAsync.when(
+          loading: () => const SizedBox(height: 36),
+          error: (_, __) => const SizedBox(height: 36),
+          data: (paints) => _StatsRow(
+            total: paints.length,
+            emptyCount: paints
+                .where((p) => p.source.quantity == 'empty')
+                .length,
+            viewMode: viewMode,
+            onToggle: (mode) {
+              HapticFeedback.lightImpact();
+              ref.read(_viewModeProvider.notifier).state = mode;
+            },
+          ),
+        ),
+        Expanded(
+          child: resolvedAsync.when(
+            loading: () =>
+                const Center(child: CircularProgressIndicator()),
+            error: (e, _) =>
+                Center(child: Text('Errore: $e')),
+            data: (paints) {
+              if (paints.isEmpty) return const _EmptyInventory();
+              if (viewMode == _ViewMode.grid) {
+                return SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.fromLTRB(12, 8, 12, 96),
+                  child: _HoneycombGrid(paints: paints),
+                );
+              }
+              return ListView.builder(
+                padding:
+                    const EdgeInsets.fromLTRB(0, 8, 0, 96),
+                itemCount: paints.length,
+                itemBuilder: (_, i) =>
+                    _InventoryListTile(paint: paints[i]),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Stats row ─────────────────────────────────────────────────────────────────
+
+class _StatsRow extends StatelessWidget {
+  final int total;
+  final int emptyCount;
+  final _ViewMode viewMode;
+  final void Function(_ViewMode) onToggle;
+  const _StatsRow({
+    required this.total,
+    required this.emptyCount,
+    required this.viewMode,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 12, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                  color: scheme.onSurfaceVariant,
+                ),
+                children: [
+                  TextSpan(
+                      text:
+                          '$total ${total == 1 ? 'vernice' : 'vernici'}'),
+                  if (emptyCount > 0) ...[
+                    const TextSpan(text: ' · '),
+                    TextSpan(
+                      text:
+                          '$emptyCount esaurit${emptyCount == 1 ? 'a' : 'e'}',
+                      style: const TextStyle(
+                          color: _kEmpty,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          _ViewBtn(
+            icon: Icons.grid_view,
+            active: viewMode == _ViewMode.grid,
+            scheme: scheme,
+            onTap: () => onToggle(_ViewMode.grid),
+          ),
+          _ViewBtn(
+            icon: Icons.list,
+            active: viewMode == _ViewMode.list,
+            scheme: scheme,
+            onTap: () => onToggle(_ViewMode.list),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ViewBtn extends StatelessWidget {
+  final IconData icon;
+  final bool active;
+  final ColorScheme scheme;
+  final VoidCallback onTap;
+  const _ViewBtn(
+      {required this.icon,
+      required this.active,
+      required this.scheme,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon,
+            size: 20,
+            color:
+                active ? scheme.primary : scheme.onSurfaceVariant),
+      ),
+    );
+  }
+}
+
+// ── Honeycomb grid ────────────────────────────────────────────────────────────
+
+class _HoneycombGrid extends ConsumerWidget {
+  final List<ResolvedPaint> paints;
+  const _HoneycombGrid({required this.paints});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    const kCols = 4;
+    return LayoutBuilder(builder: (context, constraints) {
+      final cellW  = constraints.maxWidth / kCols;
+      final hexW   = cellW * 0.84;
+      final hexH   = hexW * 0.866; // sqrt(3)/2 per flat-top
+      final vGap   = hexH * 0.12;
+      final offset = hexH * 0.5;
+
+      final columns = List.generate(kCols, (_) => <ResolvedPaint>[]);
+      for (var i = 0; i < paints.length; i++) {
+        columns[i % kCols].add(paints[i]);
+      }
+
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(kCols, (col) {
+          return SizedBox(
+            width: cellW,
+            child: Column(
+              children: [
+                if (col.isOdd) SizedBox(height: offset),
+                ...columns[col].map((p) => Padding(
+                      padding: EdgeInsets.only(bottom: vGap),
+                      child: _HexCell(paint: p, size: hexW),
+                    )),
+              ],
+            ),
+          );
+        }),
+      );
+    });
+  }
+}
+
+class _HexCell extends ConsumerWidget {
+  final ResolvedPaint paint;
+  final double size;
+  const _HexCell({required this.paint, required this.size});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _showPaintDetail(context, ref, paint);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              HexColorChip(color: _hexColor(paint.hex), size: size),
+              Positioned(
+                bottom: size * 0.08,
+                right: size * 0.04,
+                child: _QuantityDot(quantity: paint.source.quantity),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            paint.code,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 9,
+              color: scheme.onSurfaceVariant,
+            ),
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quantity widgets ──────────────────────────────────────────────────────────
+
+class _QuantityDot extends StatelessWidget {
+  final String quantity;
+  const _QuantityDot({required this.quantity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: _quantityColor(quantity),
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: Theme.of(context).colorScheme.surface, width: 1.5),
+      ),
+    );
+  }
+}
+
+class _QuantityPill extends StatelessWidget {
+  final String quantity;
+  const _QuantityPill({required this.quantity});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _quantityColor(quantity);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        _quantityLabel(quantity),
+        style: GoogleFonts.jetBrainsMono(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Inventory list tile ───────────────────────────────────────────────────────
+
+class _InventoryListTile extends ConsumerWidget {
+  final ResolvedPaint paint;
+  const _InventoryListTile({required this.paint});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt     = Theme.of(context).textTheme;
+
+    return Dismissible(
+      key: ValueKey(paint.source.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: scheme.error,
+        child: Icon(Icons.delete_outline, color: scheme.onError),
+      ),
+      onDismissed: (_) {
+        HapticFeedback.lightImpact();
+        ref
+            .read(paintsRepositoryProvider)
+            .deleteInventoryPaint(paint.source.id);
+      },
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _showPaintDetail(context, ref, paint);
+        },
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              HexColorChip(color: _hexColor(paint.hex), size: 32),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_brandLabel(paint.brand)}  ${paint.code}',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      paint.name,
+                      style: tt.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _QuantityPill(quantity: paint.source.quantity),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyInventory extends StatelessWidget {
+  const _EmptyInventory();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt     = Theme.of(context).textTheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 72,
+            height: 72,
+            child: CustomPaint(
+              painter: _DashedHexPainter(color: scheme.outline),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text('La cassettiera è vuota', style: tt.titleMedium),
+          const SizedBox(height: 8),
+          Text(
+            'Aggiungi vernici dal catalogo con +',
+            style:
+                tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashedHexPainter extends CustomPainter {
+  final Color color;
+  const _DashedHexPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final pts = [
+      Offset(w * 0.25, 0),
+      Offset(w * 0.75, 0),
+      Offset(w, h * 0.5),
+      Offset(w * 0.75, h),
+      Offset(w * 0.25, h),
+      Offset(0, h * 0.5),
+    ];
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    for (var i = 0; i < pts.length; i++) {
+      _dashed(canvas, pts[i], pts[(i + 1) % pts.length], paint);
+    }
+  }
+
+  void _dashed(Canvas c, Offset a, Offset b, Paint p) {
+    const dash = 5.0;
+    const gap  = 4.0;
+    final dx   = b.dx - a.dx;
+    final dy   = b.dy - a.dy;
+    final len  = math.sqrt(dx * dx + dy * dy);
+    var drawn  = 0.0;
+    var draw   = true;
+    while (drawn < len) {
+      final seg = draw ? dash : gap;
+      final t0  = drawn / len;
+      final t1  = (drawn + seg).clamp(0, len) / len;
+      if (draw) {
+        c.drawLine(
+          Offset(a.dx + dx * t0, a.dy + dy * t0),
+          Offset(a.dx + dx * t1, a.dy + dy * t1),
+          p,
+        );
+      }
+      drawn += seg;
+      draw = !draw;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedHexPainter old) => old.color != color;
+}
+
+// ── Paint detail sheet ────────────────────────────────────────────────────────
+
+void _showPaintDetail(
+    BuildContext context, WidgetRef ref, ResolvedPaint paint) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => _PaintDetailSheet(paint: paint),
+  );
+}
+
+class _PaintDetailSheet extends ConsumerWidget {
+  final ResolvedPaint paint;
+  const _PaintDetailSheet({required this.paint});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt     = Theme.of(context).textTheme;
+    final repo   = ref.read(paintsRepositoryProvider);
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: scheme.outline,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  HexColorChip(
+                      color: _hexColor(paint.hex), size: 64),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          paint.code,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        Text(paint.name, style: tt.bodyMedium),
+                        Text(
+                          '${_brandLabel(paint.brand)} · ${paint.hex.toUpperCase()}',
+                          style: tt.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'QUANTITÀ',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                      color: scheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      'full', 'half', 'low', 'empty'
+                    ].map((q) {
+                      final active = paint.source.quantity == q;
+                      final color  = _quantityColor(q);
+                      return Expanded(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              repo.updatePaintQuantity(
+                                  paint.source.id, q);
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10),
+                              decoration: BoxDecoration(
+                                color: active
+                                    ? color.withOpacity(0.18)
+                                    : scheme.surfaceContainerHigh,
+                                borderRadius:
+                                    BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: active
+                                      ? color
+                                      : scheme.outline,
+                                  width: active ? 1.5 : 1,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                _quantityLabel(q),
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: active
+                                      ? color
+                                      : scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  icon: Icon(Icons.delete_outline,
+                      color: scheme.error, size: 18),
+                  label: Text(
+                    'Rimuovi dall\'inventario',
+                    style: TextStyle(color: scheme.error),
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    repo.deleteInventoryPaint(paint.source.id);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Add from catalog sheet ────────────────────────────────────────────────────
+
+class _AddFromCatalogSheet extends ConsumerStatefulWidget {
+  const _AddFromCatalogSheet();
+
+  @override
+  ConsumerState<_AddFromCatalogSheet> createState() =>
+      _AddFromCatalogSheetState();
+}
+
+class _AddFromCatalogSheetState
+    extends ConsumerState<_AddFromCatalogSheet> {
+  final _ctrl     = TextEditingController();
+  List<_CatalogEntry> _results = [];
+  final Set<String> _selected  = {}; // "brand+code" keys
+  bool _isSaving               = false;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _search(String q, Map<String, _CatalogEntry> catalog) {
+    final t = q.trim().toLowerCase();
+    if (t.isEmpty) {
+      setState(() => _results = []);
+      return;
+    }
+    setState(() {
+      _results = catalog.values
+          .where((e) =>
+              e.code.toLowerCase().contains(t) ||
+              e.name.toLowerCase().contains(t) ||
+              e.brand.toLowerCase().contains(t))
+          .take(40)
+          .toList();
+    });
+  }
+
+  Future<void> _confirm() async {
+    if (_selected.isEmpty) return;
+    setState(() => _isSaving = true);
+    final repo = ref.read(paintsRepositoryProvider);
+    for (final key in _selected) {
+      final sep   = key.indexOf('+');
+      final brand = key.substring(0, sep);
+      final code  = key.substring(sep + 1);
+      await repo.addInventoryPaint(brand: brand, code: code);
+    }
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme       = Theme.of(context).colorScheme;
+    final tt           = Theme.of(context).textTheme;
+    final catalogAsync = ref.watch(_catalogIndexProvider);
+    final count        = _selected.length;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (ctx, scrollCtrl) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: scheme.outline,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+            child: Row(
+              children: [
+                Expanded(
+                    child: Text('Aggiungi all\'inventario',
+                        style: tt.titleMedium)),
+                if (count > 0)
+                  FilledButton(
+                    onPressed: _isSaving ? null : _confirm,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2),
+                          )
+                        : Text('Aggiungi $count'),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: catalogAsync.when(
+              loading: () =>
+                  const LinearProgressIndicator(),
+              error: (_, __) =>
+                  const SizedBox.shrink(),
+              data: (catalog) => TextField(
+                controller: _ctrl,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Cerca per codice, nome o marca…',
+                  prefixIcon:
+                      const Icon(Icons.search, size: 20),
+                  suffixIcon: _ctrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear,
+                              size: 18),
+                          onPressed: () {
+                            _ctrl.clear();
+                            _search('', catalog);
+                          },
+                        )
+                      : null,
+                ),
+                onChanged: (q) => _search(q, catalog),
+              ),
+            ),
+          ),
+          Expanded(
+            child: catalogAsync.when(
+              loading: () => const Center(
+                  child: CircularProgressIndicator()),
+              error: (_, __) => const Center(
+                  child:
+                      Text('Errore caricamento catalogo')),
+              data: (_) {
+                if (_results.isEmpty &&
+                    _ctrl.text.isEmpty) {
+                  return Center(
+                    child: Text(
+                        'Cerca per trovare una vernice',
+                        style: tt.bodySmall),
+                  );
+                }
+                if (_results.isEmpty) {
+                  return Center(
+                    child: Text('Nessun risultato',
+                        style: tt.bodySmall),
+                  );
+                }
+                return ListView.builder(
+                  controller: scrollCtrl,
+                  itemCount: _results.length,
+                  itemBuilder: (_, i) {
+                    final p   = _results[i];
+                    final key = '${p.brand}+${p.code}';
+                    final sel = _selected.contains(key);
+                    return ListTile(
+                      leading: HexColorChip(
+                          color: _hexColor(p.hex),
+                          size: 32),
+                      title: Text(
+                        '${p.code}  ${p.name}',
+                        style: GoogleFonts.jetBrainsMono(
+                            fontSize: 13,
+                            fontWeight:
+                                FontWeight.w500),
+                      ),
+                      subtitle: Text(
+                          _brandLabel(p.brand),
+                          style: tt.bodySmall),
+                      trailing: AnimatedSwitcher(
+                        duration: const Duration(
+                            milliseconds: 180),
+                        child: sel
+                            ? Icon(Icons.check_circle,
+                                key: const ValueKey(
+                                    'c'),
+                                color: scheme.primary,
+                                size: 24)
+                            : Icon(
+                                Icons
+                                    .radio_button_unchecked,
+                                key: const ValueKey(
+                                    'u'),
+                                color: scheme.outline,
+                                size: 24),
+                      ),
+                      selected: sel,
+                      selectedTileColor:
+                          scheme.primary.withOpacity(0.08),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          if (sel) {
+                            _selected.remove(key);
+                          } else {
+                            _selected.add(key);
+                          }
+                        });
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Catalog tab ───────────────────────────────────────────────────────────────
+
+class _CatalogTab extends ConsumerWidget {
+  const _CatalogTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme       = Theme.of(context).colorScheme;
+    final tt           = Theme.of(context).textTheme;
+    final catalogAsync = ref.watch(_catalogIndexProvider);
+    final invAsync     = ref.watch(_rawInventoryProvider);
+    final brand        = ref.watch(_selectedBrandProvider);
+    final query        = ref.watch(_searchQueryProvider).trim().toLowerCase();
+
+    if (brand == null && query.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search,
+                size: 48,
+                color: scheme.onSurface.withOpacity(0.2)),
+            const SizedBox(height: 16),
+            Text(
+              'Seleziona una marca o cerca una vernice',
+              style: tt.bodyMedium
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return catalogAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Errore: $e')),
+      data: (catalog) {
+        final inventoryKeys = invAsync.value
+                ?.where((ip) =>
+                    ip.catalogBrand != null &&
+                    ip.catalogCode != null)
+                .map((ip) =>
+                    '${ip.catalogBrand}+${ip.catalogCode}')
+                .toSet() ??
+            {};
+
+        var entries = catalog.values.toList();
+        if (brand != null) {
+          entries =
+              entries.where((e) => e.brand == brand).toList();
+          entries.sort((a, b) => a.code.compareTo(b.code));
+        }
+        if (query.isNotEmpty) {
+          entries = entries
+              .where((e) =>
+                  e.code.toLowerCase().contains(query) ||
+                  e.name.toLowerCase().contains(query) ||
+                  e.brand.toLowerCase().contains(query))
+              .take(80)
+              .toList();
+        }
+
+        if (entries.isEmpty) {
+          return Center(
+              child: Text('Nessun risultato',
+                  style: tt.bodySmall));
+        }
+
+        // Flatten with group headers
+        final groups = <String, List<_CatalogEntry>>{};
+        for (final e in entries) {
+          groups.putIfAbsent(e.brand, () => []).add(e);
+        }
+        final flat = <Object>[];
+        for (final b in groups.keys) {
+          flat.add(b);
+          flat.addAll(groups[b]!);
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.only(bottom: 96),
+          itemCount: flat.length,
+          itemBuilder: (_, i) {
+            final item = flat[i];
+            if (item is String) {
+              return Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  _brandLabel(item).toUpperCase(),
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.primary,
+                  ),
+                ),
+              );
+            }
+            final entry      = item as _CatalogEntry;
+            final key        = '${entry.brand}+${entry.code}';
+            final inInventory = inventoryKeys.contains(key);
+            return ListTile(
+              leading: HexColorChip(
+                  color: _hexColor(entry.hex), size: 32),
+              title: Text(
+                '${entry.code}  ${entry.name}',
+                style: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500),
+              ),
+              subtitle: Text(_brandLabel(entry.brand),
+                  style: tt.bodySmall),
+              trailing: inInventory
+                  ? const Icon(Icons.check_circle,
+                      color: _kFull, size: 22)
+                  : IconButton(
+                      icon: Icon(Icons.add,
+                          color: scheme.primary),
+                      tooltip: 'Aggiungi all\'inventario',
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        ref
+                            .read(paintsRepositoryProvider)
+                            .addInventoryPaint(
+                              brand: entry.brand,
+                              code: entry.code,
+                            );
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(
+                          content: Text(
+                              '${entry.code} aggiunta all\'inventario'),
+                        ));
+                      },
+                    ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
