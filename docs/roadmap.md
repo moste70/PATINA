@@ -312,6 +312,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | 3.5 | Espansione cataloghi tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
 | 3.6 | Condivisione ricette con la community |
 | 3.7 | **Istruzioni AR** — fotografia libretto istruzioni in B/N, Claude Vision riconosce i codici colore e sovrappone esagoni colorati reali (overlay interattivo, salvato nel progetto, funzionalità a crediti) |
+| 3.8 | **Sostituzione OCR con AI Vision (premium)** — l'attuale scanner istruzioni usa Google MLKit offline (riconosce testo ma sbaglia o manca codici con font piccoli, multi-colonna o layout complessi). In Fase 3 sostituire con Claude Vision: l'utente fotografa il foglio istruzioni e l'AI identifica direttamente i codici colore per marca (Tamiya, Vallejo, Citadel…) restituendo una lista pronta da aggiungere alla palette, senza parsing manuale del testo. Funzionalità a crediti (stesso sistema di 3.3). |
 
 ---
 
@@ -331,6 +332,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | DT.8 | 🟢 Bassa | Dipendenze inutilizzate in `pubspec.yaml`: `cached_network_image`, `uuid`, `dio`, `path_provider`, `path`, `intl`, `riverpod_annotation`, `riverpod_generator` | Rimuovere ora, reintrodurre quando effettivamente necessarie | ✅ Risolto |
 | DT.9 | 🟢 Bassa | `docs/architecture.md` documenta solo 3 cataloghi (Vallejo MC, Citadel, Tamiya XF) — nella realtà sono 11 con ~1.000 colori | Aggiornare la sezione cataloghi in architecture.md | ✅ Risolto |
 | DT.10 | 🟢 Bassa | `CLAUDE.md` mancante — nessuna guida per Claude Code su comandi build, codegen Drift, convenzioni naming | Creare `CLAUDE.md` alla radice con: `cd app && flutter pub get`, `flutter pub run build_runner build`, convenzioni progetto | ✅ Risolto |
+| DT.11 | 🟢 Bassa | OCR istruzioni kit — MLKit offline riconosce il testo ma fallisce su font piccoli, layout multi-colonna e codici parzialmente sovrapposti a icone (es. Tamiya). La funzione è utile come aiuto alla compilazione ma non affidabile al 100%. Limite strutturale dell'OCR testuale; da risolvere in Fase 3 con **AI Vision** (vedi milestone 3.8). Nessun intervento necessario ora. | Rimandato a Fase 3 — milestone 3.8 | ⏳ Rimandato |
 
 ---
 
