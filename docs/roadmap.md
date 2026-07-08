@@ -26,6 +26,8 @@
 
 **Obiettivo:** creare, visualizzare e gestire progetti. Prima funzionalità usabile.
 
+> **Limiti Free:** max 2 progetti attivi contemporaneamente (i progetti Completati non contano). Max 5 foto per progetto.
+
 > **Convenzione priorità:** 🔴 Alta — sblocca altre feature · 🟡 Media — necessaria ma non bloccante · 🟢 Bassa — polish/ottimizzazione
 
 ### Documentazione (da completare prima dello sviluppo)
@@ -54,12 +56,14 @@
 
 **Obiettivo:** inventario personale e cataloghi marche consultabili offline.
 
+> **Limiti Free:** max 20 vernici in inventario personale. Il catalogo offline è sempre consultabile senza limiti.
+
 | Task | Descrizione | Stato |
 |------|-------------|-------|
 | 1B.1 | Schermata catalogo — sfoglia per marca e linea | ⬜ Da fare |
 | 1B.2 | Ricerca nel catalogo per codice e nome | ⬜ Da fare |
 | 1B.3 | Inventario personale — griglia chip esagonali / lista | ⬜ Da fare |
-| 1B.4 | Aggiunta vernice da catalogo o manuale | ⬜ Da fare |
+| 1B.4 | Aggiunta vernice da catalogo o manuale (con gate Free: max 20) | ⬜ Da fare |
 | 1B.5 | Modifica quantità con tap rapido | ⬜ Da fare |
 | 1B.6 | Lista della spesa — sezione automatica (vernici palette kit non in inventario, checkbox in-memory, ordine checked-in-fondo) + voci manuali (DB, checkbox persistito, swipe-to-delete, FAB); schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
 | 1B.7 | Equivalenze tra marche | ⬜ Da fare |
@@ -69,6 +73,8 @@
 ## Fase 1C — Ricette
 
 **Obiettivo:** creare e salvare miscele personalizzate con proporzioni.
+
+> **Limiti Free:** max 5 ricette salvate.
 
 | Task | Descrizione | Stato |
 |------|-------------|-------|
@@ -305,10 +311,10 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 > Tutte le funzionalità di questa fase sono **riservate agli utenti Pro** (abbonamento in-app).
 > Vedere `docs/vision.md` per il modello di business completo.
 
-### Modello abbonamento
-- **Free**: tutte le funzionalità Fase 0–2 incluse, per sempre
-- **Pro**: sblocca le funzionalità AI e cloud di Fase 3
-- **Prezzo indicativo**: 2,99 €/mese · 19,99 €/anno
+### Modello abbonamento (3 tier)
+- **Free**: tutte le funzionalità Fase 0–2 con limiti quantitativi (2 progetti attivi, 20 vernici inventario, 5 foto/progetto, 5 ricette)
+- **Standard** (1,99 €/mese · 12,99 €/anno): rimuove tutti i limiti quantitativi, funzionalità Fase 0–2 illimitate
+- **Pro** (3,99 €/mese · 24,99 €/anno): tutto di Standard + funzionalità AI e cloud di Fase 3
 - **Piattaforme**: Google Play Billing (Android) + Apple IAP (iOS)
 - **Gate nel codice**: `ProGate.isProUser(ref)` — `false` mostra paywall, `true` esegue la funzione
 

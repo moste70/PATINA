@@ -11,7 +11,8 @@
 | Immagini | image_picker + cached_network_image | Selezione da galleria/camera, cache efficiente |
 | Manipolazione foto/pin | InteractiveViewer + Canvas Flutter | Zoom, pan e overlay pin senza librerie esterne |
 | Preferenze utente | shared_preferences | Persistenza tema dark/light tra sessioni |
-| AI (Fase 2) | Anthropic Claude API | Miscelazione avanzata, riconoscimento colore da foto |
+| AI (Fase 3 — Pro) | Anthropic Claude API | Miscelazione avanzata, riconoscimento colore da foto, scan istruzioni |
+| Acquisti in-app (Fase 3) | Google Play Billing + Apple IAP | Abbonamento Standard / Pro — gate via `ProGate` |
 | CI/CD | GitHub Actions | Build APK debug e release su ogni push |
 
 ---

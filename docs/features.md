@@ -227,6 +227,8 @@ Il FAB `+` è sempre visibile anche sull'empty state.
 #### 1.1 Archivio Progetti (`/projects`)
 Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 
+> **Limite Free:** max **2 progetti attivi** (stati `Da iniziare` o `In corso`). I progetti `Completato` non contano ai fini del limite. Superato il limite, il FAB mostra il paywall per l'upgrade a Standard.
+
 **Contenuto di ogni card progetto:**
 - Miniatura 80×80 della foto di copertina (placeholder con icona se assente)
 - Nome del modello (grassetto)
@@ -280,6 +282,8 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 ---
 
 ##### Sezione 2 — Galleria Foto
+
+> **Limite Free:** max **5 foto** per progetto. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard.
 
 Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
 Prima cella è il bottone `+` con icona `add_photo_alternate`.
@@ -373,6 +377,8 @@ Creato il 01 giu 2026  ·  Modificato 3 giorni fa
 #### 2.1 Inventario Personale (`/paints`)
 Raccoglie tutte le vernici che l'utente possiede fisicamente.
 
+> **Limite Free:** max **20 vernici** nell'inventario personale. Il catalogo offline rimane sempre consultabile senza limiti. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard.
+
 **Dati di ogni vernice:**
 - Marca (Vallejo / Citadel / Tamiya — Fase 1)
 - Linea/serie (es. Model Color, Base, XF)
@@ -420,6 +426,8 @@ perché referenziano `brand+code` e non l'ID interno del catalogo.
 
 #### 2.3 Gestione Ricette (`/recipes`)
 Miscele personalizzate salvate con proporzioni esatte.
+
+> **Limite Free:** max **5 ricette** salvate. Raggiunto il limite, la creazione di una nuova ricetta mostra il paywall per l'upgrade a Standard.
 
 **Dati di ogni ricetta:**
 - Nome (es. "Grigio Panzer invecchiato")
