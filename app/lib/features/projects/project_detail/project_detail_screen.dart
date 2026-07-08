@@ -137,6 +137,16 @@ class _ProjectDetailContentState
     } catch (_) {}
   }
 
+  Future<void> _removeCoverPhoto() async {
+    await ref.read(projectRepositoryProvider).updateProject(
+      widget.project.id,
+      ProjectsCompanion(
+        coverPhoto: const Value(null),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
   void _editProject() {
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
@@ -226,6 +236,7 @@ class _ProjectDetailContentState
                   if (v == 'edit') _editProject();
                   if (v == 'status') _showStatusSheet();
                   if (v == 'cover') _updateCoverPhoto();
+                  if (v == 'remove_cover') _removeCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
                 itemBuilder: (_) => [
@@ -237,6 +248,10 @@ class _ProjectDetailContentState
                   const PopupMenuItem(
                       value: 'cover',
                       child: Text('Cambia foto copertina')),
+                  if (p.coverPhoto != null)
+                    const PopupMenuItem(
+                        value: 'remove_cover',
+                        child: Text('Rimuovi foto copertina')),
                   const PopupMenuDivider(),
                   PopupMenuItem(
                       value: 'delete',
