@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 // `show` evita la collisione con il widget Flutter `CustomPaint`
 import '../../database/app_database.dart' show InventoryPaint, databaseProvider;
+import '../../shared/pro/pro_gate.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 import 'paints_repository.dart';
 
@@ -15,11 +16,13 @@ enum _ViewMode { grid, list }
 
 class _CatalogEntry {
   final String brand;
+  final String line;
   final String code;
   final String name;
   final String hex;
   const _CatalogEntry({
     required this.brand,
+    required this.line,
     required this.code,
     required this.name,
     required this.hex,
@@ -84,6 +87,23 @@ String _quantityLabel(String q) => switch (q) {
   _       => 'Esaurita',
 };
 
+String _lineLabel(String l) => switch (l) {
+  'model_color'   => 'Model Color',
+  'model_air'     => 'Model Air',
+  'xf_flat'       => 'XF (Opache)',
+  'x_gloss'       => 'X (Lucide)',
+  'lp_lacquer'    => 'LP (Lacca)',
+  'ts_spray'      => 'TS (Spray)',
+  'mr_color'      => 'Mr. Color',
+  'aqueous'       => 'Aqueous',
+  'mr_metal'      => 'Mr. Metal',
+  'enamel'        => 'Enamel',
+  'base'          => 'Base',
+  'lc'            => 'UA Series',
+  'ua'            => 'LC Series',
+  _               => l,
+};
+
 String _brandLabel(String b) => switch (b) {
   'tamiya'    => 'Tamiya',
   'vallejo'   => 'Vallejo',
@@ -111,10 +131,12 @@ Future<Map<String, _CatalogEntry>> _loadCatalogIndex() async {
       final raw = await rootBundle.loadString(asset);
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final brand = data['brand'] as String;
+      final line  = (data['line'] as String?) ?? '';
       for (final p in data['paints'] as List) {
         final code = p['code'] as String;
         index['$brand+$code'] = _CatalogEntry(
           brand: brand,
+          line: line,
           code: code,
           name: p['name'] as String,
           hex: p['hex'] as String,
@@ -142,8 +164,28 @@ final _customIndexProvider =
 });
 
 final _selectedBrandProvider = StateProvider.autoDispose<String?>((ref) => null);
+final _selectedLineProvider  = StateProvider.autoDispose<String?>((ref) => null);
 final _searchQueryProvider   = StateProvider.autoDispose<String>((ref) => '');
 final _viewModeProvider      = StateProvider.autoDispose<_ViewMode>((ref) => _ViewMode.grid);
+
+const int _kFreeInventoryLimit = 20;
+
+// Linee disponibili per la marca selezionata, estratte dal catalogo
+final _availableLinesProvider =
+    Provider.autoDispose<AsyncValue<List<String>>>((ref) {
+  final catAsync = ref.watch(_catalogIndexProvider);
+  final brand    = ref.watch(_selectedBrandProvider);
+  if (catAsync is! AsyncData || brand == null) {
+    return const AsyncValue.data([]);
+  }
+  final lines = catAsync.value!.values
+      .where((e) => e.brand == brand && e.line.isNotEmpty)
+      .map((e) => e.line)
+      .toSet()
+      .toList()
+    ..sort();
+  return AsyncValue.data(lines);
+});
 
 final _resolvedInventoryProvider =
     Provider.autoDispose<AsyncValue<List<ResolvedPaint>>>((ref) {
@@ -369,6 +411,7 @@ class _BrandFilterChips extends ConsumerWidget {
             onTap: () {
               HapticFeedback.lightImpact();
               ref.read(_selectedBrandProvider.notifier).state = null;
+              ref.read(_selectedLineProvider.notifier).state  = null;
             },
           ),
           ..._kBrands.map((b) => _BrandChip(
@@ -378,6 +421,7 @@ class _BrandFilterChips extends ConsumerWidget {
                 onTap: () {
                   HapticFeedback.lightImpact();
                   ref.read(_selectedBrandProvider.notifier).state = b;
+                  ref.read(_selectedLineProvider.notifier).state  = null;
                 },
               )),
         ],
@@ -490,7 +534,7 @@ class _InventoryTab extends ConsumerWidget {
 
 // ── Stats row ─────────────────────────────────────────────────────────────────
 
-class _StatsRow extends StatelessWidget {
+class _StatsRow extends ConsumerWidget {
   final int total;
   final int emptyCount;
   final _ViewMode viewMode;
@@ -503,52 +547,96 @@ class _StatsRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 12, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 10,
-                  letterSpacing: 0.8,
-                  color: scheme.onSurfaceVariant,
-                ),
-                children: [
-                  TextSpan(
-                      text:
-                          '$total ${total == 1 ? 'vernice' : 'vernici'}'),
-                  if (emptyCount > 0) ...[
-                    const TextSpan(text: ' · '),
-                    TextSpan(
-                      text:
-                          '$emptyCount esaurit${emptyCount == 1 ? 'a' : 'e'}',
-                      style: const TextStyle(
-                          color: _kEmpty,
-                          fontWeight: FontWeight.w600),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme  = Theme.of(context).colorScheme;
+    final isFree  = !ProGate.watchProUser(ref);
+    final ratio   = isFree ? (total / _kFreeInventoryLimit).clamp(0.0, 1.0) : 0.0;
+    final nearLimit = isFree && total >= _kFreeInventoryLimit - 3;
+
+    final barColor = ratio >= 1.0
+        ? _kEmpty
+        : ratio >= 0.75
+            ? _kLow
+            : scheme.primary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 12, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10,
+                      letterSpacing: 0.8,
+                      color: scheme.onSurfaceVariant,
                     ),
-                  ],
-                ],
+                    children: [
+                      TextSpan(
+                          text: isFree
+                              ? '$total/$_kFreeInventoryLimit vernic${total == 1 ? 'e' : 'i'}'
+                              : '$total ${total == 1 ? 'vernice' : 'vernici'}'),
+                      if (emptyCount > 0) ...[
+                        const TextSpan(text: ' · '),
+                        TextSpan(
+                          text:
+                              '$emptyCount esaurit${emptyCount == 1 ? 'a' : 'e'}',
+                          style: const TextStyle(
+                              color: _kEmpty,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              _ViewBtn(
+                icon: Icons.grid_view,
+                active: viewMode == _ViewMode.grid,
+                scheme: scheme,
+                onTap: () => onToggle(_ViewMode.grid),
+              ),
+              _ViewBtn(
+                icon: Icons.list,
+                active: viewMode == _ViewMode.list,
+                scheme: scheme,
+                onTap: () => onToggle(_ViewMode.list),
+              ),
+            ],
+          ),
+        ),
+        if (isFree) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 3,
+                backgroundColor: scheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation<Color>(barColor),
               ),
             ),
           ),
-          _ViewBtn(
-            icon: Icons.grid_view,
-            active: viewMode == _ViewMode.grid,
-            scheme: scheme,
-            onTap: () => onToggle(_ViewMode.grid),
-          ),
-          _ViewBtn(
-            icon: Icons.list,
-            active: viewMode == _ViewMode.list,
-            scheme: scheme,
-            onTap: () => onToggle(_ViewMode.list),
-          ),
+          if (nearLimit)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+              child: Text(
+                total >= _kFreeInventoryLimit
+                    ? 'Limite raggiunto — passa a Standard per aggiungerne altre'
+                    : '${_kFreeInventoryLimit - total} posizioni rimanenti nel piano Free',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 9,
+                  color: barColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -885,12 +973,25 @@ void _showPaintDetail(
   );
 }
 
-class _PaintDetailSheet extends ConsumerWidget {
+class _PaintDetailSheet extends ConsumerStatefulWidget {
   final ResolvedPaint paint;
   const _PaintDetailSheet({required this.paint});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PaintDetailSheet> createState() => _PaintDetailSheetState();
+}
+
+class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
+  late String _quantity;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity = widget.paint.source.quantity;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
     final repo   = ref.read(paintsRepositoryProvider);
@@ -916,23 +1017,23 @@ class _PaintDetailSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   HexColorChip(
-                      color: _hexColor(paint.hex), size: 64),
+                      color: _hexColor(widget.paint.hex), size: 64),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          paint.code,
+                          widget.paint.code,
                           style: GoogleFonts.jetBrainsMono(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: scheme.onSurface,
                           ),
                         ),
-                        Text(paint.name, style: tt.bodyMedium),
+                        Text(widget.paint.name, style: tt.bodyMedium),
                         Text(
-                          '${_brandLabel(paint.brand)} · ${paint.hex.toUpperCase()}',
+                          '${_brandLabel(widget.paint.brand)} · ${widget.paint.hex.toUpperCase()}',
                           style: tt.bodySmall?.copyWith(
                               color: scheme.onSurfaceVariant),
                         ),
@@ -958,35 +1059,30 @@ class _PaintDetailSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   Row(
-                    children: [
-                      'full', 'half', 'low', 'empty'
-                    ].map((q) {
-                      final active = paint.source.quantity == q;
+                    children: ['full', 'half', 'low', 'empty'].map((q) {
+                      final active = _quantity == q;
                       final color  = _quantityColor(q);
                       return Expanded(
                         child: Padding(
-                          padding:
-                              const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.only(right: 8),
                           child: GestureDetector(
-                            onTap: () {
+                            onTap: () async {
+                              if (_quantity == q) return;
                               HapticFeedback.lightImpact();
-                              repo.updatePaintQuantity(
-                                  paint.source.id, q);
-                              Navigator.pop(context);
+                              setState(() => _quantity = q);
+                              await repo.updatePaintQuantity(
+                                  widget.paint.source.id, q);
                             },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 160),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: active
                                     ? color.withOpacity(0.18)
                                     : scheme.surfaceContainerHigh,
-                                borderRadius:
-                                    BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: active
-                                      ? color
-                                      : scheme.outline,
+                                  color: active ? color : scheme.outline,
                                   width: active ? 1.5 : 1,
                                 ),
                               ),
@@ -1012,8 +1108,7 @@ class _PaintDetailSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
@@ -1025,7 +1120,7 @@ class _PaintDetailSheet extends ConsumerWidget {
                   ),
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    repo.deleteInventoryPaint(paint.source.id);
+                    repo.deleteInventoryPaint(widget.paint.source.id);
                     Navigator.pop(context);
                   },
                 ),
@@ -1051,7 +1146,9 @@ class _CatalogTab extends ConsumerWidget {
     final catalogAsync = ref.watch(_catalogIndexProvider);
     final invAsync     = ref.watch(_rawInventoryProvider);
     final brand        = ref.watch(_selectedBrandProvider);
+    final selectedLine = ref.watch(_selectedLineProvider);
     final query        = ref.watch(_searchQueryProvider).trim().toLowerCase();
+    final linesAsync   = ref.watch(_availableLinesProvider);
 
     if (brand == null && query.isEmpty) {
       return Center(
@@ -1073,113 +1170,156 @@ class _CatalogTab extends ConsumerWidget {
       );
     }
 
-    return catalogAsync.when(
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Errore: $e')),
-      data: (catalog) {
-        final inventoryKeys = invAsync.value
-                ?.where((ip) =>
-                    ip.catalogBrand != null &&
-                    ip.catalogCode != null)
-                .map((ip) =>
-                    '${ip.catalogBrand}+${ip.catalogCode}')
-                .toSet() ??
-            {};
+    final lines = linesAsync.value ?? [];
 
-        var entries = catalog.values.toList();
-        if (brand != null) {
-          entries =
-              entries.where((e) => e.brand == brand).toList();
-          entries.sort((a, b) => a.code.compareTo(b.code));
-        }
-        if (query.isNotEmpty) {
-          entries = entries
-              .where((e) =>
-                  e.code.toLowerCase().contains(query) ||
-                  e.name.toLowerCase().contains(query) ||
-                  e.brand.toLowerCase().contains(query))
-              .take(80)
-              .toList();
-        }
-
-        if (entries.isEmpty) {
-          return Center(
-              child: Text('Nessun risultato',
-                  style: tt.bodySmall));
-        }
-
-        // Flatten with group headers
-        final groups = <String, List<_CatalogEntry>>{};
-        for (final e in entries) {
-          groups.putIfAbsent(e.brand, () => []).add(e);
-        }
-        final flat = <Object>[];
-        for (final b in groups.keys) {
-          flat.add(b);
-          flat.addAll(groups[b]!);
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.only(bottom: 96),
-          itemCount: flat.length,
-          itemBuilder: (_, i) {
-            final item = flat[i];
-            if (item is String) {
-              return Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  _brandLabel(item).toUpperCase(),
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 11,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.primary,
-                  ),
+    return Column(
+      children: [
+        // Sottofiltro per linea — visibile solo se la marca è selezionata e ha più linee
+        if (brand != null && lines.length > 1)
+          SizedBox(
+            height: 40,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              scrollDirection: Axis.horizontal,
+              children: [
+                _BrandChip(
+                  label: 'Tutte',
+                  active: selectedLine == null,
+                  scheme: scheme,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ref.read(_selectedLineProvider.notifier).state = null;
+                  },
                 ),
-              );
-            }
-            final entry      = item as _CatalogEntry;
-            final key        = '${entry.brand}+${entry.code}';
-            final inInventory = inventoryKeys.contains(key);
-            return ListTile(
-              leading: HexColorChip(
-                  color: _hexColor(entry.hex), size: 32),
-              title: Text(
-                '${entry.code}  ${entry.name}',
-                style: GoogleFonts.jetBrainsMono(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500),
-              ),
-              subtitle: Text(_brandLabel(entry.brand),
-                  style: tt.bodySmall),
-              trailing: inInventory
-                  ? const Icon(Icons.check_circle,
-                      color: _kFull, size: 22)
-                  : IconButton(
-                      icon: Icon(Icons.add,
-                          color: scheme.primary),
-                      tooltip: 'Aggiungi all\'inventario',
-                      onPressed: () {
+                ...lines.map((l) => _BrandChip(
+                      label: _lineLabel(l),
+                      active: selectedLine == l,
+                      scheme: scheme,
+                      onTap: () {
                         HapticFeedback.lightImpact();
-                        ref
-                            .read(paintsRepositoryProvider)
-                            .addInventoryPaint(
-                              brand: entry.brand,
-                              code: entry.code,
-                            );
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(
-                          content: Text(
-                              '${entry.code} aggiunta all\'inventario'),
-                        ));
+                        ref.read(_selectedLineProvider.notifier).state = l;
                       },
+                    )),
+              ],
+            ),
+          ),
+        Expanded(
+          child: catalogAsync.when(
+            loading: () =>
+                const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Errore: $e')),
+            data: (catalog) {
+              final inventoryKeys = invAsync.value
+                      ?.where((ip) =>
+                          ip.catalogBrand != null &&
+                          ip.catalogCode != null)
+                      .map((ip) =>
+                          '${ip.catalogBrand}+${ip.catalogCode}')
+                      .toSet() ??
+                  {};
+
+              var entries = catalog.values.toList();
+              if (brand != null) {
+                entries = entries.where((e) => e.brand == brand).toList();
+                if (selectedLine != null) {
+                  entries = entries.where((e) => e.line == selectedLine).toList();
+                }
+                entries.sort((a, b) => a.code.compareTo(b.code));
+              }
+              if (query.isNotEmpty) {
+                entries = entries
+                    .where((e) =>
+                        e.code.toLowerCase().contains(query) ||
+                        e.name.toLowerCase().contains(query) ||
+                        e.brand.toLowerCase().contains(query))
+                    .take(80)
+                    .toList();
+              }
+
+              if (entries.isEmpty) {
+                return Center(
+                    child: Text('Nessun risultato', style: tt.bodySmall));
+              }
+
+              // Flatten with group headers (per brand, poi per linea se multi-brand)
+              final groups = <String, List<_CatalogEntry>>{};
+              for (final e in entries) {
+                final key = brand != null ? e.line : e.brand;
+                groups.putIfAbsent(key, () => []).add(e);
+              }
+              final flat = <Object>[];
+              for (final g in groups.keys) {
+                flat.add(g);
+                flat.addAll(groups[g]!);
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 96),
+                itemCount: flat.length,
+                itemBuilder: (_, i) {
+                  final item = flat[i];
+                  if (item is String) {
+                    final label = brand != null
+                        ? _lineLabel(item).toUpperCase()
+                        : _brandLabel(item).toUpperCase();
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Text(
+                        label,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    );
+                  }
+                  final entry       = item as _CatalogEntry;
+                  final key         = '${entry.brand}+${entry.code}';
+                  final inInventory = inventoryKeys.contains(key);
+                  return ListTile(
+                    leading: HexColorChip(
+                        color: _hexColor(entry.hex), size: 32),
+                    title: Text(
+                      '${entry.code}  ${entry.name}',
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 13, fontWeight: FontWeight.w500),
                     ),
-            );
-          },
-        );
-      },
+                    subtitle: Text(
+                      brand == null
+                          ? _brandLabel(entry.brand)
+                          : _lineLabel(entry.line),
+                      style: tt.bodySmall,
+                    ),
+                    trailing: inInventory
+                        ? const Icon(Icons.check_circle,
+                            color: _kFull, size: 22)
+                        : IconButton(
+                            icon: Icon(Icons.add, color: scheme.primary),
+                            tooltip: 'Aggiungi all\'inventario',
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              ref
+                                  .read(paintsRepositoryProvider)
+                                  .addInventoryPaint(
+                                    brand: entry.brand,
+                                    code: entry.code,
+                                  );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text(
+                                    '${entry.code} aggiunta all\'inventario'),
+                              ));
+                            },
+                          ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

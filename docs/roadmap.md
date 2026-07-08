@@ -60,13 +60,21 @@
 
 | Task | Descrizione | Stato |
 |------|-------------|-------|
-| 1B.1 | Schermata catalogo — sfoglia per marca e linea | ⬜ Da fare |
-| 1B.2 | Ricerca nel catalogo per codice e nome | ⬜ Da fare |
-| 1B.3 | Inventario personale — griglia chip esagonali / lista | ⬜ Da fare |
-| 1B.4 | Aggiunta vernice da catalogo o manuale (con gate Free: max 20) | ⬜ Da fare |
-| 1B.5 | Modifica quantità con tap rapido | ⬜ Da fare |
+| 1B.1 | Schermata catalogo — sfoglia per marca e linea | ✅ Completato |
+| 1B.2 | Ricerca nel catalogo per codice e nome | ✅ Completato |
+| 1B.3 | Inventario personale — griglia chip esagonali / lista (toggle) | ✅ Completato |
+| 1B.4 | Aggiunta vernice da catalogo con bottone `+` inline | ✅ Completato |
+| 1B.5 | Modifica quantità dal detail sheet (senza chiudere il sheet) | ✅ Completato |
 | 1B.6 | Lista della spesa — sezione automatica (vernici palette kit non in inventario, checkbox in-memory, ordine checked-in-fondo) + voci manuali (DB, checkbox persistito, swipe-to-delete, FAB); schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
-| 1B.7 | Equivalenze tra marche | ⬜ Da fare |
+| 1B.7 | Indicatore limite Free nella stats row (N/20 + barra progresso) | ✅ Completato |
+| 1B.8 | Sottofiltro per linea nel catalogo (dopo selezione marca) | ✅ Completato |
+| 1B.9 | Aggiunta vernice manuale (non in catalogo) — UI per `custom_paints` | ⬜ Da fare |
+| 1B.10 | Ordinamento inventario — per marca, per quantità (esaurite prima), per data aggiunta | ⬜ Da fare |
+| 1B.11 | Long-press sul chip esagonale → cambio quantità rapido senza aprire il sheet | ⬜ Da fare |
+| 1B.12 | Badge conteggio vernici per marca nei chip filtro (es. `Vallejo (12)`) | ⬜ Da fare |
+| 1B.13 | Nome vernice visibile nella griglia esagonale (sotto il codice, font più piccolo) | ⬜ Da fare |
+| 1B.14 | Collegamento rapido lista della spesa dal detail sheet (visibile solo se `low`/`empty`) | ⬜ Da fare |
+| 1B.15 | Equivalenze tra marche | ⬜ Da fare |
 
 ---
 
