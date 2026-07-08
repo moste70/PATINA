@@ -470,6 +470,11 @@ class _StatusChip extends StatelessWidget {
           Theme.of(context).colorScheme.primary,
           Colors.black87
         ),
+      'paused' => (
+          'In pausa',
+          Colors.blueGrey,
+          Colors.white
+        ),
       _ => (
           'Da iniziare',
           Colors.transparent,

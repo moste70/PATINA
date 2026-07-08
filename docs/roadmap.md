@@ -47,8 +47,8 @@
 | 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — card con miniatura cover photo 80×80, badge stato colorato, filter bar chip per stato | ✅ Completato |
 | 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, miniature, viewer fullscreen con zoom (InteractiveViewer), elimina dall'AppBar | ✅ Completato |
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
-| 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
-| 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) — filtro per stato ✅ implementato; ricerca per nome ⬜ da fare | 🔶 Parziale |
+| 1A.6 | 🟢 Bassa | Modifica (wizard edit mode), stato "In pausa" (non conta verso limite Free), eliminazione con conferma | ✅ Completato |
+| 1A.7 | 🟢 Bassa | Ricerca per nome (search bar inline nell'AppBar, toggle icona lente) + filtro per stato (chip bar) + gate Free sul FAB (lock icon + paywall a 2 progetti attivi) | ✅ Completato |
 
 ---
 

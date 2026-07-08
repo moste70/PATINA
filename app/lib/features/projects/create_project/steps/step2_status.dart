@@ -45,7 +45,10 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: AppConstants.projectStatuses.map((s) {
+          // 'paused' non ha senso come stato iniziale alla creazione
+          children: AppConstants.projectStatuses
+              .where((s) => s != 'paused')
+              .map((s) {
             final selected = state.status == s;
             return FilterChip(
               selected: selected,

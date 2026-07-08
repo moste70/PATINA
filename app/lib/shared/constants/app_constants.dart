@@ -4,13 +4,17 @@ class AppConstants {
   ];
 
   static const List<String> projectStatuses = [
-    'todo', 'in_progress', 'completed',
+    'todo', 'in_progress', 'completed', 'paused',
   ];
+
+  // Statuses che contano verso il limite Free "progetti attivi"
+  static const Set<String> activeStatuses = {'todo', 'in_progress'};
 
   static const Map<String, String> projectStatusLabels = {
     'todo': 'Da iniziare',
     'in_progress': 'In corso',
     'completed': 'Completato',
+    'paused': 'In pausa',
   };
 
   static const Map<String, String> categoryLabels = {
