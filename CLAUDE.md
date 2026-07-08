@@ -128,6 +128,26 @@ Schema corrente: **v4**
 - v3 → aggiunta `project_paints` (palette del kit — vernici associate a un progetto)
 - v4 → aggiunta `shopping_items` (lista della spesa manuale)
 
+## Funzionalità Pro (Fase 3)
+
+Le funzionalità AI richiedono abbonamento Pro. Gate e paywall sono già predisposti:
+
+```dart
+// Bloccare una funzionalità Pro:
+import 'package:patina/shared/pro/pro_gate.dart';
+import 'package:patina/shared/pro/paywall_sheet.dart';
+
+if (!ProGate.isProUser(ref)) {
+  PaywallSheet.show(context, feature: 'Nome funzionalità');
+  return;
+}
+// ... esegui la funzionalità
+```
+
+- `app/lib/shared/pro/pro_gate.dart` — `proStatusProvider` (stub `false`) + `ProGate` helper
+- `app/lib/shared/pro/paywall_sheet.dart` — bottom sheet paywall placeholder
+- In Fase 3 (milestone 3.1): collegare `proStatusProvider` a Google Play Billing / Apple IAP
+
 ## Debito tecnico noto
 
 Vedere sezione "Debito Tecnico" in `docs/roadmap.md` per la lista completa.

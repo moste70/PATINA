@@ -70,10 +70,36 @@ e ricette con la community.
 
 ---
 
+## Modello di Business
+
+**App unica con tier Free e Pro** — nessuna app separata.
+
+### Free (sempre disponibile)
+Tutte le funzionalità core: progetti, inventario vernici, ricette manuali, pin su foto,
+lista della spesa, cataloghi offline. L'app è pienamente usabile senza pagare nulla.
+
+### Pro (abbonamento in-app)
+Funzionalità che richiedono chiamate Claude API o backend cloud:
+- Scansione istruzioni kit con AI Vision (sostituisce OCR — Fase 3)
+- Miscelazione AI avanzata con Claude (Fase 3)
+- Riconoscimento colore da foto (Claude Vision — Fase 3)
+- Istruzioni AR con overlay esagoni colorati (Fase 3)
+- Sincronizzazione cloud e backup automatico (Fase 3)
+- Condivisione ricette con la community (Fase 3)
+
+**Pricing indicativo:** 2,99 €/mese · 19,99 €/anno (da validare prima del lancio Fase 3).
+
+**Distribuzione:** Google Play Billing (Android) · App Store In-App Purchase (iOS).
+Le commissioni store (15–30%) sono incluse nel pricing.
+Nessun conteggio token esposto all'utente: il costo API è assorbito dall'abbonamento.
+
+---
+
 ## Roadmap di Alto Livello
 
 | Fase | Contenuto | Stato |
 |------|-----------|-------|
 | **Fase 0** | Struttura Flutter, database, cataloghi, design system, navigazione | Completato |
 | **Fase 1** | Archivio progetti, inventario vernici, ricette manuali, pin su foto, backup | In corso |
-| **Fase 2** | Miscelazione AI, ricerca da foto (Claude Vision), sync cloud, espansione cataloghi | Futuro |
+| **Fase 2** | Internazionalizzazione, supporto tablet, rifinitura UX, release store | In corso |
+| **Fase 3** | Funzionalità AI Pro (Claude API), sync cloud, community — con abbonamento in-app | Futuro |

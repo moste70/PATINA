@@ -299,20 +299,33 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ---
 
-## Fase 3 — Funzionalità AI e Cloud
+## Fase 3 — Funzionalità AI Pro e Cloud
 
 > Da pianificare in dettaglio al completamento della Fase 2.
+> Tutte le funzionalità di questa fase sono **riservate agli utenti Pro** (abbonamento in-app).
+> Vedere `docs/vision.md` per il modello di business completo.
+
+### Modello abbonamento
+- **Free**: tutte le funzionalità Fase 0–2 incluse, per sempre
+- **Pro**: sblocca le funzionalità AI e cloud di Fase 3
+- **Prezzo indicativo**: 2,99 €/mese · 19,99 €/anno
+- **Piattaforme**: Google Play Billing (Android) + Apple IAP (iOS)
+- **Gate nel codice**: `ProGate.isProUser(ref)` — `false` mostra paywall, `true` esegue la funzione
+
+### Predisposizioni già nel codice
+- `app/lib/shared/pro/pro_gate.dart` — `ProGate` helper + `proStatusProvider` (stub `false`, da collegare a billing)
+- `app/lib/shared/pro/paywall_sheet.dart` — bottom sheet paywall placeholder da sostituire con UI definitiva in Fase 3
 
 | Milestone | Descrizione |
 |-----------|-------------|
-| 3.1 | Integrazione Claude API — miscelazione AI avanzata |
-| 3.2 | Riconoscimento colore da foto (Claude Vision) |
-| 3.3 | Sistema crediti in-app (Google Play Billing) |
-| 3.4 | Sincronizzazione cloud opzionale |
-| 3.5 | Espansione cataloghi tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
-| 3.6 | Condivisione ricette con la community |
-| 3.7 | **Istruzioni AR** — fotografia libretto istruzioni in B/N, Claude Vision riconosce i codici colore e sovrappone esagoni colorati reali (overlay interattivo, salvato nel progetto, funzionalità a crediti) |
-| 3.8 | **Sostituzione OCR con AI Vision (premium)** — l'attuale scanner istruzioni usa Google MLKit offline (riconosce testo ma sbaglia o manca codici con font piccoli, multi-colonna o layout complessi). In Fase 3 sostituire con Claude Vision: l'utente fotografa il foglio istruzioni e l'AI identifica direttamente i codici colore per marca (Tamiya, Vallejo, Citadel…) restituendo una lista pronta da aggiungere alla palette, senza parsing manuale del testo. Funzionalità a crediti (stesso sistema di 3.3). |
+| 3.1 | **Sistema abbonamento** — integrazione Google Play Billing + Apple IAP; `proStatusProvider` collegato allo stato reale dell'abbonamento; paywall UI definitivo |
+| 3.2 | **AI Vision scansione istruzioni** (sostituisce OCR MLKit) — Claude Vision identifica codici colore per marca da foto del libretto; lista pronta da aggiungere alla palette |
+| 3.3 | **Miscelazione AI avanzata** — Claude API suggerisce ricette di miscelazione partendo da un colore target o da una foto |
+| 3.4 | **Riconoscimento colore da foto** — Claude Vision trova la vernice più vicina a un punto dell'immagine |
+| 3.5 | **Istruzioni AR** — overlay esagoni colorati reali su foto libretto istruzioni B/N |
+| 3.6 | **Sincronizzazione cloud** — backup automatico e sync multi-dispositivo |
+| 3.7 | **Condivisione ricette con la community** |
+| 3.8 | **Espansione cataloghi** tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, AK, Ammo) |
 
 ---
 
