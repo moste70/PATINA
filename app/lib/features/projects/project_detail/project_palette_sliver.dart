@@ -216,6 +216,7 @@ class _HeaderIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
+      preferBelow: false,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
