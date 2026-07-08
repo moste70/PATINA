@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/theme.dart';
+import '../../l10n/app_localizations.dart';
 
 // Provider per la lingua selezionata (codice locale, es. 'it', 'en', 'system').
 // Usato anche in main.dart per impostare la locale di MaterialApp.
@@ -32,44 +33,44 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localePrefProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Impostazioni'),
+        title: Text(l.settingsScreenTitle),
         centerTitle: false,
       ),
       body: ListView(
         children: [
           // ── Aspetto ──────────────────────────────────────────────────────
-          _SectionHeader(title: 'Aspetto'),
+          _SectionHeader(title: l.settingsAppearanceSection),
 
           _SettingsTile(
             icon: Icons.dark_mode_outlined,
-            title: 'Tema',
-            subtitle: _themeModeLabel(themeMode),
-            onTap: () => _showThemePicker(context, ref, themeMode),
+            title: l.settingsThemeTitle,
+            subtitle: _themeModeLabel(l, themeMode),
+            onTap: () => _showThemePicker(context, ref, l, themeMode),
           ),
 
           // ── Lingua ───────────────────────────────────────────────────────
-          _SectionHeader(title: 'Lingua'),
+          _SectionHeader(title: l.settingsLanguageSection),
 
           _SettingsTile(
             icon: Icons.language_outlined,
-            title: 'Lingua dell\'app',
-            subtitle: _localeLabel(locale),
-            onTap: () => _showLocalePicker(context, ref, locale),
+            title: l.settingsLanguageTitle,
+            subtitle: _localeLabel(l, locale),
+            onTap: () => _showLocalePicker(context, ref, l, locale),
           ),
 
           // ── Info ─────────────────────────────────────────────────────────
-          _SectionHeader(title: 'Info'),
+          _SectionHeader(title: l.settingsInfoSection),
 
           _SettingsTile(
             icon: Icons.info_outline,
-            title: 'Versione',
+            title: l.settingsVersionTitle,
             subtitle: '1.0.0-beta.1',
             onTap: null,
           ),
@@ -78,101 +79,99 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _themeModeLabel(ThemeMode mode) => switch (mode) {
-        ThemeMode.dark => 'Scuro',
-        ThemeMode.light => 'Chiaro',
-        ThemeMode.system => 'Sistema',
+  String _themeModeLabel(AppL10n l, ThemeMode mode) => switch (mode) {
+        ThemeMode.dark => l.settingsThemeDark,
+        ThemeMode.light => l.settingsThemeLight,
+        ThemeMode.system => l.settingsThemeSystem,
       };
 
-  String _localeLabel(String locale) => switch (locale) {
-        'it' => 'Italiano',
-        'en' => 'English',
-        _ => 'Sistema',
+  String _localeLabel(AppL10n l, String locale) => switch (locale) {
+        'it' => l.settingsLocaleItalian,
+        'en' => l.settingsLocaleEnglish,
+        _ => l.settingsLocaleSystem,
       };
 
   void _showThemePicker(
-      BuildContext context, WidgetRef ref, ThemeMode current) {
+      BuildContext context, WidgetRef ref, AppL10n l, ThemeMode current) {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                child: Text('Tema',
-                    style: Theme.of(ctx).textTheme.titleMedium),
-              ),
-              for (final option in [
-                (ThemeMode.dark, Icons.dark_mode_outlined, 'Scuro'),
-                (ThemeMode.light, Icons.light_mode_outlined, 'Chiaro'),
-                (ThemeMode.system, Icons.brightness_auto_outlined, 'Sistema'),
-              ])
-                ListTile(
-                  leading: Icon(option.$2),
-                  title: Text(option.$3),
-                  trailing: current == option.$1
-                      ? Icon(Icons.check,
-                          color: Theme.of(ctx).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    ref.read(themeModeProvider.notifier).setMode(option.$1);
-                    Navigator.pop(ctx);
-                  },
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: Text(ll.settingsThemeTitle,
+                      style: Theme.of(ctx).textTheme.titleMedium),
                 ),
-            ],
+                for (final option in [
+                  (ThemeMode.dark, Icons.dark_mode_outlined, ll.settingsThemeDark),
+                  (ThemeMode.light, Icons.light_mode_outlined, ll.settingsThemeLight),
+                  (ThemeMode.system, Icons.brightness_auto_outlined, ll.settingsThemeSystem),
+                ])
+                  ListTile(
+                    leading: Icon(option.$2),
+                    title: Text(option.$3),
+                    trailing: current == option.$1
+                        ? Icon(Icons.check,
+                            color: Theme.of(ctx).colorScheme.primary)
+                        : null,
+                    onTap: () {
+                      ref.read(themeModeProvider.notifier).setMode(option.$1);
+                      Navigator.pop(ctx);
+                    },
+                  ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   void _showLocalePicker(
-      BuildContext context, WidgetRef ref, String current) {
+      BuildContext context, WidgetRef ref, AppL10n l, String current) {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                child: Text('Lingua',
-                    style: Theme.of(ctx).textTheme.titleMedium),
-              ),
-              for (final option in [
-                ('system', Icons.brightness_auto_outlined, 'Sistema (predefinito)'),
-                ('it', Icons.flag_outlined, 'Italiano'),
-                ('en', Icons.flag_outlined, 'English'),
-              ])
-                ListTile(
-                  leading: Icon(option.$2),
-                  title: Text(option.$3),
-                  trailing: current == option.$1
-                      ? Icon(Icons.check,
-                          color: Theme.of(ctx).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    ref.read(localePrefProvider.notifier).set(option.$1);
-                    Navigator.pop(ctx);
-                  },
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: Text(ll.settingsLanguageSection,
+                      style: Theme.of(ctx).textTheme.titleMedium),
                 ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(24, 8, 24, 0),
-                child: Text(
-                  'La modifica della lingua richiede il riavvio dell\'app.',
-                  style: TextStyle(fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
+                for (final option in [
+                  ('system', Icons.brightness_auto_outlined, ll.settingsLocaleSystem),
+                  ('it', Icons.flag_outlined, ll.settingsLocaleItalian),
+                  ('en', Icons.flag_outlined, ll.settingsLocaleEnglish),
+                ])
+                  ListTile(
+                    leading: Icon(option.$2),
+                    title: Text(option.$3),
+                    trailing: current == option.$1
+                        ? Icon(Icons.check,
+                            color: Theme.of(ctx).colorScheme.primary)
+                        : null,
+                    onTap: () {
+                      ref.read(localePrefProvider.notifier).set(option.$1);
+                      Navigator.pop(ctx);
+                    },
+                  ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

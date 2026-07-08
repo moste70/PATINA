@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../database/app_database.dart';
+import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n_helpers.dart';
 import '../../shared/constants/app_constants.dart';
 import '../../shared/pro/pro_gate.dart';
 import '../../shared/pro/paywall_sheet.dart';
@@ -22,6 +24,7 @@ class ProjectsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final repo        = ref.watch(projectRepositoryProvider);
     final filter      = ref.watch(_statusFilterProvider);
     final query       = ref.watch(_searchQueryProvider).trim().toLowerCase();
@@ -31,6 +34,7 @@ class ProjectsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: searchActive
             ? _SearchField(
+                hint: l.projectSearchHint,
                 onChanged: (v) =>
                     ref.read(_searchQueryProvider.notifier).state = v,
                 onClose: () {
@@ -38,12 +42,12 @@ class ProjectsScreen extends ConsumerWidget {
                   ref.read(_searchQueryProvider.notifier).state = '';
                 },
               )
-            : const Text('Progetti'),
+            : Text(l.projectsScreenTitle),
         actions: [
           if (!searchActive)
             IconButton(
               icon: const Icon(Icons.search),
-              tooltip: 'Cerca progetto',
+              tooltip: l.projectSearchTooltip,
               onPressed: () {
                 HapticFeedback.lightImpact();
                 ref.read(_searchActiveProvider.notifier).state = true;
@@ -74,11 +78,6 @@ class ProjectsScreen extends ConsumerWidget {
                 .toList();
           }
 
-          // Conta progetti attivi per il gate Free
-          final activeCount = all
-              .where((p) => AppConstants.activeStatuses.contains(p.status))
-              .length;
-
           return Column(
             children: [
               _FilterBar(current: filter),
@@ -87,7 +86,7 @@ class ProjectsScreen extends ConsumerWidget {
                     ? _EmptyFilter(
                         query: query,
                         label: filter != null
-                            ? AppConstants.projectStatusLabels[filter] ?? filter
+                            ? AppL10n.of(context).projectStatusLabel(filter)
                             : null,
                       )
                     : ListView.builder(
@@ -133,6 +132,7 @@ class _FabNewProject extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final isPro = ProGate.watchProUser(ref);
     return StreamBuilder<List<Project>>(
       stream: repoStream,
@@ -148,14 +148,12 @@ class _FabNewProject extends ConsumerWidget {
             HapticFeedback.lightImpact();
             if (atLimit) {
               PaywallSheet.show(context,
-                  feature: 'Progetti illimitati (Standard)');
+                  feature: l.filterAll); // placeholder feature name
             } else {
               onTap();
             }
           },
-          tooltip: atLimit
-              ? 'Limite Free raggiunto (2 progetti attivi)'
-              : 'Nuovo progetto',
+          tooltip: atLimit ? l.projectFabLimitTooltip : l.projectFabNewTooltip,
           child: atLimit
               ? const Icon(Icons.lock_outline)
               : const Icon(Icons.add),
@@ -168,9 +166,14 @@ class _FabNewProject extends ConsumerWidget {
 // ── Search field ──────────────────────────────────────────────────────────────
 
 class _SearchField extends StatefulWidget {
+  final String hint;
   final ValueChanged<String> onChanged;
   final VoidCallback onClose;
-  const _SearchField({required this.onChanged, required this.onClose});
+  const _SearchField({
+    required this.hint,
+    required this.onChanged,
+    required this.onClose,
+  });
 
   @override
   State<_SearchField> createState() => _SearchFieldState();
@@ -191,7 +194,7 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _ctrl,
       autofocus: true,
       decoration: InputDecoration(
-        hintText: 'Cerca per nome…',
+        hintText: widget.hint,
         border: InputBorder.none,
         suffixIcon: IconButton(
           icon: const Icon(Icons.close),
@@ -212,6 +215,7 @@ class _FilterBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     return SizedBox(
@@ -221,7 +225,7 @@ class _FilterBar extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
           _FilterChip(
-            label: 'Tutti',
+            label: l.filterAll,
             selected: current == null,
             onTap: () {
               HapticFeedback.lightImpact();
@@ -233,7 +237,7 @@ class _FilterBar extends ConsumerWidget {
           ...AppConstants.projectStatuses.map((s) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: _FilterChip(
-                  label: AppConstants.projectStatusLabels[s] ?? s,
+                  label: l.projectStatusLabel(s),
                   selected: current == s,
                   onTap: () {
                     HapticFeedback.lightImpact();
@@ -307,13 +311,13 @@ class _ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final p      = project;
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
 
     final subtitle = [
-      if (p.category != null)
-        AppConstants.categoryLabels[p.category] ?? p.category!,
+      if (p.category != null) l.categoryLabel(p.category!),
       if (p.scale != null) p.scale!,
     ].join(' · ');
 
@@ -403,24 +407,22 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, bg, fg) = switch (status) {
+    final l = AppL10n.of(context);
+    final label = l.projectStatusLabel(status);
+    final (bg, fg) = switch (status) {
       'in_progress' => (
-          'In corso',
           const Color(0xFFC87A20).withOpacity(0.15),
           const Color(0xFFC87A20),
         ),
       'completed' => (
-          'Completato',
           const Color(0xFF2F8F57).withOpacity(0.15),
           const Color(0xFF2F8F57),
         ),
       'paused' => (
-          'In pausa',
           Colors.blueGrey.withOpacity(0.15),
           Colors.blueGrey,
         ),
       _ => (
-          'Da iniziare',
           Theme.of(context).colorScheme.surfaceContainerHighest,
           Theme.of(context).colorScheme.onSurfaceVariant,
         ),
@@ -452,6 +454,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
 
@@ -464,11 +467,11 @@ class _EmptyState extends StatelessWidget {
             Icon(Icons.view_module_outlined,
                 size: 80, color: scheme.onSurface.withOpacity(0.2)),
             const SizedBox(height: 24),
-            Text('Nessun progetto ancora',
+            Text(l.projectEmptyTitle,
                 style: tt.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(
-              'Inizia aggiungendo il tuo primo modello in scala.',
+              l.projectEmptyBody,
               style: tt.bodyMedium
                   ?.copyWith(color: scheme.onSurface.withOpacity(0.5)),
               textAlign: TextAlign.center,
@@ -476,7 +479,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 32),
             FilledButton.icon(
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Nuovo progetto'),
+              label: Text(l.projectFabNewTooltip),
               onPressed: onNewProject,
             ),
           ],
@@ -493,10 +496,11 @@ class _EmptyFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final msg = query.isNotEmpty
-        ? 'Nessun progetto trovato per "$query"'
-        : 'Nessun progetto "${label ?? ''}"';
+        ? l.projectSearchEmpty(query)
+        : l.projectFilterEmpty(label ?? '');
     return Center(
       child: Text(
         msg,

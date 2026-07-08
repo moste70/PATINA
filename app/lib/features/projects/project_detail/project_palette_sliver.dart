@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'scan_instructions_sheet.dart';
 import '../../../database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
 import '../project_repository.dart';
 
@@ -80,6 +81,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final paintsAsync = ref.watch(_projectPaintsProvider(projectId));
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -96,7 +98,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    'COLORI DEL KIT',
+                    l.paletteSectionTitle,
                     style: tt.labelSmall?.copyWith(
                       color: scheme.primary,
                       letterSpacing: 1.2,
@@ -105,7 +107,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   const Spacer(),
                   _HeaderIconButton(
                     icon: Icons.shopping_cart_outlined,
-                    tooltip: 'Lista della spesa',
+                    tooltip: l.paletteShoppingTooltip,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       context.push('/shopping');
@@ -114,7 +116,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   ),
                   _HeaderIconButton(
                     icon: Icons.camera_alt_outlined,
-                    tooltip: 'Scansiona istruzioni',
+                    tooltip: l.paletteScanTooltip,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       _scan(context, ref);
@@ -123,7 +125,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   ),
                   _HeaderIconButton(
                     icon: Icons.add,
-                    tooltip: 'Aggiungi vernice',
+                    tooltip: l.paletteAddPaintTooltip,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       _showAddSheet(context, ref);
@@ -163,6 +165,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
   }
 
   Future<void> _scan(BuildContext context, WidgetRef ref) async {
+    final l = AppL10n.of(context);
     final repo = ref.read(projectRepositoryProvider);
     await showScanSheet(
       context,
@@ -179,9 +182,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
         if (context.mounted && results.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                '${results.length} vernic${results.length == 1 ? 'e aggiunta' : 'i aggiunte'} alla palette.',
-              ),
+              content: Text(l.paletteSnackAdded(results.length)),
             ),
           );
         }
@@ -244,6 +245,7 @@ class _EmptyPalette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Column(
       children: [
         // Auto-load tile (supported brands)
@@ -268,13 +270,12 @@ class _EmptyPalette extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Caricamento automatico',
+                        l.paletteAutoloadTitle,
                         style: tt.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        'Fotografia il foglio istruzioni\n'
-                        '${supportedBrands.join(' · ')}',
+                        l.paletteAutoloadBody,
                         style: tt.bodySmall
                             ?.copyWith(color: scheme.onSurfaceVariant),
                       ),
@@ -303,7 +304,7 @@ class _EmptyPalette extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Cerca nel catalogo',
+                    l.paletteCatalogSearch,
                     style: tt.bodyMedium,
                   ),
                 ),
@@ -327,6 +328,7 @@ class _PaletteRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final repo = ref.read(projectRepositoryProvider);
@@ -413,6 +415,7 @@ class _StockBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -437,7 +440,7 @@ class _StockBadge extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            inStock ? 'In magazzino' : 'Da acquistare',
+            inStock ? l.paletteInStock : l.paletteToBuy,
             style: GoogleFonts.jetBrainsMono(
               fontSize: 9,
               fontWeight: FontWeight.w600,
@@ -454,8 +457,6 @@ class _StockBadge extends StatelessWidget {
 }
 
 // ── Add paint bottom sheet ────────────────────────────────────────────────────
-// Se initialResults è valorizzato, la sheet mostra quei risultati direttamente
-// (modalità post-scansione). L'utente può comunque cercare altro nel catalogo.
 
 class _AddPaintSheet extends ConsumerStatefulWidget {
   final int projectId;
@@ -523,6 +524,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final catalogAsync = ref.watch(_catalogProvider);
@@ -552,7 +554,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
             child: Row(
               children: [
-                Expanded(child: Text('Aggiungi vernici', style: tt.titleMedium)),
+                Expanded(child: Text(l.paletteAddPaintsTitle, style: tt.titleMedium)),
                 if (count > 0)
                   FilledButton(
                     onPressed: _isSaving ? null : _confirm,
@@ -566,7 +568,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text('Aggiungi $count'),
+                        : Text(l.paletteAddCountButton(count)),
                   ),
               ],
             ),
@@ -582,7 +584,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                 controller: _controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Cerca per codice, nome o marca…',
+                  hintText: l.paintSearchHint,
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
@@ -604,17 +606,17 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
               error: (_, __) =>
-                  const Center(child: Text('Errore caricamento catalogo')),
+                  Center(child: Text(l.errorCatalogLoad)),
               data: (_) {
                 if (_results.isEmpty && _controller.text.isEmpty) {
                   return Center(
-                    child: Text('Cerca per trovare una vernice',
+                    child: Text(l.paintSearchPrompt,
                         style: tt.bodySmall),
                   );
                 }
                 if (_results.isEmpty) {
                   return Center(
-                    child: Text('Nessun risultato', style: tt.bodySmall),
+                    child: Text(l.searchNoResults, style: tt.bodySmall),
                   );
                 }
                 return ListView.builder(

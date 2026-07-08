@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../wizard_state.dart';
 
 class Step3Photo extends ConsumerWidget {
@@ -12,6 +13,7 @@ class Step3Photo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final state = ref.watch(createProjectProvider);
     final notifier = ref.read(createProjectProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
@@ -20,10 +22,9 @@ class Step3Photo extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
       children: [
-        Text('Foto Copertina', style: tt.displaySmall),
+        Text(l.projectStep3PhotoTitle, style: tt.displaySmall),
         const SizedBox(height: 8),
-        Text('Opzionale — puoi aggiungerla in qualsiasi momento',
-            style: tt.bodySmall),
+        Text(l.projectStep3PhotoSubtitle, style: tt.bodySmall),
         const SizedBox(height: 24),
 
         // Preview / placeholder
@@ -68,7 +69,7 @@ class Step3Photo extends ConsumerWidget {
                       Icon(Icons.add_photo_alternate_outlined,
                           size: 48, color: scheme.onSurface.withOpacity(0.4)),
                       const SizedBox(height: 12),
-                      Text('Aggiungi copertina',
+                      Text(l.projectAddCoverPhotoLabel,
                           style: tt.bodyMedium?.copyWith(
                               color: scheme.onSurface.withOpacity(0.4))),
                     ],
@@ -83,7 +84,7 @@ class Step3Photo extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                  label: const Text('Fotocamera'),
+                  label: Text(l.photoSourceCamera),
                   onPressed: () => _pick(context, notifier, ImageSource.camera),
                 ),
               ),
@@ -91,7 +92,7 @@ class Step3Photo extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.photo_library_outlined, size: 18),
-                  label: const Text('Galleria'),
+                  label: Text(l.photoSourceGallery),
                   onPressed: () => _pick(context, notifier, ImageSource.gallery),
                 ),
               ),
@@ -106,7 +107,7 @@ class Step3Photo extends ConsumerWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: state.isSaving ? null : onBack,
-                child: const Text('Indietro'),
+                child: Text(l.actionBack),
               ),
             ),
             const SizedBox(width: 12),
@@ -119,7 +120,7 @@ class Step3Photo extends ConsumerWidget {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(saveLabel ?? 'Crea Progetto'),
+                    : Text(saveLabel ?? l.projectCreateAction),
               ),
             ),
           ],
@@ -133,6 +134,7 @@ class Step3Photo extends ConsumerWidget {
     CreateProjectNotifier notifier,
     ImageSource source,
   ) async {
+    final l = AppL10n.of(context);
     try {
       final picker = ImagePicker();
       final file = await picker.pickImage(source: source, imageQuality: 85);
@@ -140,7 +142,7 @@ class Step3Photo extends ConsumerWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossibile accedere alle foto')),
+          SnackBar(content: Text(l.errorPhotoAccess)),
         );
       }
     }

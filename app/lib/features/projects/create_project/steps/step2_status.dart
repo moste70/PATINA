@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n_helpers.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../wizard_state.dart';
 
@@ -29,6 +31,7 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final state = ref.watch(createProjectProvider);
     final notifier = ref.read(createProjectProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
@@ -37,10 +40,10 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
       children: [
-        Text('Stato Iniziale', style: tt.displaySmall),
+        Text(l.projectStep2StatusTitle, style: tt.displaySmall),
         const SizedBox(height: 24),
 
-        Text('Stato', style: tt.titleSmall),
+        Text(l.projectStatusSectionLabel, style: tt.titleSmall),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
@@ -52,7 +55,7 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
             final selected = state.status == s;
             return FilterChip(
               selected: selected,
-              label: Text(AppConstants.projectStatusLabels[s] ?? s),
+              label: Text(l.projectStatusLabel(s)),
               onSelected: (_) => notifier.setStatus(s),
               selectedColor: scheme.primary.withOpacity(0.18),
               checkmarkColor: scheme.primary,
@@ -68,9 +71,9 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
           controller: _notesCtrl,
           maxLines: 4,
           maxLength: 500,
-          decoration: const InputDecoration(
-            labelText: 'Note iniziali',
-            hintText: 'Aggiungi note, riferimenti, obiettivi…',
+          decoration: InputDecoration(
+            labelText: l.projectNotesInitialLabel,
+            hintText: l.projectNotesInitialHint,
             alignLabelWithHint: true,
           ),
           onChanged: notifier.setNotes,
@@ -82,14 +85,14 @@ class _Step2StatusState extends ConsumerState<Step2Status> {
             Expanded(
               child: OutlinedButton(
                 onPressed: widget.onBack,
-                child: const Text('Indietro'),
+                child: Text(l.actionBack),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: FilledButton(
                 onPressed: widget.onNext,
-                child: const Text('Avanti'),
+                child: Text(l.actionNext),
               ),
             ),
           ],

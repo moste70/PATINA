@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart' show Share;
 import '../projects/project_repository.dart';
 import '../../database/app_database.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 
 final _shoppingListProvider = StreamProvider<List<ShoppingEntry>>((ref) {
@@ -22,6 +23,7 @@ class ShoppingListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final paintsAsync = ref.watch(_shoppingListProvider);
     final itemsAsync = ref.watch(_shoppingItemsProvider);
     final checkedPaints = ref.watch(_checkedPaintsProvider);
@@ -30,12 +32,13 @@ class ShoppingListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lista della spesa'),
+        title: Text(l.shoppingScreenTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
-            tooltip: 'Condividi lista',
+            tooltip: l.shoppingShareTooltip,
             onPressed: () => _shareList(
+              context: context,
               paints: paintsAsync.value ?? [],
               items: itemsAsync.value ?? [],
               checkedPaints: checkedPaints,
@@ -52,7 +55,7 @@ class ShoppingListScreen extends ConsumerWidget {
           // ── Sezione vernici mancanti ──────────────────────────────
           SliverToBoxAdapter(
             child: _SectionHeader(
-              label: 'VERNICI DA ACQUISTARE',
+              label: l.shoppingPaintsSection,
               scheme: scheme,
               tt: tt,
             ),
@@ -67,7 +70,7 @@ class ShoppingListScreen extends ConsumerWidget {
             error: (e, _) => SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Errore: $e'),
+                child: Text(l.errorGeneric(e.toString())),
               ),
             ),
             data: (entries) {
@@ -76,12 +79,11 @@ class ShoppingListScreen extends ConsumerWidget {
                   child: _EmptyState(
                     icon: Icons.check_circle_outline,
                     iconColor: const Color(0xFF2F8F57),
-                    label: 'Tutte le vernici sono in magazzino',
+                    label: l.shoppingPaintsEmpty,
                     tt: tt,
                   ),
                 );
               }
-              // Unchecked prima, checked in fondo
               final sorted = [
                 ...entries.where((e) => !checkedPaints.contains('${e.brand}+${e.code}')),
                 ...entries.where((e) => checkedPaints.contains('${e.brand}+${e.code}')),
@@ -133,7 +135,7 @@ class ShoppingListScreen extends ConsumerWidget {
           // ── Sezione voci manuali ──────────────────────────────────
           SliverToBoxAdapter(
             child: _SectionHeader(
-              label: 'ALTRO',
+              label: l.shoppingOtherSection,
               scheme: scheme,
               tt: tt,
             ),
@@ -147,7 +149,7 @@ class ShoppingListScreen extends ConsumerWidget {
                   child: _EmptyState(
                     icon: Icons.add_shopping_cart_outlined,
                     iconColor: scheme.onSurfaceVariant,
-                    label: 'Tocca + per aggiungere pennelli, diluenti…',
+                    label: l.shoppingOtherEmpty,
                     tt: tt,
                   ),
                 );
@@ -181,15 +183,17 @@ class ShoppingListScreen extends ConsumerWidget {
   }
 
   void _shareList({
+    required BuildContext context,
     required List<ShoppingEntry> paints,
     required List<ShoppingItem> items,
     required Set<String> checkedPaints,
   }) {
+    final l = AppL10n.of(context);
     final buf = StringBuffer();
-    buf.writeln('🎨 Lista della spesa — PATINA\n');
+    buf.writeln('${l.shoppingShareHeader}\n');
 
     if (paints.isNotEmpty) {
-      buf.writeln('VERNICI DA ACQUISTARE');
+      buf.writeln(l.shoppingPaintsSection);
       final byProject = <String, List<ShoppingEntry>>{};
       for (final e in paints) {
         byProject.putIfAbsent(e.projectName, () => []).add(e);
@@ -205,7 +209,7 @@ class ShoppingListScreen extends ConsumerWidget {
 
     if (items.isNotEmpty) {
       if (paints.isNotEmpty) buf.writeln();
-      buf.writeln('ALTRO');
+      buf.writeln(l.shoppingOtherSection);
       for (final item in items) {
         final done = item.done ? '✓' : '○';
         buf.writeln('  $done ${item.label}');
@@ -216,7 +220,7 @@ class ShoppingListScreen extends ConsumerWidget {
     }
 
     if (paints.isEmpty && items.isEmpty) {
-      buf.writeln('La lista è vuota.');
+      buf.writeln(l.shoppingShareEmpty);
     }
 
     Share.share(buf.toString());
@@ -470,6 +474,7 @@ class _AddItemSheetState extends State<_AddItemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -495,24 +500,24 @@ class _AddItemSheetState extends State<_AddItemSheet> {
               ),
             ),
           ),
-          Text('Aggiungi voce', style: tt.titleMedium),
+          Text(l.shoppingAddItemTitle, style: tt.titleMedium),
           const SizedBox(height: 16),
           TextField(
             controller: _labelCtrl,
             autofocus: true,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Descrizione',
-              hintText: 'es. Pennello piatto n.4, Diluente…',
+            decoration: InputDecoration(
+              labelText: l.shoppingItemDescriptionLabel,
+              hintText: l.shoppingItemDescriptionHint,
             ),
             onSubmitted: (_) => _save(),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _notesCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Note (opzionale)',
-              hintText: 'marca, quantità…',
+            decoration: InputDecoration(
+              labelText: l.shoppingItemNotesLabel,
+              hintText: l.shoppingItemNotesHint,
             ),
           ),
           const SizedBox(height: 20),
@@ -524,7 +529,7 @@ class _AddItemSheetState extends State<_AddItemSheet> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Aggiungi'),
+                : Text(l.actionAdd),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
 import 'wizard_state.dart';
 import 'steps/step1_kit.dart';
 import 'steps/step2_status.dart';
@@ -26,7 +27,6 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
   void initState() {
     super.initState();
     if (_isEditing) {
-      // Popola il provider prima che i figli leggano il loro initState
       ref.read(createProjectProvider.notifier).initFromProject(widget.project!);
     }
   }
@@ -47,6 +47,7 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
   }
 
   Future<void> _save() async {
+    final l = AppL10n.of(context);
     try {
       if (_isEditing) {
         await ref
@@ -63,37 +64,42 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Errore nel salvataggio, riprova')),
+          SnackBar(content: Text(l.errorSaveRetry)),
         );
       }
     }
   }
 
   Future<bool> _onWillPop() async {
-    if (_isEditing) return true; // modifica: chiudi senza conferma
+    if (_isEditing) return true;
     final state = ref.read(createProjectProvider);
     if (!state.hasData) return true;
+    final l = AppL10n.of(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Vuoi scartare il progetto?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annulla'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Scarta'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.projectDiscardTitle),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ll.actionCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ll.actionDiscard),
+            ),
+          ],
+        );
+      },
     );
     return confirm ?? false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final state = ref.watch(createProjectProvider);
     final scheme = Theme.of(context).colorScheme;
 
@@ -111,7 +117,7 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
               if (await _onWillPop()) Navigator.of(context).pop();
             },
           ),
-          title: Text(_isEditing ? 'Modifica Progetto' : 'Nuovo Progetto'),
+          title: Text(_isEditing ? l.projectEditTitle : l.projectNewTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
             child: _StepIndicator(
@@ -130,7 +136,7 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
             Step3Photo(
               onBack: () => _goTo(1),
               onSave: _save,
-              saveLabel: _isEditing ? 'Salva modifiche' : null,
+              saveLabel: _isEditing ? l.actionSaveChanges : null,
             ),
           ],
         ),

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 // `show` evita la collisione con il widget Flutter `CustomPaint`
 import '../../database/app_database.dart' show InventoryPaint, databaseProvider;
+import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n_helpers.dart';
 import '../../shared/pro/pro_gate.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 import 'paints_repository.dart';
@@ -80,28 +82,11 @@ Color _quantityColor(String q) => switch (q) {
   _       => _kEmpty,
 };
 
-String _quantityLabel(String q) => switch (q) {
-  'full'  => 'Piena',
-  'half'  => 'Metà',
-  'low'   => 'Quasi',
-  _       => 'Esaurita',
-};
-
-String _lineLabel(String l) => switch (l) {
-  'model_color'   => 'Model Color',
-  'model_air'     => 'Model Air',
-  'xf_flat'       => 'XF (Opache)',
-  'x_gloss'       => 'X (Lucide)',
-  'lp_lacquer'    => 'LP (Lacca)',
-  'ts_spray'      => 'TS (Spray)',
-  'mr_color'      => 'Mr. Color',
-  'aqueous'       => 'Aqueous',
-  'mr_metal'      => 'Mr. Metal',
-  'enamel'        => 'Enamel',
-  'base'          => 'Base',
-  'lc'            => 'UA Series',
-  'ua'            => 'LC Series',
-  _               => l,
+String _quantityLabel(AppL10n l, String q) => switch (q) {
+  'full'  => l.quantityFull,
+  'half'  => l.quantityHalf,
+  'low'   => l.quantityLow,
+  _       => l.quantityEmpty,
 };
 
 String _brandLabel(String b) => switch (b) {
@@ -285,18 +270,12 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vernici'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filtra',
-            onPressed: () => HapticFeedback.lightImpact(),
-          ),
-        ],
+        title: Text(l.paintsScreenTitle),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: scheme.primary,
@@ -308,13 +287,13 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
             fontWeight: FontWeight.w600,
             letterSpacing: 1,
           ),
-          tabs: const [Tab(text: 'INVENTARIO'), Tab(text: 'CATALOGO')],
+          tabs: [Tab(text: l.paintsTabInventory), Tab(text: l.paintsTabCatalog)],
         ),
       ),
       floatingActionButton: _tabIndex == 0
           ? FloatingActionButton(
               onPressed: _goToCatalog,
-              tooltip: 'Vai al catalogo per aggiungere vernici',
+              tooltip: l.paintsFabTooltip,
               child: const Icon(Icons.add),
             )
           : null,
@@ -359,12 +338,13 @@ class _SearchBarState extends ConsumerState<_SearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       child: TextField(
         controller: _ctrl,
         decoration: InputDecoration(
-          hintText: 'Cerca per codice, nome o marca…',
+          hintText: l.paintSearchHint,
           prefixIcon: const Icon(Icons.search, size: 20),
           suffixIcon: _ctrl.text.isNotEmpty
               ? IconButton(
@@ -395,6 +375,7 @@ class _BrandFilterChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme   = Theme.of(context).colorScheme;
     final selected = ref.watch(_selectedBrandProvider);
 
@@ -405,7 +386,7 @@ class _BrandFilterChips extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         children: [
           _BrandChip(
-            label: 'Tutti',
+            label: l.filterAllLines,
             active: selected == null,
             scheme: scheme,
             onTap: () {
@@ -507,7 +488,7 @@ class _InventoryTab extends ConsumerWidget {
             loading: () =>
                 const Center(child: CircularProgressIndicator()),
             error: (e, _) =>
-                Center(child: Text('Errore: $e')),
+                Center(child: Text(AppL10n.of(context).errorGeneric(e.toString()))),
             data: (paints) {
               if (paints.isEmpty) return const _EmptyInventory();
               if (viewMode == _ViewMode.grid) {
@@ -548,6 +529,7 @@ class _StatsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme  = Theme.of(context).colorScheme;
     final isFree  = !ProGate.watchProUser(ref);
     final ratio   = isFree ? (total / _kFreeInventoryLimit).clamp(0.0, 1.0) : 0.0;
@@ -577,13 +559,12 @@ class _StatsRow extends ConsumerWidget {
                     children: [
                       TextSpan(
                           text: isFree
-                              ? '$total/$_kFreeInventoryLimit vernic${total == 1 ? 'e' : 'i'}'
-                              : '$total ${total == 1 ? 'vernice' : 'vernici'}'),
+                              ? l.inventoryFreePaintsCount(total, _kFreeInventoryLimit)
+                              : l.inventoryPaintsCount(total)),
                       if (emptyCount > 0) ...[
                         const TextSpan(text: ' · '),
                         TextSpan(
-                          text:
-                              '$emptyCount esaurit${emptyCount == 1 ? 'a' : 'e'}',
+                          text: l.inventoryEmptyPaints(emptyCount),
                           style: const TextStyle(
                               color: _kEmpty,
                               fontWeight: FontWeight.w600),
@@ -626,8 +607,8 @@ class _StatsRow extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
               child: Text(
                 total >= _kFreeInventoryLimit
-                    ? 'Limite raggiunto — passa a Standard per aggiungerne altre'
-                    : '${_kFreeInventoryLimit - total} posizioni rimanenti nel piano Free',
+                    ? l.inventoryLimitReached
+                    : l.inventoryFreeNearLimit(_kFreeInventoryLimit - total),
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 9,
                   color: barColor,
@@ -781,6 +762,7 @@ class _QuantityPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final color = _quantityColor(quantity);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -790,7 +772,7 @@ class _QuantityPill extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
-        _quantityLabel(quantity),
+        _quantityLabel(l, quantity),
         style: GoogleFonts.jetBrainsMono(
           fontSize: 10,
           fontWeight: FontWeight.w600,
@@ -882,6 +864,7 @@ class _EmptyInventory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
     return Center(
@@ -896,10 +879,10 @@ class _EmptyInventory extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text('La cassettiera è vuota', style: tt.titleMedium),
+          Text(l.inventoryEmptyTitle, style: tt.titleMedium),
           const SizedBox(height: 8),
           Text(
-            'Aggiungi vernici dal catalogo con +',
+            l.inventoryEmptyBody,
             style:
                 tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -992,6 +975,7 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
     final repo   = ref.read(paintsRepositoryProvider);
@@ -1088,7 +1072,7 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                _quantityLabel(q),
+                                _quantityLabel(l, q),
                                 style: GoogleFonts.jetBrainsMono(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -1115,7 +1099,7 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
                   icon: Icon(Icons.delete_outline,
                       color: scheme.error, size: 18),
                   label: Text(
-                    'Rimuovi dall\'inventario',
+                    l.paintRemoveFromInventory,
                     style: TextStyle(color: scheme.error),
                   ),
                   onPressed: () {
@@ -1141,6 +1125,7 @@ class _CatalogTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme       = Theme.of(context).colorScheme;
     final tt           = Theme.of(context).textTheme;
     final catalogAsync = ref.watch(_catalogIndexProvider);
@@ -1160,7 +1145,7 @@ class _CatalogTab extends ConsumerWidget {
                 color: scheme.onSurface.withOpacity(0.2)),
             const SizedBox(height: 16),
             Text(
-              'Seleziona una marca o cerca una vernice',
+              l.catalogEmptyPrompt,
               style: tt.bodyMedium
                   ?.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
@@ -1183,7 +1168,7 @@ class _CatalogTab extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               children: [
                 _BrandChip(
-                  label: 'Tutte',
+                  label: l.filterAllLines,
                   active: selectedLine == null,
                   scheme: scheme,
                   onTap: () {
@@ -1191,13 +1176,13 @@ class _CatalogTab extends ConsumerWidget {
                     ref.read(_selectedLineProvider.notifier).state = null;
                   },
                 ),
-                ...lines.map((l) => _BrandChip(
-                      label: _lineLabel(l),
-                      active: selectedLine == l,
+                ...lines.map((line) => _BrandChip(
+                      label: l.paintLineLabel(line),
+                      active: selectedLine == line,
                       scheme: scheme,
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        ref.read(_selectedLineProvider.notifier).state = l;
+                        ref.read(_selectedLineProvider.notifier).state = line;
                       },
                     )),
               ],
@@ -1207,7 +1192,7 @@ class _CatalogTab extends ConsumerWidget {
           child: catalogAsync.when(
             loading: () =>
                 const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Errore: $e')),
+            error: (e, _) => Center(child: Text(l.errorGeneric(e.toString()))),
             data: (catalog) {
               final inventoryKeys = invAsync.value
                       ?.where((ip) =>
@@ -1238,7 +1223,7 @@ class _CatalogTab extends ConsumerWidget {
 
               if (entries.isEmpty) {
                 return Center(
-                    child: Text('Nessun risultato', style: tt.bodySmall));
+                    child: Text(l.searchNoResults, style: tt.bodySmall));
               }
 
               // Flatten with group headers (per brand, poi per linea se multi-brand)
@@ -1260,7 +1245,7 @@ class _CatalogTab extends ConsumerWidget {
                   final item = flat[i];
                   if (item is String) {
                     final label = brand != null
-                        ? _lineLabel(item).toUpperCase()
+                        ? l.paintLineLabel(item).toUpperCase()
                         : _brandLabel(item).toUpperCase();
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -1289,7 +1274,7 @@ class _CatalogTab extends ConsumerWidget {
                     subtitle: Text(
                       brand == null
                           ? _brandLabel(entry.brand)
-                          : _lineLabel(entry.line),
+                          : l.paintLineLabel(entry.line),
                       style: tt.bodySmall,
                     ),
                     trailing: inInventory
@@ -1297,7 +1282,7 @@ class _CatalogTab extends ConsumerWidget {
                             color: _kFull, size: 22)
                         : IconButton(
                             icon: Icon(Icons.add, color: scheme.primary),
-                            tooltip: 'Aggiungi all\'inventario',
+                            tooltip: l.paintAddToInventoryTooltip,
                             onPressed: () {
                               HapticFeedback.lightImpact();
                               ref
@@ -1308,8 +1293,7 @@ class _CatalogTab extends ConsumerWidget {
                                   );
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(SnackBar(
-                                content: Text(
-                                    '${entry.code} aggiunta all\'inventario'),
+                                content: Text(l.paintAddedToInventory(entry.code)),
                               ));
                             },
                           ),
