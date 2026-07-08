@@ -72,22 +72,30 @@ e ricette con la community.
 
 ## Modello di Business
 
-**App unica con tier Free e Pro** — nessuna app separata.
+**App unica con 3 tier** — nessuna app separata.
 
 ### Free (sempre disponibile)
-Tutte le funzionalità core: progetti, inventario vernici, ricette manuali, pin su foto,
-lista della spesa, cataloghi offline. L'app è pienamente usabile senza pagare nulla.
+Funzionalità core con limiti quantitativi:
+- Max **2 progetti attivi** (i completati non contano)
+- Max **20 vernici** in inventario personale
+- Max **5 foto** per progetto
+- Max **5 ricette** salvate
+- Catalogo offline, lista della spesa: illimitati
 
-### Pro (abbonamento in-app)
-Funzionalità che richiedono chiamate Claude API o backend cloud:
-- Scansione istruzioni kit con AI Vision (sostituisce OCR — Fase 3)
+### Standard (abbonamento — rimuove i limiti)
+Tutte le funzionalità Free senza restrizioni quantitative.
+**Pricing indicativo:** 1,99 €/mese · 12,99 €/anno.
+
+### Pro (abbonamento — aggiunge AI)
+Tutto di Standard, più funzionalità che richiedono Claude API o backend cloud:
+- Scansione istruzioni kit con AI Vision (Fase 3)
 - Miscelazione AI avanzata con Claude (Fase 3)
 - Riconoscimento colore da foto (Claude Vision — Fase 3)
 - Istruzioni AR con overlay esagoni colorati (Fase 3)
 - Sincronizzazione cloud e backup automatico (Fase 3)
 - Condivisione ricette con la community (Fase 3)
 
-**Pricing indicativo:** 2,99 €/mese · 19,99 €/anno (da validare prima del lancio Fase 3).
+**Pricing indicativo:** 3,99 €/mese · 24,99 €/anno (da validare prima del lancio Fase 3).
 
 **Distribuzione:** Google Play Billing (Android) · App Store In-App Purchase (iOS).
 Le commissioni store (15–30%) sono incluse nel pricing.

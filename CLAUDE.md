@@ -128,6 +128,12 @@ Schema corrente: **v4**
 - v3 → aggiunta `project_paints` (palette del kit — vernici associate a un progetto)
 - v4 → aggiunta `shopping_items` (lista della spesa manuale)
 
+## Modello di business (3 tier)
+
+- **Free**: max 2 progetti attivi, max 20 vernici inventario, max 5 foto/progetto, max 5 ricette. Catalogo e lista della spesa illimitati.
+- **Standard** (1,99 €/mese · 12,99 €/anno): rimuove tutti i limiti quantitativi.
+- **Pro** (3,99 €/mese · 24,99 €/anno): tutto Standard + funzionalità AI (Claude API, cloud sync, community).
+
 ## Funzionalità Pro (Fase 3)
 
 Le funzionalità AI richiedono abbonamento Pro. Gate e paywall sono già predisposti:
