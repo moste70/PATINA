@@ -353,7 +353,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | Task | Priorità | Descrizione | Come risolvere | Stato |
 |------|----------|-------------|----------------|-------|
 | DT.1 | 🔴 Alta | `CustomPaints` non registrata in `@DriftDatabase` — la tabella non viene creata nel DB SQLite, tutto il flusso vernici manuali è non funzionante a runtime | Aggiungere `CustomPaints` alla lista tables in `app_database.dart` e incrementare `schemaVersion` a 2 con migrazione | ✅ Risolto (serve `build_runner build` per rigenerare .g.dart) |
-| DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ⬜ Da fare |
+| DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ✅ Già risolto — `initializeDemoProject()` è chiamata dentro `_finish()` in `onboarding_screen.dart`, cioè solo al tap su "Inizia" nell'ultimo step |
 | DT.3 | 🟡 Media | `colorScheme.background` / `onBackground` / `surfaceVariant` deprecati in Flutter 3.18+ — genera warning in build | Migrazione completa: `background→surface`, `onBackground→onSurface`, `surface→surfaceContainer`, `surfaceVariant→surfaceContainerHigh` in tutti i file dart | ✅ Risolto |
 | DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ✅ Risolto |
 | DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ⬜ Da fare |
@@ -381,7 +381,7 @@ Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task 
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
 Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico █████░░░░░  50% — DT.1/3/4/6/7/8/9/10/12/13 risolti; DT.2/5 aperti
+Debito Tecnico ██████░░░░  60% — DT.1/2/3/4/6/7/8/9/10/12/13 risolti; DT.5 aperto
 ```
 
 ### Schema DB attuale: v6
@@ -394,8 +394,7 @@ Debito Tecnico █████░░░░░  50% — DT.1/3/4/6/7/8/9/10/12/13
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🔴 `DT.2` — Fix ordine demo project / onboarding
-2. 🟡 `DT.5` — Allineare comportamento note progetto (autosave vs bottoni)
+1. 🟡 `DT.5` — Allineare comportamento note progetto (autosave vs bottoni)
 3. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
 5. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
 6. 🟢 `1B.10` — Ordinamento inventario
