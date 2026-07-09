@@ -89,7 +89,8 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
   final _notesCtrl = TextEditingController();
   final _tagsCtrl = TextEditingController();
 
-  String? _technique;
+  String? _finish;
+  int? _coats;
   final List<_IngredientDraft> _ingredients = [];
   bool _saving = false;
   bool _showOptional = false;
@@ -102,7 +103,8 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
     final r = widget.recipe;
     if (r != null) {
       _nameCtrl.text = r.name;
-      _technique = r.technique;
+      _finish = r.finish;
+      _coats = r.coats;
       _dilutionCtrl.text = r.dilution ?? '';
       _surfaceCtrl.text = r.surface ?? '';
       _notesCtrl.text = r.notes ?? '';
@@ -160,7 +162,8 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           widget.recipe!.id,
           RecipesCompanion(
             name: Value(name),
-            technique: Value(_technique),
+            finish: Value(_finish),
+            coats: Value(_coats),
             dilution: Value(_dilutionCtrl.text.trim().isEmpty
                 ? null
                 : _dilutionCtrl.text.trim()),
@@ -190,7 +193,8 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
       } else {
         final id = await repo.createRecipe(RecipesCompanion(
           name: Value(name),
-          technique: Value(_technique),
+          finish: Value(_finish),
+          coats: Value(_coats),
           dilution: Value(_dilutionCtrl.text.trim().isEmpty
               ? null
               : _dilutionCtrl.text.trim()),
@@ -269,20 +273,39 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── Tecnica ────────────────────────────────────────────────────
-          Text(l.recipeTechniqueLabel,
+          // ── Finitura ───────────────────────────────────────────────────
+          Text(l.recipeFinishLabel,
               style: tt.labelSmall
                   ?.copyWith(color: scheme.onSurfaceVariant)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: AppConstants.paintTechniques.map((t) {
-              final selected = _technique == t;
+            children: ['opaco', 'satinato', 'lucido'].map((f) {
+              final selected = _finish == f;
               return ChoiceChip(
-                label: Text(l.techniqueLabel(t)),
+                label: Text(l.finishLabel(f)),
                 selected: selected,
                 onSelected: (_) =>
-                    setState(() => _technique = selected ? null : t),
+                    setState(() => _finish = selected ? null : f),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Numero di mani ─────────────────────────────────────────────
+          Text(l.recipeCoatsLabel,
+              style: tt.labelSmall
+                  ?.copyWith(color: scheme.onSurfaceVariant)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [1, 2, 3, 4].map((n) {
+              final selected = _coats == n;
+              return ChoiceChip(
+                label: Text('$n'),
+                selected: selected,
+                onSelected: (_) =>
+                    setState(() => _coats = selected ? null : n),
               );
             }).toList(),
           ),

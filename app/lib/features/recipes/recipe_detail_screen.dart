@@ -421,10 +421,16 @@ class _DetailsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = <Widget>[];
 
-    if (recipe.technique != null)
+    if (recipe.finish != null)
       rows.add(_DetailRow(
-          label: l.recipeTechniqueLabel,
-          value: l.techniqueLabel(recipe.technique),
+          label: l.recipeFinishLabel,
+          value: l.finishLabel(recipe.finish),
+          tt: tt,
+          scheme: scheme));
+    if (recipe.coats != null)
+      rows.add(_DetailRow(
+          label: l.recipeCoatsLabel,
+          value: '${recipe.coats}',
           tt: tt,
           scheme: scheme));
     if (recipe.dilution != null && recipe.dilution!.isNotEmpty)

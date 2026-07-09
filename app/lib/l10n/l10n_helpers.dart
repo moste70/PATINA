@@ -27,6 +27,13 @@ extension AppL10nHelpers on AppL10n {
         _ => technique ?? '',
       };
 
+  String finishLabel(String? finish) => switch (finish) {
+        'opaco' => recipeFinishMatte,
+        'satinato' => recipeFinishSatin,
+        'lucido' => recipeFinishGloss,
+        _ => finish ?? '',
+      };
+
   String deltaELabel(double de) {
     if (de <= 2) return recipeDeltaExcellent;
     if (de <= 5) return recipeDeltaGood;

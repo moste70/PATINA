@@ -267,9 +267,9 @@ class _RecipeCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        if (recipe.technique != null) ...[
+                        if (recipe.finish != null) ...[
                           _TechChip(
-                              label: l.techniqueLabel(recipe.technique),
+                              label: l.finishLabel(recipe.finish),
                               scheme: scheme,
                               tt: tt),
                           const SizedBox(width: 8),

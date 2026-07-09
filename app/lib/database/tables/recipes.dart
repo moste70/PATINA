@@ -5,7 +5,9 @@ class Recipes extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get photoPath => text().nullable()();
-  TextColumn get technique => text().nullable()();
+  TextColumn get technique => text().nullable()(); // legacy, non più usato in UI
+  TextColumn get finish => text().nullable()();    // opaco|satinato|lucido
+  IntColumn get coats => integer().nullable()();   // numero di mani
   TextColumn get dilution => text().nullable()();
   TextColumn get surface => text().nullable()();
   TextColumn get notes => text().nullable()();
