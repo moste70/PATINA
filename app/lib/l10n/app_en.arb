@@ -259,6 +259,8 @@
   "recipeTagsHint": "e.g. ww2, camouflage, metal",
   "recipeIngredientsSection": "INGREDIENTS",
   "recipeAddIngredient": "Add ingredient",
+  "recipeLinkedProjectsSection": "PROJECTS USING THIS RECIPE",
+  "@recipeLinkedProjectsSection": {},
   "recipeBlendedColorLabel": "Resulting colour",
   "recipeIngredientCount": "{count, plural, one{1 ingredient} other{{count} ingredients}}",
   "recipeDeleteTitle": "Delete recipe?",

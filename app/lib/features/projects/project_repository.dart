@@ -78,6 +78,38 @@ class ProjectRepository {
     return row != null;
   }
 
+  // ── Progetti che usano una o più vernici della ricetta ───────────────────
+
+  Stream<List<Project>> watchProjectsUsingPaints(
+      List<({String brand, String code})> paints) {
+    if (paints.isEmpty) return Stream.value([]);
+    final conditions =
+        paints.map((_) => '(pp.brand = ? AND pp.code = ?)').join(' OR ');
+    final args = paints.expand((p) => [p.brand, p.code]).toList();
+    final sql = '''
+      SELECT DISTINCT p.*
+      FROM projects p
+      JOIN project_paints pp ON pp.project_id = p.id
+      WHERE $conditions
+      ORDER BY p.updated_at DESC
+    ''';
+    return _db.customSelect(sql,
+        variables: args.map(Variable.withString).toList(),
+        readsFrom: {_db.projects, _db.projectPaints}).watch().map((rows) =>
+        rows.map((r) => Project(
+              id: r.read<int>('id'),
+              name: r.read<String>('name'),
+              brand: r.readNullable<String>('brand'),
+              scale: r.readNullable<String>('scale'),
+              category: r.readNullable<String>('category'),
+              coverPhoto: r.readNullable<String>('cover_photo'),
+              status: r.read<String>('status'),
+              notes: r.readNullable<String>('notes'),
+              createdAt: r.read<int>('created_at'),
+              updatedAt: r.read<int>('updated_at'),
+            )).toList());
+  }
+
   // ── Lista della spesa — voci manuali ─────────────────────────────────────
 
   Stream<List<ShoppingItem>> watchShoppingItems() =>

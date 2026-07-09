@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../database/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/l10n_helpers.dart';
 import '../../shared/utils/lab_mixer.dart';
 import '../../shared/widgets/hex_color_chip.dart';
+import '../projects/project_repository.dart';
 import 'recipe_repository.dart';
 import 'create_recipe_screen.dart';
 
@@ -19,6 +21,18 @@ final _ingredientsProvider =
     StreamProvider.autoDispose.family<List<RecipeIngredient>, int>(
         (ref, recipeId) =>
             ref.watch(recipeRepositoryProvider).watchIngredients(recipeId));
+
+final _linkedProjectsProvider =
+    StreamProvider.autoDispose.family<List<Project>, List<RecipeIngredient>>(
+        (ref, ingredients) {
+  final paints = ingredients
+      .where((i) => i.brand != null && i.code != null)
+      .map((i) => (brand: i.brand!, code: i.code!))
+      .toList();
+  return ref
+      .watch(projectRepositoryProvider)
+      .watchProjectsUsingPaints(paints);
+});
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -120,6 +134,15 @@ class RecipeDetailScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: _DetailsSection(
                   recipe: recipe,
+                  scheme: scheme,
+                  tt: tt,
+                  l: l,
+                ),
+              ),
+              // ── Progetti collegati ───────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _LinkedProjectsSection(
+                  ingredients: ingredients,
                   scheme: scheme,
                   tt: tt,
                   l: l,
@@ -512,6 +535,84 @@ class _TagRow extends StatelessWidget {
                 ))
             .toList(),
       ),
+    );
+  }
+}
+
+// ── Progetti collegati ────────────────────────────────────────────────────────
+
+class _LinkedProjectsSection extends ConsumerWidget {
+  final List<RecipeIngredient> ingredients;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  final AppL10n l;
+
+  const _LinkedProjectsSection({
+    required this.ingredients,
+    required this.scheme,
+    required this.tt,
+    required this.l,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final projectsAsync = ref.watch(_linkedProjectsProvider(ingredients));
+    return projectsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (projects) {
+        if (projects.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.recipeLinkedProjectsSection,
+                style: tt.labelSmall
+                    ?.copyWith(color: scheme.primary, letterSpacing: 1.2),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: projects.map((p) {
+                    final statusColor = switch (p.status) {
+                      'in_progress' => const Color(0xFF3FA8A0),
+                      'completed' => const Color(0xFF2F8F57),
+                      _ => null,
+                    };
+                    return ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                      title: Text(p.name, style: tt.bodyMedium),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (statusColor != null)
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                  color: statusColor, shape: BoxShape.circle),
+                            ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.chevron_right,
+                              color: scheme.onSurfaceVariant.withOpacity(0.5)),
+                        ],
+                      ),
+                      onTap: () => context.push('/projects/${p.id}'),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

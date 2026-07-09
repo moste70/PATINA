@@ -555,6 +555,8 @@
   "@recipeIngredientsSection": {},
   "recipeAddIngredient": "Aggiungi ingrediente",
   "@recipeAddIngredient": {},
+  "recipeLinkedProjectsSection": "PROGETTI CHE USANO QUESTA RICETTA",
+  "@recipeLinkedProjectsSection": {},
   "recipeBlendedColorLabel": "Colore risultante",
   "@recipeBlendedColorLabel": {},
   "recipeIngredientCount": "{count, plural, one{1 ingrediente} other{{count} ingredienti}}",
