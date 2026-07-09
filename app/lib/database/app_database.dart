@@ -24,20 +24,20 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.createTable(customPaints);
-      }
-      if (from < 3) {
-        await m.createTable(projectPaints);
-      }
-      if (from < 4) {
-        await m.createTable(shoppingItems);
+      if (from < 2) await m.createTable(customPaints);
+      if (from < 3) await m.createTable(projectPaints);
+      if (from < 4) await m.createTable(shoppingItems);
+      if (from < 5) {
+        await m.addColumn(recipeIngredients, recipeIngredients.brand);
+        await m.addColumn(recipeIngredients, recipeIngredients.code);
+        await m.addColumn(recipeIngredients, recipeIngredients.paintName);
+        await m.addColumn(recipeIngredients, recipeIngredients.hex);
       }
     },
   );

@@ -20,6 +20,20 @@ extension AppL10nHelpers on AppL10n {
         _ => categoryOther,
       };
 
+  String techniqueLabel(String? technique) => switch (technique) {
+        'brush' => techniqueBrush,
+        'airbrush' => techniqueAirbrush,
+        'sponge' => techniqueSponge,
+        _ => technique ?? '',
+      };
+
+  String deltaELabel(double de) {
+    if (de <= 2) return recipeDeltaExcellent;
+    if (de <= 5) return recipeDeltaGood;
+    if (de <= 10) return recipeDeltaApprox;
+    return recipeDeltaFar;
+  }
+
   String paintLineLabel(String line) => switch (line) {
         'model_color' => paintLineModelColor,
         'model_air' => paintLineModelAir,

@@ -5,11 +5,12 @@ import '../features/onboarding/onboarding_screen.dart';
 import '../features/onboarding/splash_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/projects/project_detail/project_detail_screen.dart';
-import '../shared/widgets/placeholder_screen.dart';
 import '../shared/widgets/nav_icons.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shopping/shopping_list_screen.dart';
 import '../features/paints/paints_screen.dart';
+import '../features/recipes/recipes_screen.dart';
+import '../features/recipes/recipe_detail_screen.dart';
 import '../l10n/app_localizations.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
@@ -65,10 +66,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/recipes',
             name: 'recipes',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Ricette',
-              icon: Icons.science_outlined,
-            ),
+            builder: (context, state) => const RecipesScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                name: 'recipe-detail',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return RecipeDetailScreen(recipeId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/settings',
