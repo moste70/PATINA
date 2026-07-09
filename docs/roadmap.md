@@ -361,6 +361,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | DT.9 | 🟢 Bassa | `docs/architecture.md` documenta solo 3 cataloghi (Vallejo MC, Citadel, Tamiya XF) — nella realtà sono 11 con ~1.000 colori | Aggiornare la sezione cataloghi in architecture.md | ✅ Risolto |
 | DT.10 | 🟢 Bassa | `CLAUDE.md` mancante — nessuna guida per Claude Code su comandi build, codegen Drift, convenzioni naming | Creare `CLAUDE.md` alla radice con: `cd app && flutter pub get`, `flutter pub run build_runner build`, convenzioni progetto | ✅ Risolto |
 | DT.11 | 🟢 Bassa | OCR istruzioni kit — MLKit offline riconosce il testo ma fallisce su font piccoli, layout multi-colonna e codici parzialmente sovrapposti a icone (es. Tamiya). La funzione è utile come aiuto alla compilazione ma non affidabile al 100%. Limite strutturale dell'OCR testuale; da risolvere in Fase 3 con **AI Vision** (vedi milestone 3.8). Nessun intervento necessario ora. | Rimandato a Fase 3 — milestone 3.8 | ⏳ Rimandato |
+| DT.12 | 🟢 Bassa | `HexColorChip` — bordo fisso `scheme.outline` non visibile sui colori molto scuri (nero, navy) su sfondo scuro, né sui colori molto chiari (bianco, avorio) su sfondo chiaro | `HexColorChip.build()`: calcola luminanza relativa WCAG del colore; se luminanza > 0.18 applica bordo `nero/25%`, altrimenti `bianco/35%`. Applicato globalmente a tutte le schermate (palette, shopping, scan, inventario, ricette). | ✅ Risolto |
 
 ---
 
