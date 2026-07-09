@@ -87,13 +87,15 @@
 
 | Task | Descrizione | Stato |
 |------|-------------|-------|
-| 1C.1 | Lista ricette con foto anteprima | ⬜ Da fare |
-| 1C.2 | Creazione ricetta — selezione vernici + proporzioni | ⬜ Da fare |
-| 1C.3 | Foto risultato dalla camera o galleria | ⬜ Da fare |
-| 1C.4 | Tag e ricerca ricette | ⬜ Da fare |
+| 1C.1 | Lista ricette con chip colore CIELAB e tag | ✅ Completato |
+| 1C.2 | Creazione ricetta — selezione vernici da inventario/catalogo + proporzioni, finitura, numero di mani | ✅ Completato |
+| 1C.3 | Foto risultato dalla camera o galleria | ⬜ Non implementato — sostituito da colore CIELAB auto-generato |
+| 1C.4 | Tag e ricerca ricette per nome/tag | ✅ Completato |
 | 1C.5 | Duplica ricetta | ⬜ Da fare |
-| 1C.6 | Algoritmo miscelazione CIELAB (HEX → suggerimento ricetta) | ⬜ Da fare |
-| 1C.7 | Collegamento ricette ↔ progetti | ⬜ Da fare |
+| 1C.6 | Colore miscelato CIELAB calcolato automaticamente dagli ingredienti (chip esagonale in tempo reale) | ✅ Completato |
+| 1C.7 | Collegamento ricette ↔ progetti — tab "Ricette personali" nel picker palette kit; sezione progetti nella scheda ricetta | ✅ Completato |
+| 1C.8 | Schermata dettaglio ricetta con colore blended, ingredienti, ΔE match e lista progetti collegati | ✅ Completato |
+| 1C.9 | Cerca ricetta per colore target (HEX picker → ΔE ranking) | ✅ Completato |
 
 ---
 
@@ -362,6 +364,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | DT.10 | 🟢 Bassa | `CLAUDE.md` mancante — nessuna guida per Claude Code su comandi build, codegen Drift, convenzioni naming | Creare `CLAUDE.md` alla radice con: `cd app && flutter pub get`, `flutter pub run build_runner build`, convenzioni progetto | ✅ Risolto |
 | DT.11 | 🟢 Bassa | OCR istruzioni kit — MLKit offline riconosce il testo ma fallisce su font piccoli, layout multi-colonna e codici parzialmente sovrapposti a icone (es. Tamiya). La funzione è utile come aiuto alla compilazione ma non affidabile al 100%. Limite strutturale dell'OCR testuale; da risolvere in Fase 3 con **AI Vision** (vedi milestone 3.8). Nessun intervento necessario ora. | Rimandato a Fase 3 — milestone 3.8 | ⏳ Rimandato |
 | DT.12 | 🟢 Bassa | `HexColorChip` — bordo fisso `scheme.outline` non visibile sui colori molto scuri (nero, navy) su sfondo scuro, né sui colori molto chiari (bianco, avorio) su sfondo chiaro | `HexColorChip.build()`: calcola luminanza relativa WCAG del colore; se luminanza > 0.18 applica bordo `nero/25%`, altrimenti `bianco/35%`. Applicato globalmente a tutte le schermate (palette, shopping, scan, inventario, ricette). | ✅ Risolto |
+| DT.13 | 🟡 Media | Selector quantità inventario — 4 bottoni GestureDetector+AnimatedContainer sostituiti con `DropdownButtonFormField` nel detail sheet (`paints_screen.dart`). | ✅ Risolto |
 
 ---
 
@@ -369,24 +372,32 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ```
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
-Fase 1A      █████████░   93%  — card+foto+badge+filtro stato OK; viewer foto OK; manca modifica progetto, ricerca per nome
-Fase 1B      █░░░░░░░░░   14%  — lista della spesa (1B.6) completata; catalogo + inventario da fare
-Fase 1C      ░░░░░░░░░░    0%  — Ricette
+Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa
+Fase 1B      ████████░░   80%  — inventario + catalogo + lista spesa completati; mancano 1B.9/10/11/12/13/14/15
+Fase 1C      █████████░   90%  — lista, creazione, dettaglio, ricerca, colore CIELAB, collegamento progetti completati; manca 1C.5 (duplica)
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
-Fase 2       ███░░░░░░░   30%  — i18n IT+EN + selezione lingua completati; manca migrazione stringhe + ES/FR
+Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
 Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risolti; DT.2/5 aperti
+Debito Tecnico █████░░░░░  50% — DT.1/3/4/6/7/8/9/10/12/13 risolti; DT.2/5 aperti
 ```
+
+### Schema DB attuale: v6
+- v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
+- v2 → aggiunta `custom_paints`
+- v3 → aggiunta `project_paints` (palette del kit)
+- v4 → aggiunta `shopping_items` (lista della spesa manuale)
+- v5 → aggiunta colonne `paint_id`, `catalog_id`, `hex` a `recipe_ingredients`
+- v6 → aggiunta colonne `finish`, `coats` a `recipes`
 
 ### Prossimi step immediati (ordine esecuzione)
 
 1. 🔴 `DT.2` — Fix ordine demo project / onboarding
-2. 🟡 `1A.6` — Modifica, archiviazione, eliminazione progetto
-3. 🟡 `2.3` — Migrazione stringhe hardcoded → `AppL10n` (feature per feature)
-4. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
-5. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
-6. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
-7. 🟢 `1A.7` — Ricerca per nome nell'archivio (filtro stato già fatto)
+2. 🟡 `DT.5` — Allineare comportamento note progetto (autosave vs bottoni)
+3. 🟡 `1C.5` — Duplica ricetta
+4. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
+5. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
+6. 🟢 `1B.10` — Ordinamento inventario
+7. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`

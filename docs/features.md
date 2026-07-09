@@ -431,21 +431,33 @@ Miscele personalizzate salvate con proporzioni esatte.
 
 **Dati di ogni ricetta:**
 - Nome (es. "Grigio Panzer invecchiato")
-- Foto del risultato
 - Lista ingredienti: vernice + percentuale
-- Tecnica: `Pennello` · `Aerografo` · `Spugnatura`
-- Diluizione consigliata
-- Superficie: plastica, metallo, resina
+- Colore risultante: calcolato automaticamente per miscelazione CIELAB dagli ingredienti (nessuna foto necessaria)
+- Finitura: `Opaco` · `Satinato` · `Lucido` (opzionale)
+- Numero di mani (opzionale)
+- Diluizione consigliata (testo libero)
+- Superficie: plastica, metallo, resina (testo libero)
 - Note e tag liberi
 - Collegamento ai progetti in cui è stata usata
+
+> **Nota:** il campo `Tecnica` (pennello/aerografo/spugna) è stato rimosso dall'interfaccia nella Fase 1C; se necessario può essere annotato nelle Note. Il campo rimane nello schema DB (`technique`) per retrocompatibilità ma non è più esposto.
 
 **Funzionalità:**
 - Creazione con selezione vernici da inventario o catalogo
 - Proporzioni via slider o valore numerico
-- Foto dalla camera o galleria
+- Colore miscelato CIELAB visualizzato in tempo reale (chip esagonale)
 - Ricerca per nome o tag
-- Duplica ricetta come base per varianti
+- Duplica ricetta come base per varianti (1C.5, da implementare)
 - Scala automatica delle quantità
+
+**Collegamento Ricette ↔ Progetti:**
+
+Le ricette vengono collegate ai progetti tramite la palette del kit. Nel bottom sheet "Aggiungi al kit" (accessibile dalla sezione *Colori del Kit* di ogni progetto) è presente un tab **"Ricette personali"** che elenca tutte le ricette salvate. Selezionando una o più ricette e confermando, vengono aggiunte alla palette del progetto come voci speciali (brand `'ricetta'`, code = ID ricetta).
+
+- Nella scheda progetto, le ricette appaiono nella palette con uno stile distinto (bordo primary, label "Ricetta personale"); il tap naviga alla scheda ricetta.
+- Nella scheda ricetta, la sezione **"PROGETTI CHE USANO QUESTA RICETTA"** mostra tutti i progetti che hanno aggiunto quella ricetta alla propria palette; il tap naviga al progetto.
+- La relazione è bidirezionale e in tempo reale (Drift stream).
+- Implementazione: colonna `brand='ricetta'` + `code=recipeId` nella tabella `project_paints` — nessuna tabella di join separata.
 
 #### 2.4 Assistenza alla Miscelazione
 
@@ -507,8 +519,10 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app |
 | Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (checkbox in-memory) + voci manuali (DB), swipe-to-delete |
 | Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — crop manuale, preprocessing scala di grigi, MLKit OCR, riconosce codici, aggiunge a palette |
-| Vernici / Inventario | `/paints` | ⬜ Placeholder |
-| Ricette | `/recipes` | ⬜ Placeholder |
+| Vernici / Inventario | `/paints` | ✅ Implementato — inventario con griglia esagonale, catalogo offline, aggiunta/rimozione, quantità dropdown, stats Free |
+| Catalogo vernici | (tab in /paints) | ✅ Implementato — sfoglia per marca e linea, ricerca codice/nome, aggiunta all'inventario |
+| Ricette | `/recipes` | ✅ Implementato — lista, creazione/modifica, ingredienti con proporzioni, colore CIELAB auto, finitura, mani, tag, ricerca, collegamento progetti |
+| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — palette con tab Catalogo + Ricette personali, scan OCR, shopping list automatica, swipe-to-delete |
 
 ---
 

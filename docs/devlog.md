@@ -5,6 +5,49 @@
 
 ---
 
+## Sessione 2026-07-09 — Fase 1C completa: Ricette, collegamento progetti, UX inventario
+
+### Cosa è stato fatto
+
+**Schema DB v6:**
+- Aggiunta colonna `finish` (nullable text: `opaco`|`satinato`|`lucido`) a `recipes`
+- Aggiunta colonna `coats` (nullable int, numero di mani) a `recipes`
+- Migrazione `if (from < 6)` in `app_database.dart`
+- Campo `technique` mantenuto in DB per retrocompatibilità ma rimosso dall'UI
+
+**Schermata Ricette — completamento Fase 1C:**
+- `create_recipe_screen.dart`: sostituito ChoiceChip tecnica con chip finitura (Opaco/Satinato/Lucido) e chip numero di mani (1–4, deselezionabili)
+- `recipe_detail_screen.dart`: sezione dettagli mostra finitura e numero di mani (se presenti); tecnica rimossa
+- `recipes_screen.dart`: chip in lista mostra finitura invece di tecnica
+
+**Collegamento Ricette ↔ Progetti (1C.7):**
+- Approccio senza nuova tabella: la tabella esistente `project_paints` viene riutilizzata con `brand='ricetta'` e `code=recipeId.toString()` come sentinella
+- `project_palette_sliver.dart`: tab "Ricette personali" nel bottom sheet "Aggiungi al kit" via `SegmentedButton`; le ricette appaiono con chip CIELAB e nome; selezione multipla → aggiunta alla palette
+- Nella palette del progetto, le voci ricetta appaiono con stile distinto (`_RecipePaletteRow`): bordo primary, label "Ricetta personale", tap naviga alla scheda ricetta
+- `project_repository.dart`: aggiunto `watchProjectsUsingRecipe(int recipeId)` — query SQL su `project_paints` WHERE brand='ricetta' AND code=?
+- `recipe_detail_screen.dart`: provider `_linkedProjectsProvider` ora è `family<List<Project>, int>` basato su `recipeId`; sezione "PROGETTI CHE USANO QUESTA RICETTA" mostra i progetti collegati con tap verso `/projects/:id`
+
+**UX Inventario — quantità dropdown:**
+- `paints_screen.dart`: sostituito il selettore 4-bottoni (GestureDetector+AnimatedContainer) con `DropdownButtonFormField<String>` nel detail sheet; ogni voce ha cerchio colorato 10dp + label JetBrains Mono nel colore corrispondente alla quantità
+
+**i18n:**
+- `app_it.arb` / `app_en.arb`: aggiunte chiavi `recipeFinishLabel`, `recipeFinishMatte`, `recipeFinishSatin`, `recipeFinishGloss`, `recipeCoatsLabel`, `paletteCatalogTab`, `paletteRecipesTab`, `paletteRecipeLabel`, `recipeLinkedProjectsSection`; aggiornata `paletteAddPaintsTitle` → "Aggiungi al kit" / "Add to kit"
+- `l10n_helpers.dart`: aggiunto helper `finishLabel(String? finish)` usato in dettaglio e lista ricette
+
+### Decisioni
+
+- **Nessuna tabella `project_recipes`**: riutilizzare `project_paints` con brand sentinella evita una migrazione aggiuntiva e integra naturalmente nel flusso palette esistente (shopping list, OCR, swipe-to-delete)
+- **Colore ricetta calcolato, non fotografato**: CIELAB blending in tempo reale dagli ingredienti; eliminata la necessità di foto risultato, più utile e consistente
+- **Tecnica rimossa dall'UI**: i campi tecnica/pressione/primer hanno senso nelle Note; manteniamo finitura (impatta il risultato visivo) e numero di mani (dato operativo rilevante)
+- **Picker unificato**: un unico bottom sheet "Aggiungi al kit" con SegmentedButton Catalogo/Ricette evita frammentazione UX
+
+### Problemi risolti
+
+- SQLite non supporta row-value syntax `(a, b) IN (...)` su tutte le versioni — sostituito con OR conditions `(a = ? AND b = ?)`
+- `_linkedProjectsProvider` inizialmente basato su brand+code degli ingredienti (cercava progetti con le stesse vernici) — corretto: ora cerca esplicitamente `brand='ricetta' AND code=recipeId`
+
+---
+
 ## Sessione 2026-07-08 — Modello business 3 tier, UX vernici, gestione progetti
 
 ### Cosa è stato fatto
