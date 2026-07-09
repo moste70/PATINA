@@ -23,16 +23,8 @@ final _ingredientsProvider =
             ref.watch(recipeRepositoryProvider).watchIngredients(recipeId));
 
 final _linkedProjectsProvider =
-    StreamProvider.autoDispose.family<List<Project>, List<RecipeIngredient>>(
-        (ref, ingredients) {
-  final paints = ingredients
-      .where((i) => i.brand != null && i.code != null)
-      .map((i) => (brand: i.brand!, code: i.code!))
-      .toList();
-  return ref
-      .watch(projectRepositoryProvider)
-      .watchProjectsUsingPaints(paints);
-});
+    StreamProvider.autoDispose.family<List<Project>, int>((ref, recipeId) =>
+        ref.watch(projectRepositoryProvider).watchProjectsUsingRecipe(recipeId));
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -142,7 +134,7 @@ class RecipeDetailScreen extends ConsumerWidget {
               // ── Progetti collegati ───────────────────────────────────────
               SliverToBoxAdapter(
                 child: _LinkedProjectsSection(
-                  ingredients: ingredients,
+                  recipeId: recipeId,
                   scheme: scheme,
                   tt: tt,
                   l: l,
@@ -548,13 +540,13 @@ class _TagRow extends StatelessWidget {
 // ── Progetti collegati ────────────────────────────────────────────────────────
 
 class _LinkedProjectsSection extends ConsumerWidget {
-  final List<RecipeIngredient> ingredients;
+  final int recipeId;
   final ColorScheme scheme;
   final TextTheme tt;
   final AppL10n l;
 
   const _LinkedProjectsSection({
-    required this.ingredients,
+    required this.recipeId,
     required this.scheme,
     required this.tt,
     required this.l,
@@ -562,7 +554,7 @@ class _LinkedProjectsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final projectsAsync = ref.watch(_linkedProjectsProvider(ingredients));
+    final projectsAsync = ref.watch(_linkedProjectsProvider(recipeId));
     return projectsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),

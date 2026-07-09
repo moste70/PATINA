@@ -7,8 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'scan_instructions_sheet.dart';
 import '../../../database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/utils/lab_mixer.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
+import '../../recipes/recipe_repository.dart';
 import '../project_repository.dart';
+
+const _kRecipeBrand = 'ricetta';
 
 // ── Catalog search ────────────────────────────────────────────────────────────
 
@@ -72,6 +76,13 @@ final _projectPaintsProvider =
     StreamProvider.autoDispose.family<List<ProjectPaint>, int>((ref, id) {
   return ref.watch(projectRepositoryProvider).watchProjectPaints(id);
 });
+
+final _allRecipesProvider = StreamProvider.autoDispose<List<Recipe>>((ref) =>
+    ref.watch(recipeRepositoryProvider).watchAllRecipes());
+
+final _allIngredientsForSheetProvider =
+    StreamProvider.autoDispose<List<RecipeIngredient>>((ref) =>
+        ref.watch(recipeRepositoryProvider).watchAllIngredients());
 
 // ── Main widget ───────────────────────────────────────────────────────────────
 
@@ -347,53 +358,50 @@ class _PaletteRow extends ConsumerWidget {
         child: Icon(Icons.delete_outline, color: scheme.onError),
       ),
       onDismissed: (_) => repo.deleteProjectPaint(paint.id),
-      child: FutureBuilder<bool>(
-        future: repo.isPaintInInventory(paint.brand, paint.code),
-        builder: (context, snap) {
-          final inStock = snap.data ?? false;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                HexColorChip(
-                  color: _hexColor(paint.hex),
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: paint.brand == _kRecipeBrand
+          ? _RecipePaletteRow(paint: paint, scheme: scheme, tt: tt)
+          : FutureBuilder<bool>(
+              future: repo.isPaintInInventory(paint.brand, paint.code),
+              builder: (context, snap) {
+                final inStock = snap.data ?? false;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
                     children: [
-                      Text(
-                        paint.code,
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurface,
-                          letterSpacing: 0.3,
+                      HexColorChip(color: _hexColor(paint.hex), size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              paint.code,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onSurface,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            Text(paint.name,
+                                style: tt.bodySmall,
+                                overflow: TextOverflow.ellipsis),
+                          ],
                         ),
                       ),
-                      Text(
-                        paint.name,
-                        style: tt.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      const SizedBox(width: 8),
+                      _StockBadge(inStock: inStock, scheme: scheme),
                     ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                _StockBadge(inStock: inStock, scheme: scheme),
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
@@ -403,6 +411,62 @@ class _PaletteRow extends ConsumerWidget {
     } catch (_) {
       return Colors.grey;
     }
+  }
+}
+
+// ── Recipe palette row ────────────────────────────────────────────────────────
+
+class _RecipePaletteRow extends StatelessWidget {
+  final ProjectPaint paint;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _RecipePaletteRow(
+      {required this.paint, required this.scheme, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => context.push('/recipes/${paint.code}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: scheme.primary.withOpacity(0.25), width: 1),
+        ),
+        child: Row(
+          children: [
+            HexColorChip(
+              color: Color(
+                  int.tryParse(paint.hex.replaceFirst('#', '0xFF')) ??
+                      0xFF888888),
+              size: 32,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(paint.name,
+                      style: tt.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis),
+                  Text(l.paletteRecipeLabel,
+                      style: tt.labelSmall
+                          ?.copyWith(color: scheme.primary)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right,
+                color: scheme.onSurfaceVariant.withOpacity(0.5), size: 18),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -466,11 +530,15 @@ class _AddPaintSheet extends ConsumerStatefulWidget {
   ConsumerState<_AddPaintSheet> createState() => _AddPaintSheetState();
 }
 
+enum _SheetMode { catalog, recipes }
+
 class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   final _controller = TextEditingController();
   List<_CatalogPaint> _results = [];
   final Set<_CatalogPaint> _selected = {};
+  final Set<int> _selectedRecipeIds = {};
   bool _isSaving = false;
+  _SheetMode _mode = _SheetMode.catalog;
 
   @override
   void dispose() {
@@ -506,21 +574,60 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
     });
   }
 
-  Future<void> _confirm() async {
-    if (_selected.isEmpty) return;
-    setState(() => _isSaving = true);
+  void _toggleRecipe(Recipe r, String blendedHex) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_selectedRecipeIds.contains(r.id)) {
+        _selectedRecipeIds.remove(r.id);
+      } else {
+        _selectedRecipeIds.add(r.id);
+      }
+    });
+  }
+
+  Future<void> _confirm(
+      List<Recipe> recipes, List<RecipeIngredient> allIngredients) async {
     final repo = ref.read(projectRepositoryProvider);
-    for (final p in _selected) {
-      await repo.addProjectPaint(
-        projectId: widget.projectId,
-        brand: p.brand,
-        code: p.code,
-        name: p.name,
-        hex: p.hex,
-      );
+    setState(() => _isSaving = true);
+
+    if (_mode == _SheetMode.catalog) {
+      for (final p in _selected) {
+        await repo.addProjectPaint(
+          projectId: widget.projectId,
+          brand: p.brand,
+          code: p.code,
+          name: p.name,
+          hex: p.hex,
+        );
+      }
+    } else {
+      for (final id in _selectedRecipeIds) {
+        final recipe = recipes.firstWhere((r) => r.id == id);
+        final ings = allIngredients
+            .where((i) =>
+                i.recipeId == id && i.hex != null && i.hex!.isNotEmpty)
+            .toList();
+        final blended = ings.isNotEmpty
+            ? blendColorsInLab(
+                ings.map((i) => (hex: i.hex!, weight: i.percentage)).toList())
+            : const Color(0xFF888888);
+        final hex =
+            '#${blended.value.toRadixString(16).substring(2).toUpperCase()}';
+        await repo.addProjectPaint(
+          projectId: widget.projectId,
+          brand: _kRecipeBrand,
+          code: id.toString(),
+          name: recipe.name,
+          hex: hex,
+        );
+      }
     }
+
     if (mounted) Navigator.pop(context);
   }
+
+  int get _count =>
+      _mode == _SheetMode.catalog ? _selected.length : _selectedRecipeIds.length;
 
   @override
   Widget build(BuildContext context) {
@@ -528,7 +635,8 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final catalogAsync = ref.watch(_catalogProvider);
-    final count = _selected.length;
+    final recipesAsync = ref.watch(_allRecipesProvider);
+    final ingredientsAsync = ref.watch(_allIngredientsForSheetProvider);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -554,10 +662,17 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
             child: Row(
               children: [
-                Expanded(child: Text(l.paletteAddPaintsTitle, style: tt.titleMedium)),
-                if (count > 0)
+                Expanded(
+                    child: Text(l.paletteAddPaintsTitle,
+                        style: tt.titleMedium)),
+                if (_count > 0)
                   FilledButton(
-                    onPressed: _isSaving ? null : _confirm,
+                    onPressed: _isSaving
+                        ? null
+                        : () => _confirm(
+                              recipesAsync.value ?? [],
+                              ingredientsAsync.value ?? [],
+                            ),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, 36),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -568,92 +683,175 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(l.paletteAddCountButton(count)),
+                        : Text(l.paletteAddCountButton(_count)),
                   ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          // Search field
+          const SizedBox(height: 8),
+          // Mode toggle
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: catalogAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (all) => TextField(
-                controller: _controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l.paintSearchHint,
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  suffixIcon: _controller.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            _search('', all);
-                          },
-                        )
-                      : null,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SegmentedButton<_SheetMode>(
+              segments: [
+                ButtonSegment(
+                  value: _SheetMode.catalog,
+                  label: Text(l.paletteCatalogTab),
+                  icon: const Icon(Icons.palette_outlined, size: 16),
                 ),
-                onChanged: (q) => _search(q, all),
-              ),
+                ButtonSegment(
+                  value: _SheetMode.recipes,
+                  label: Text(l.paletteRecipesTab),
+                  icon: const Icon(Icons.science_outlined, size: 16),
+                ),
+              ],
+              selected: {_mode},
+              onSelectionChanged: (s) =>
+                  setState(() => _mode = s.first),
             ),
           ),
+          // Search field (catalog only)
+          if (_mode == _SheetMode.catalog)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: catalogAsync.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (all) => TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: l.paintSearchHint,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _controller.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _controller.clear();
+                              _search('', all);
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: (q) => _search(q, all),
+                ),
+              ),
+            ),
           // Results
           Expanded(
-            child: catalogAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (_, __) =>
-                  Center(child: Text(l.errorCatalogLoad)),
-              data: (_) {
-                if (_results.isEmpty && _controller.text.isEmpty) {
-                  return Center(
-                    child: Text(l.paintSearchPrompt,
-                        style: tt.bodySmall),
-                  );
-                }
-                if (_results.isEmpty) {
-                  return Center(
-                    child: Text(l.searchNoResults, style: tt.bodySmall),
-                  );
-                }
-                return ListView.builder(
-                  controller: scrollCtrl,
-                  itemCount: _results.length,
-                  itemBuilder: (_, i) {
-                    final p = _results[i];
-                    final sel = _selected.contains(p);
-                    return ListTile(
-                      leading: HexColorChip(
-                        color: _hexColor(p.hex),
-                        size: 32,
-                      ),
-                      title: Text(
-                        '${p.code}  ${p.name}',
-                        style: GoogleFonts.jetBrainsMono(
-                            fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(p.brand, style: tt.bodySmall),
-                      trailing: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: sel
-                            ? Icon(Icons.check_circle,
-                                key: const ValueKey('checked'),
-                                color: scheme.primary, size: 24)
-                            : Icon(Icons.radio_button_unchecked,
-                                key: const ValueKey('unchecked'),
-                                color: scheme.outline, size: 24),
-                      ),
-                      selected: sel,
-                      selectedTileColor: scheme.primary.withOpacity(0.08),
-                      onTap: () => _toggle(p),
-                    );
-                  },
-                );
-              },
-            ),
+            child: _mode == _SheetMode.catalog
+                ? catalogAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, __) =>
+                        Center(child: Text(l.errorCatalogLoad)),
+                    data: (_) {
+                      if (_results.isEmpty && _controller.text.isEmpty) {
+                        return Center(
+                            child: Text(l.paintSearchPrompt,
+                                style: tt.bodySmall));
+                      }
+                      if (_results.isEmpty) {
+                        return Center(
+                            child: Text(l.searchNoResults,
+                                style: tt.bodySmall));
+                      }
+                      return ListView.builder(
+                        controller: scrollCtrl,
+                        itemCount: _results.length,
+                        itemBuilder: (_, i) {
+                          final p = _results[i];
+                          final sel = _selected.contains(p);
+                          return ListTile(
+                            leading:
+                                HexColorChip(color: _hexColor(p.hex), size: 32),
+                            title: Text(
+                              '${p.code}  ${p.name}',
+                              style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                            subtitle: Text(p.brand, style: tt.bodySmall),
+                            trailing: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              child: sel
+                                  ? Icon(Icons.check_circle,
+                                      key: const ValueKey('checked'),
+                                      color: scheme.primary,
+                                      size: 24)
+                                  : Icon(Icons.radio_button_unchecked,
+                                      key: const ValueKey('unchecked'),
+                                      color: scheme.outline,
+                                      size: 24),
+                            ),
+                            selected: sel,
+                            selectedTileColor:
+                                scheme.primary.withOpacity(0.08),
+                            onTap: () => _toggle(p),
+                          );
+                        },
+                      );
+                    },
+                  )
+                : recipesAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (recipes) {
+                      if (recipes.isEmpty) {
+                        return Center(
+                            child: Text(l.recipesEmptyTitle,
+                                style: tt.bodySmall));
+                      }
+                      final allIngs = ingredientsAsync.value ?? [];
+                      return ListView.builder(
+                        controller: scrollCtrl,
+                        itemCount: recipes.length,
+                        itemBuilder: (_, i) {
+                          final r = recipes[i];
+                          final ings = allIngs
+                              .where((ing) =>
+                                  ing.recipeId == r.id &&
+                                  ing.hex != null &&
+                                  ing.hex!.isNotEmpty)
+                              .toList();
+                          final blended = ings.isNotEmpty
+                              ? blendColorsInLab(ings
+                                  .map((ing) => (
+                                        hex: ing.hex!,
+                                        weight: ing.percentage
+                                      ))
+                                  .toList())
+                              : scheme.surfaceContainerHighest;
+                          final sel = _selectedRecipeIds.contains(r.id);
+                          return ListTile(
+                            leading: HexColorChip(color: blended, size: 32),
+                            title: Text(r.name, style: tt.bodyMedium),
+                            subtitle: Text(
+                              '${ings.length} ingredienti',
+                              style: tt.bodySmall,
+                            ),
+                            trailing: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              child: sel
+                                  ? Icon(Icons.check_circle,
+                                      key: const ValueKey('checked'),
+                                      color: scheme.primary,
+                                      size: 24)
+                                  : Icon(Icons.radio_button_unchecked,
+                                      key: const ValueKey('unchecked'),
+                                      color: scheme.outline,
+                                      size: 24),
+                            ),
+                            selected: sel,
+                            selectedTileColor:
+                                scheme.primary.withOpacity(0.08),
+                            onTap: () => _toggleRecipe(r, ''),
+                          );
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
       ),

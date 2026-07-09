@@ -341,8 +341,14 @@
   "@paletteCatalogSearch": {},
   "paintSearchPrompt": "Cerca per trovare una vernice",
   "@paintSearchPrompt": {},
-  "paletteAddPaintsTitle": "Aggiungi vernici",
+  "paletteAddPaintsTitle": "Aggiungi al kit",
   "@paletteAddPaintsTitle": {},
+  "paletteCatalogTab": "Catalogo",
+  "@paletteCatalogTab": {},
+  "paletteRecipesTab": "Ricette personali",
+  "@paletteRecipesTab": {},
+  "paletteRecipeLabel": "Ricetta personale",
+  "@paletteRecipeLabel": {},
   "paletteAddCountButton": "Aggiungi {count}",
   "@paletteAddCountButton": {
     "placeholders": {

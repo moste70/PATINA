@@ -80,6 +80,31 @@ class ProjectRepository {
 
   // ── Progetti che usano una o più vernici della ricetta ───────────────────
 
+  Stream<List<Project>> watchProjectsUsingRecipe(int recipeId) {
+    const sql = '''
+      SELECT DISTINCT p.*
+      FROM projects p
+      JOIN project_paints pp ON pp.project_id = p.id
+      WHERE pp.brand = 'ricetta' AND pp.code = ?
+      ORDER BY p.updated_at DESC
+    ''';
+    return _db.customSelect(sql,
+        variables: [Variable.withString(recipeId.toString())],
+        readsFrom: {_db.projects, _db.projectPaints}).watch().map((rows) =>
+        rows.map((r) => Project(
+              id: r.read<int>('id'),
+              name: r.read<String>('name'),
+              brand: r.readNullable<String>('brand'),
+              scale: r.readNullable<String>('scale'),
+              category: r.readNullable<String>('category'),
+              coverPhoto: r.readNullable<String>('cover_photo'),
+              status: r.read<String>('status'),
+              notes: r.readNullable<String>('notes'),
+              createdAt: r.read<int>('created_at'),
+              updatedAt: r.read<int>('updated_at'),
+            )).toList());
+  }
+
   Stream<List<Project>> watchProjectsUsingPaints(
       List<({String brand, String code})> paints) {
     if (paints.isEmpty) return Stream.value([]);
