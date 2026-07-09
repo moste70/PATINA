@@ -17,9 +17,23 @@ class HexColorChip extends StatelessWidget {
     this.child,
   });
 
+  /// Relative luminance (WCAG formula) — determines if a contrast border is needed.
+  static double _luminance(Color c) {
+    double lin(int v) {
+      final s = v / 255.0;
+      return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) * ((s + 0.055) / 1.055);
+    }
+    return 0.2126 * lin(c.red) + 0.7152 * lin(c.green) + 0.0722 * lin(c.blue);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final border = borderColor ?? Theme.of(context).colorScheme.outline.withOpacity(0.4);
+    // Auto-contrast border: light chip → dark outline, dark chip → light outline.
+    final lum = _luminance(color);
+    final autoBorder = lum > 0.18
+        ? Colors.black.withOpacity(0.25)
+        : Colors.white.withOpacity(0.35);
+    final border = borderColor ?? autoBorder;
     return SizedBox(
       width: size,
       height: size,
