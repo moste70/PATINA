@@ -718,6 +718,27 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
+                  // Ricette personali chip — colore secondary, per prima
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.paletteRecipesTab),
+                      avatar: const Icon(Icons.science_outlined, size: 14),
+                      selected: _recipesMode,
+                      selectedColor: scheme.secondaryContainer,
+                      labelStyle: TextStyle(
+                        color: _recipesMode
+                            ? scheme.onSecondaryContainer
+                            : scheme.secondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      side: BorderSide(color: scheme.secondary.withOpacity(0.5)),
+                      onSelected: (_) => setState(() {
+                        _selectedBrand = _kRecipesVirtualBrand;
+                        _controller.clear();
+                      }),
+                    ),
+                  ),
                   // "Tutti" chip
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
@@ -742,27 +763,6 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                       }),
                     ),
                   )),
-                  // Ricette personali chip — colore secondary
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(l.paletteRecipesTab),
-                      avatar: const Icon(Icons.science_outlined, size: 14),
-                      selected: _recipesMode,
-                      selectedColor: scheme.secondaryContainer,
-                      labelStyle: TextStyle(
-                        color: _recipesMode
-                            ? scheme.onSecondaryContainer
-                            : scheme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      side: BorderSide(color: scheme.secondary.withOpacity(0.5)),
-                      onSelected: (_) => setState(() {
-                        _selectedBrand = _kRecipesVirtualBrand;
-                        _controller.clear();
-                      }),
-                    ),
-                  ),
                 ],
               ),
             ),
