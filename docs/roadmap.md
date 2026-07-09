@@ -91,7 +91,7 @@
 | 1C.2 | Creazione ricetta — selezione vernici da inventario/catalogo + proporzioni, finitura, numero di mani | ✅ Completato |
 | 1C.3 | Foto risultato dalla camera o galleria | ⬜ Non implementato — sostituito da colore CIELAB auto-generato |
 | 1C.4 | Tag e ricerca ricette per nome/tag | ✅ Completato |
-| 1C.5 | Duplica ricetta | ⬜ Da fare |
+| 1C.5 | ~~Duplica ricetta~~ | 🚫 Eliminato |
 | 1C.6 | Colore miscelato CIELAB calcolato automaticamente dagli ingredienti (chip esagonale in tempo reale) | ✅ Completato |
 | 1C.7 | Collegamento ricette ↔ progetti — tab "Ricette personali" nel picker palette kit; sezione progetti nella scheda ricetta | ✅ Completato |
 | 1C.8 | Schermata dettaglio ricetta con colore blended, ingredienti, ΔE match e lista progetti collegati | ✅ Completato |
@@ -374,7 +374,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
 Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa
 Fase 1B      ████████░░   80%  — inventario + catalogo + lista spesa completati; mancano 1B.9/10/11/12/13/14/15
-Fase 1C      █████████░   90%  — lista, creazione, dettaglio, ricerca, colore CIELAB, collegamento progetti completati; manca 1C.5 (duplica)
+Fase 1C      ██████████  100%  — completa
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
@@ -396,8 +396,7 @@ Debito Tecnico █████░░░░░  50% — DT.1/3/4/6/7/8/9/10/12/13
 
 1. 🔴 `DT.2` — Fix ordine demo project / onboarding
 2. 🟡 `DT.5` — Allineare comportamento note progetto (autosave vs bottoni)
-3. 🟡 `1C.5` — Duplica ricetta
-4. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
+3. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
 5. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
 6. 🟢 `1B.10` — Ordinamento inventario
 7. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`

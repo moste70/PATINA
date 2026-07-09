@@ -447,7 +447,7 @@ Miscele personalizzate salvate con proporzioni esatte.
 - Proporzioni via slider o valore numerico
 - Colore miscelato CIELAB visualizzato in tempo reale (chip esagonale)
 - Ricerca per nome o tag
-- Duplica ricetta come base per varianti (1C.5, da implementare)
+- Duplica ricetta — non previsto
 - Scala automatica delle quantità
 
 **Collegamento Ricette ↔ Progetti:**
