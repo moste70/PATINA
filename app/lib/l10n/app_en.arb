@@ -1,13 +1,10 @@
 {
   "@@locale": "en",
-
   "appTitle": "Patina",
-
   "navProjects": "Projects",
   "navPaints": "Paints",
   "navRecipes": "Recipes",
   "navSettings": "Settings",
-
   "actionSave": "Save",
   "actionCancel": "Cancel",
   "actionNext": "Next",
@@ -22,7 +19,6 @@
   "actionDiscard": "Discard",
   "actionSaveChanges": "Save changes",
   "actionAnalyze": "Analyse",
-
   "errorRequired": "Required field",
   "errorNameRequired": "Name is required",
   "errorBrandRequired": "Brand is required",
@@ -32,7 +28,6 @@
   "errorSaveRetry": "Save error, please try again",
   "errorPhotoAccess": "Cannot access photos",
   "errorGeneric": "Error: {message}",
-
   "onboardingWelcomeTitle": "Welcome to Patina",
   "onboardingWelcomeSubtitle": "The digital notebook for your scale models.",
   "onboardingWelcomeBody": "Track your projects, paints and mixing recipes — all offline, all yours.",
@@ -58,7 +53,6 @@
   "onboardingPermissionsHint": "You can enable them at any time from\nSettings → Apps → Patina",
   "onboardingReadyTitle": "You're all set!",
   "onboardingReadyBody": "Create your first project and start documenting your work.",
-
   "projectsScreenTitle": "Projects",
   "projectNewTitle": "New Project",
   "projectEditTitle": "Edit Project",
@@ -97,7 +91,6 @@
   "projectEmptyBody": "Start by adding your first scale model.",
   "projectSearchEmpty": "No project found for \"{query}\"",
   "projectFilterEmpty": "No \"{label}\" projects",
-
   "categoryTank": "Tank",
   "categoryAircraft": "Aircraft",
   "categoryFigure": "Figure",
@@ -106,34 +99,28 @@
   "categoryMotorcycle": "Motorcycle",
   "categoryDiorama": "Diorama",
   "categoryOther": "Other",
-
   "statusTodo": "To do",
   "statusInProgress": "In progress",
   "statusCompleted": "Completed",
   "statusPaused": "Paused",
   "statusChangeTitle": "Change status",
   "filterAll": "All",
-
   "sectionGallery": "Gallery",
   "sectionNotes": "Notes",
   "sectionInfo": "Info",
-
   "photoSourceCamera": "Camera",
   "photoSourceGallery": "Gallery",
   "photoDeleteTitle": "Delete this photo?",
   "photoDeleteTooltip": "Delete photo",
   "coverPhotoChange": "Change cover photo",
   "coverPhotoRemove": "Remove cover photo",
-
   "quantityFull": "Full",
   "quantityHalf": "Half",
   "quantityLow": "Almost empty",
   "quantityEmpty": "Empty",
-
   "techniqueBrush": "Brush",
   "techniqueAirbrush": "Airbrush",
   "techniqueSponge": "Sponge",
-
   "paintsScreenTitle": "Paints",
   "paintsTabInventory": "INVENTORY",
   "paintsTabCatalog": "CATALOGUE",
@@ -152,7 +139,6 @@
   "inventoryFreePaintsCount": "{count}/{limit} {count, plural, one{paint} other{paints}}",
   "inventoryEmptyPaints": "{count, plural, one{1 empty} other{{count} empty}}",
   "inventoryFreeNearLimit": "{remaining, plural, one{1 slot remaining on Free plan} other{{remaining} slots remaining on Free plan}}",
-
   "paletteSectionTitle": "KIT COLOURS",
   "paletteShoppingTooltip": "Shopping list",
   "paletteScanTooltip": "Scan instructions",
@@ -173,7 +159,6 @@
   "paletteToBuy": "To buy",
   "paletteSnackAdded": "{count, plural, one{1 paint added to palette} other{{count} paints added to palette}}",
   "errorCatalogLoad": "Catalogue load error",
-
   "scanTipsTitle": "How to photograph the sheet",
   "scanTipsSubtitle": "For the best automatic colour recognition:",
   "scanTip1Label": "Hold the phone vertically",
@@ -197,7 +182,6 @@
   "scanNoMatch": "No matches found",
   "scanUnknownInCatalog": "{brand} · not in catalogue",
   "scanUnknownName": "Not in catalogue",
-
   "shoppingScreenTitle": "Shopping list",
   "shoppingShareTooltip": "Share list",
   "shoppingPaintsSection": "PAINTS TO BUY",
@@ -211,7 +195,6 @@
   "shoppingItemNotesHint": "brand, quantity…",
   "shoppingShareHeader": "Shopping list — PATINA",
   "shoppingShareEmpty": "The list is empty.",
-
   "settingsScreenTitle": "Settings",
   "settingsAppearanceSection": "Appearance",
   "settingsThemeTitle": "Theme",
@@ -225,7 +208,6 @@
   "settingsLocaleEnglish": "English",
   "settingsInfoSection": "Info",
   "settingsVersionTitle": "Version",
-
   "paintLineModelColor": "Model Color",
   "paintLineModelAir": "Model Air",
   "paintLineXfFlat": "XF (Flat)",
@@ -239,7 +221,6 @@
   "paintLineLc": "LC",
   "paintLineUa": "UA",
   "paintLineCitadelBase": "Base",
-
   "recipesScreenTitle": "Recipes",
   "recipesEmptyTitle": "No recipes yet",
   "recipesEmptyBody": "Create your first custom colour mix",
@@ -249,7 +230,6 @@
   "recipesFindByColorTitle": "Search by target colour",
   "recipesFindByColorHint": "Choose the colour you want to achieve",
   "recipesNoColoredIngredients": "Add ingredients to recipes to use this feature",
-
   "recipeNew": "New Recipe",
   "recipeEdit": "Edit Recipe",
   "recipeNameLabel": "Recipe name *",
@@ -288,5 +268,14 @@
   "recipeHexInputLabel": "HEX colour",
   "recipeHexInputHint": "e.g. #4A6741",
   "recipeSearchHint": "Search by name or tag…",
-  "recipeSearchTooltip": "Search recipe"
+  "recipeSearchTooltip": "Search recipe",
+  "recipePercentWarningTitle": "Percentages incomplete",
+  "recipePercentWarningBody": "Ingredients add up to {total}% instead of 100%. Save anyway?",
+  "@recipePercentWarningBody": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

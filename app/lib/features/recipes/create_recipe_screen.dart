@@ -15,9 +15,10 @@ import 'recipe_repository.dart';
 // ── Catalog helpers (shared with palette) ─────────────────────────────────────
 
 class _CatalogPaint {
-  final String brand, code, name, hex;
+  final String brand, line, code, name, hex;
   _CatalogPaint(
       {required this.brand,
+      required this.line,
       required this.code,
       required this.name,
       required this.hex});
@@ -46,9 +47,11 @@ Future<List<_CatalogPaint>> _loadAllCatalogs() async {
       final raw = await rootBundle.loadString(asset);
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final brand = data['brand'] as String;
+      final line = (data['line'] as String?) ?? '';
       for (final p in data['paints'] as List<dynamic>) {
         result.add(_CatalogPaint(
           brand: brand,
+          line: line,
           code: p['code'] as String,
           name: p['name'] as String,
           hex: p['hex'] as String,
@@ -91,7 +94,6 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
   final _tagsCtrl = TextEditingController();
 
   String? _finish;
-  int? _coats;
   final List<_IngredientDraft> _ingredients = [];
   bool _saving = false;
   bool _showOptional = false;
@@ -105,7 +107,7 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
     if (r != null) {
       _nameCtrl.text = r.name;
       _finish = r.finish;
-      _coats = r.coats;
+
       _dilutionCtrl.text = r.dilution ?? '';
       _surfaceCtrl.text = r.surface ?? '';
       _notesCtrl.text = r.notes ?? '';
@@ -152,6 +154,32 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
+
+    // Warning se le percentuali non sommano a 100%
+    if (_ingredients.isNotEmpty) {
+      final total = _ingredients.fold<double>(0, (s, i) => s + i.percentage);
+      if ((total - 100).abs() > 0.5) {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(AppL10n.of(ctx).recipePercentWarningTitle),
+            content: Text(AppL10n.of(ctx).recipePercentWarningBody(total.round())),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(AppL10n.of(ctx).actionCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(AppL10n.of(ctx).actionSaveChanges),
+              ),
+            ],
+          ),
+        );
+        if (confirm != true) return;
+      }
+    }
+
     setState(() => _saving = true);
 
     final repo = ref.read(recipeRepositoryProvider);
@@ -164,7 +192,7 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           RecipesCompanion(
             name: Value(name),
             finish: Value(_finish),
-            coats: Value(_coats),
+
             dilution: Value(_dilutionCtrl.text.trim().isEmpty
                 ? null
                 : _dilutionCtrl.text.trim()),
@@ -195,7 +223,6 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
         final id = await repo.createRecipe(RecipesCompanion(
           name: Value(name),
           finish: Value(_finish),
-          coats: Value(_coats),
           dilution: Value(_dilutionCtrl.text.trim().isEmpty
               ? null
               : _dilutionCtrl.text.trim()),
@@ -293,23 +320,6 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── Numero di mani ─────────────────────────────────────────────
-          Text(l.recipeCoatsLabel,
-              style: tt.labelSmall
-                  ?.copyWith(color: scheme.onSurfaceVariant)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [1, 2, 3, 4].map((n) {
-              final selected = _coats == n;
-              return ChoiceChip(
-                label: Text('$n'),
-                selected: selected,
-                onSelected: (_) =>
-                    setState(() => _coats = selected ? null : n),
-              );
-            }).toList(),
-          ),
           const SizedBox(height: 20),
 
           // ── Ingredienti ────────────────────────────────────────────────
@@ -327,6 +337,20 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
                   style: tt.labelSmall
                       ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
+              Tooltip(
+                message: l.recipeAddIngredient,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _showIngredientPicker(context, l);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Icon(Icons.add, size: 20),
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -339,12 +363,6 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
                     setState(() => e.value.percentage = v),
                 onRemove: () => setState(() => _ingredients.removeAt(e.key)),
               )),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.add, size: 18),
-            label: Text(l.recipeAddIngredient),
-            onPressed: () => _showIngredientPicker(context, l),
-          ),
           const SizedBox(height: 20),
 
           // ── Sezione opzionale ──────────────────────────────────────────
@@ -593,6 +611,7 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
   final _searchCtrl = TextEditingController();
   List<_CatalogPaint>? _catalog;
   String? _selectedBrand;
+  String? _selectedLine;
 
   @override
   void initState() {
@@ -608,12 +627,22 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
     super.dispose();
   }
 
+  List<String> get _linesForBrand {
+    if (_catalog == null || _selectedBrand == null) return [];
+    return _catalog!
+        .where((p) => p.brand == _selectedBrand && p.line.isNotEmpty)
+        .map((p) => p.line)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
   List<_CatalogPaint> get _filtered {
     if (_catalog == null) return [];
     final q = _searchCtrl.text.trim().toLowerCase();
     return _catalog!.where((p) {
-      final brandMatch = _selectedBrand == null || p.brand == _selectedBrand;
-      if (!brandMatch) return false;
+      if (_selectedBrand != null && p.brand != _selectedBrand) return false;
+      if (_selectedLine != null && p.line != _selectedLine) return false;
       if (q.isEmpty) return true;
       return p.code.toLowerCase().contains(q) ||
           p.name.toLowerCase().contains(q) ||
@@ -630,6 +659,7 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
     final brands = _catalog != null
         ? (_catalog!.map((p) => p.brand).toSet().toList()..sort())
         : <String>[];
+    final lines = _linesForBrand;
     final filtered = _filtered;
 
     return Padding(
@@ -663,6 +693,7 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
                         selected: _selectedBrand == null,
                         onSelected: (_) => setState(() {
                           _selectedBrand = null;
+                          _selectedLine = null;
                           _searchCtrl.clear();
                         }),
                       ),
@@ -674,8 +705,38 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
                         selected: _selectedBrand == b,
                         onSelected: (_) => setState(() {
                           _selectedBrand = b;
+                          _selectedLine = null;
                           _searchCtrl.clear();
                         }),
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+            // Line sub-chips — visibili solo se la marca ha più linee
+            if (lines.length > 1)
+              SizedBox(
+                height: 36,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(l.filterAllLines),
+                        selected: _selectedLine == null,
+                        onSelected: (_) => setState(() => _selectedLine = null),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    ...lines.map((ln) => Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(l.paintLineLabel(ln)),
+                        selected: _selectedLine == ln,
+                        onSelected: (_) => setState(() => _selectedLine = ln),
+                        visualDensity: VisualDensity.compact,
                       ),
                     )),
                   ],

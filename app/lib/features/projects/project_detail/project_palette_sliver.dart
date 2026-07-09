@@ -18,15 +18,16 @@ const _kRecipeBrand = 'ricetta';
 
 class _CatalogPaint {
   final String brand;
+  final String line;
   final String code;
   final String name;
   final String hex;
   _CatalogPaint(
       {required this.brand,
+      required this.line,
       required this.code,
       required this.name,
       required this.hex});
-
 }
 
 const _catalogAssets = [
@@ -52,10 +53,12 @@ Future<List<_CatalogPaint>> _loadAllCatalogs() async {
       final raw = await rootBundle.loadString(asset);
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final brand = data['brand'] as String;
+      final line = (data['line'] as String?) ?? '';
       final paints = data['paints'] as List<dynamic>;
       for (final p in paints) {
         result.add(_CatalogPaint(
           brand: brand,
+          line: line,
           code: p['code'] as String,
           name: p['name'] as String,
           hex: p['hex'] as String,
@@ -535,6 +538,7 @@ const _kRecipesVirtualBrand = '__recipes__';
 class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   final _controller = TextEditingController();
   String? _selectedBrand; // null = all, _kRecipesVirtualBrand = recipes mode
+  String? _selectedLine;
   final Set<_CatalogPaint> _selected = {};
   final Set<int> _selectedRecipeIds = {};
   bool _isSaving = false;
@@ -547,11 +551,21 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
 
   bool get _recipesMode => _selectedBrand == _kRecipesVirtualBrand;
 
+  List<String> _linesForBrand(List<_CatalogPaint> all) {
+    if (_selectedBrand == null) return [];
+    return all
+        .where((p) => p.brand == _selectedBrand && p.line.isNotEmpty)
+        .map((p) => p.line)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
   List<_CatalogPaint> _filtered(List<_CatalogPaint> all) {
     final q = _controller.text.trim().toLowerCase();
     return all.where((p) {
-      final brandMatch = _selectedBrand == null || p.brand == _selectedBrand;
-      if (!brandMatch) return false;
+      if (_selectedBrand != null && p.brand != _selectedBrand) return false;
+      if (_selectedLine != null && p.line != _selectedLine) return false;
       if (q.isEmpty) return true;
       return p.code.toLowerCase().contains(q) ||
           p.name.toLowerCase().contains(q) ||
@@ -631,6 +645,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
 
     final catalog = catalogAsync.value ?? [];
     final brands = catalog.map((p) => p.brand).toSet().toList()..sort();
+    final lines = _linesForBrand(catalog);
     final recipes = recipesAsync.value ?? [];
     final allIngs = ingredientsAsync.value ?? [];
 
@@ -747,6 +762,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                       selected: _selectedBrand == null,
                       onSelected: (_) => setState(() {
                         _selectedBrand = null;
+                        _selectedLine = null;
                         _controller.clear();
                       }),
                     ),
@@ -759,6 +775,7 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
                       selected: _selectedBrand == b,
                       onSelected: (_) => setState(() {
                         _selectedBrand = b;
+                        _selectedLine = null;
                         _controller.clear();
                       }),
                     ),
@@ -767,6 +784,35 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
               ),
             ),
           ),
+          // Line sub-chips — visibili solo se marca selezionata ha più linee
+          if (!_recipesMode && lines.length > 1)
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.filterAllLines),
+                      selected: _selectedLine == null,
+                      onSelected: (_) => setState(() => _selectedLine = null),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                  ...lines.map((ln) => Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.paintLineLabel(ln)),
+                      selected: _selectedLine == ln,
+                      onSelected: (_) => setState(() => _selectedLine = ln),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  )),
+                ],
+              ),
+            ),
           // Search field (catalog only)
           if (!_recipesMode)
             Padding(

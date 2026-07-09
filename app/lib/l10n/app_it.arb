@@ -1,9 +1,9 @@
 {
   "@@locale": "it",
-
   "appTitle": "Patina",
-  "@appTitle": { "description": "Nome dell'applicazione" },
-
+  "@appTitle": {
+    "description": "Nome dell'applicazione"
+  },
   "navProjects": "Progetti",
   "@navProjects": {},
   "navPaints": "Vernici",
@@ -12,7 +12,6 @@
   "@navRecipes": {},
   "navSettings": "Impostazioni",
   "@navSettings": {},
-
   "actionSave": "Salva",
   "@actionSave": {},
   "actionCancel": "Annulla",
@@ -41,7 +40,6 @@
   "@actionSaveChanges": {},
   "actionAnalyze": "Analizza",
   "@actionAnalyze": {},
-
   "errorRequired": "Campo obbligatorio",
   "@errorRequired": {},
   "errorNameRequired": "Il nome è obbligatorio",
@@ -61,10 +59,11 @@
   "errorGeneric": "Errore: {message}",
   "@errorGeneric": {
     "placeholders": {
-      "message": { "type": "String" }
+      "message": {
+        "type": "String"
+      }
     }
   },
-
   "onboardingWelcomeTitle": "Benvenuto in Patina",
   "@onboardingWelcomeTitle": {},
   "onboardingWelcomeSubtitle": "Il taccuino digitale per i tuoi modelli in scala.",
@@ -115,7 +114,6 @@
   "@onboardingReadyTitle": {},
   "onboardingReadyBody": "Crea il tuo primo progetto e inizia a documentare il tuo lavoro.",
   "@onboardingReadyBody": {},
-
   "projectsScreenTitle": "Progetti",
   "@projectsScreenTitle": {},
   "projectNewTitle": "Nuovo Progetto",
@@ -191,16 +189,19 @@
   "projectSearchEmpty": "Nessun progetto trovato per \"{query}\"",
   "@projectSearchEmpty": {
     "placeholders": {
-      "query": { "type": "String" }
+      "query": {
+        "type": "String"
+      }
     }
   },
   "projectFilterEmpty": "Nessun progetto \"{label}\"",
   "@projectFilterEmpty": {
     "placeholders": {
-      "label": { "type": "String" }
+      "label": {
+        "type": "String"
+      }
     }
   },
-
   "categoryTank": "Carro Armato",
   "@categoryTank": {},
   "categoryAircraft": "Aereo",
@@ -217,7 +218,6 @@
   "@categoryDiorama": {},
   "categoryOther": "Altro",
   "@categoryOther": {},
-
   "statusTodo": "Da iniziare",
   "@statusTodo": {},
   "statusInProgress": "In corso",
@@ -230,14 +230,12 @@
   "@statusChangeTitle": {},
   "filterAll": "Tutti",
   "@filterAll": {},
-
   "sectionGallery": "Galleria",
   "@sectionGallery": {},
   "sectionNotes": "Note",
   "@sectionNotes": {},
   "sectionInfo": "Info",
   "@sectionInfo": {},
-
   "photoSourceCamera": "Fotocamera",
   "@photoSourceCamera": {},
   "photoSourceGallery": "Galleria",
@@ -250,7 +248,6 @@
   "@coverPhotoChange": {},
   "coverPhotoRemove": "Rimuovi foto copertina",
   "@coverPhotoRemove": {},
-
   "quantityFull": "Piena",
   "@quantityFull": {},
   "quantityHalf": "Metà",
@@ -259,14 +256,12 @@
   "@quantityLow": {},
   "quantityEmpty": "Finita",
   "@quantityEmpty": {},
-
   "techniqueBrush": "Pennello",
   "@techniqueBrush": {},
   "techniqueAirbrush": "Aerografo",
   "@techniqueAirbrush": {},
   "techniqueSponge": "Spugnatura",
   "@techniqueSponge": {},
-
   "paintsScreenTitle": "Vernici",
   "@paintsScreenTitle": {},
   "paintsTabInventory": "INVENTARIO",
@@ -292,7 +287,9 @@
   "paintAddedToInventory": "{code} aggiunta all'inventario",
   "@paintAddedToInventory": {
     "placeholders": {
-      "code": { "type": "String" }
+      "code": {
+        "type": "String"
+      }
     }
   },
   "inventoryLimitReached": "Limite raggiunto — passa a Standard per aggiungerne altre",
@@ -302,29 +299,43 @@
   "inventoryPaintsCount": "{count, plural, one{1 vernice} other{{count} vernici}}",
   "@inventoryPaintsCount": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "inventoryFreePaintsCount": "{count}/{limit} {count, plural, one{vernice} other{vernici}}",
   "@inventoryFreePaintsCount": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" },
-      "limit": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      },
+      "limit": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "inventoryEmptyPaints": "{count, plural, one{1 esaurita} other{{count} esaurite}}",
   "@inventoryEmptyPaints": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "inventoryFreeNearLimit": "{remaining, plural, one{1 posizione rimanente nel piano Free} other{{remaining} posizioni rimanenti nel piano Free}}",
   "@inventoryFreeNearLimit": {
     "placeholders": {
-      "remaining": { "type": "num", "format": "compact" }
+      "remaining": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
-
   "paletteSectionTitle": "COLORI DEL KIT",
   "@paletteSectionTitle": {},
   "paletteShoppingTooltip": "Lista della spesa",
@@ -352,7 +363,10 @@
   "paletteAddCountButton": "Aggiungi {count}",
   "@paletteAddCountButton": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "paletteInStock": "In magazzino",
@@ -362,12 +376,14 @@
   "paletteSnackAdded": "{count, plural, one{1 vernice aggiunta alla palette} other{{count} vernici aggiunte alla palette}}",
   "@paletteSnackAdded": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "errorCatalogLoad": "Errore caricamento catalogo",
   "@errorCatalogLoad": {},
-
   "scanTipsTitle": "Come fotografare il foglio",
   "@scanTipsTitle": {},
   "scanTipsSubtitle": "Per ottenere il miglior riconoscimento automatico dei colori:",
@@ -401,19 +417,27 @@
   "scanStateCatalog": "Ricerca in {catalogName}…",
   "@scanStateCatalog": {
     "placeholders": {
-      "catalogName": { "type": "String" }
+      "catalogName": {
+        "type": "String"
+      }
     }
   },
   "scanPaintsFound": "{count, plural, one{1 vernice trovata} other{{count} vernici trovate}}",
   "@scanPaintsFound": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "scanPaintsAdded": "{count, plural, one{1 vernice aggiunta} other{{count} vernici aggiunte}}",
   "@scanPaintsAdded": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "scanNoCodes": "Nessun codice riconosciuto",
@@ -425,12 +449,13 @@
   "scanUnknownInCatalog": "{brand} · non in catalogo",
   "@scanUnknownInCatalog": {
     "placeholders": {
-      "brand": { "type": "String" }
+      "brand": {
+        "type": "String"
+      }
     }
   },
   "scanUnknownName": "Non in catalogo",
   "@scanUnknownName": {},
-
   "shoppingScreenTitle": "Lista della spesa",
   "@shoppingScreenTitle": {},
   "shoppingShareTooltip": "Condividi lista",
@@ -457,7 +482,6 @@
   "@shoppingShareHeader": {},
   "shoppingShareEmpty": "La lista è vuota.",
   "@shoppingShareEmpty": {},
-
   "settingsScreenTitle": "Impostazioni",
   "@settingsScreenTitle": {},
   "settingsAppearanceSection": "Aspetto",
@@ -484,7 +508,6 @@
   "@settingsInfoSection": {},
   "settingsVersionTitle": "Versione",
   "@settingsVersionTitle": {},
-
   "paintLineModelColor": "Model Color",
   "@paintLineModelColor": {},
   "paintLineModelAir": "Model Air",
@@ -511,7 +534,6 @@
   "@paintLineUa": {},
   "paintLineCitadelBase": "Base",
   "@paintLineCitadelBase": {},
-
   "recipesScreenTitle": "Ricette",
   "@recipesScreenTitle": {},
   "recipesEmptyTitle": "Nessuna ricetta ancora",
@@ -530,7 +552,6 @@
   "@recipesFindByColorHint": {},
   "recipesNoColoredIngredients": "Aggiungi ingredienti alle ricette per usare questa funzione",
   "@recipesNoColoredIngredients": {},
-
   "recipeNew": "Nuova Ricetta",
   "@recipeNew": {},
   "recipeEdit": "Modifica Ricetta",
@@ -576,7 +597,10 @@
   "recipeIngredientCount": "{count, plural, one{1 ingrediente} other{{count} ingredienti}}",
   "@recipeIngredientCount": {
     "placeholders": {
-      "count": { "type": "num", "format": "compact" }
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
     }
   },
   "recipeDeleteTitle": "Eliminare la ricetta?",
@@ -594,8 +618,12 @@
   "recipeDeltaMatchLabel": "{match}  ΔE {value}",
   "@recipeDeltaMatchLabel": {
     "placeholders": {
-      "match": { "type": "String" },
-      "value": { "type": "String" }
+      "match": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
     }
   },
   "recipeHexInputLabel": "Colore HEX",
@@ -605,5 +633,14 @@
   "recipeSearchHint": "Cerca per nome o tag…",
   "@recipeSearchHint": {},
   "recipeSearchTooltip": "Cerca ricetta",
-  "@recipeSearchTooltip": {}
+  "@recipeSearchTooltip": {},
+  "recipePercentWarningTitle": "Percentuali non complete",
+  "recipePercentWarningBody": "La somma degli ingredienti è {total}% invece di 100%. Vuoi salvare comunque?",
+  "@recipePercentWarningBody": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

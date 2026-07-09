@@ -419,12 +419,6 @@ class _DetailsSection extends StatelessWidget {
           value: l.finishLabel(recipe.finish),
           tt: tt,
           scheme: scheme));
-    if (recipe.coats != null)
-      rows.add(_DetailRow(
-          label: l.recipeCoatsLabel,
-          value: '${recipe.coats}',
-          tt: tt,
-          scheme: scheme));
     if (recipe.dilution != null && recipe.dilution!.isNotEmpty)
       rows.add(_DetailRow(
           label: l.recipeDilutionLabel,
