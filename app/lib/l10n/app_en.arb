@@ -3,6 +3,11 @@
 
   "appTitle": "Patina",
 
+  "navProjects": "Projects",
+  "navPaints": "Paints",
+  "navRecipes": "Recipes",
+  "navSettings": "Settings",
+
   "actionSave": "Save",
   "actionCancel": "Cancel",
   "actionNext": "Next",

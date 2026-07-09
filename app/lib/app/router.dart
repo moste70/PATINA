@@ -10,6 +10,7 @@ import '../shared/widgets/nav_icons.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shopping/shopping_list_screen.dart';
 import '../features/paints/paints_screen.dart';
+import '../l10n/app_localizations.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -93,6 +94,7 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final location = GoRouterState.of(context).uri.path;
+    final l = AppL10n.of(context);
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -108,22 +110,22 @@ class AppShell extends StatelessWidget {
             NavigationDestination(
               icon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
-              label: 'Progetti',
+              label: l.navProjects,
             ),
             NavigationDestination(
               icon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
-              label: 'Vernici',
+              label: l.navPaints,
             ),
             NavigationDestination(
               icon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
-              label: 'Ricette',
+              label: l.navRecipes,
             ),
             NavigationDestination(
               icon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
-              label: 'Impostazioni',
+              label: l.navSettings,
             ),
           ],
         ),

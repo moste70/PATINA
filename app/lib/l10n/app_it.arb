@@ -4,6 +4,15 @@
   "appTitle": "Patina",
   "@appTitle": { "description": "Nome dell'applicazione" },
 
+  "navProjects": "Progetti",
+  "@navProjects": {},
+  "navPaints": "Vernici",
+  "@navPaints": {},
+  "navRecipes": "Ricette",
+  "@navRecipes": {},
+  "navSettings": "Impostazioni",
+  "@navSettings": {},
+
   "actionSave": "Salva",
   "@actionSave": {},
   "actionCancel": "Annulla",
