@@ -356,7 +356,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ✅ Già risolto — `initializeDemoProject()` è chiamata dentro `_finish()` in `onboarding_screen.dart`, cioè solo al tap su "Inizia" nell'ultimo step |
 | DT.3 | 🟡 Media | `colorScheme.background` / `onBackground` / `surfaceVariant` deprecati in Flutter 3.18+ — genera warning in build | Migrazione completa: `background→surface`, `onBackground→onSurface`, `surface→surfaceContainer`, `surfaceVariant→surfaceContainerHigh` in tutti i file dart | ✅ Risolto |
 | DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ✅ Risolto |
-| DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ⬜ Da fare |
+| DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ✅ Risolto — bottoni espliciti Annulla/Salva scelti come comportamento definitivo; spec allineata |
 | DT.6 | 🟡 Media | Campo `phaseId` orfano in `Pins` — non referenzia nessuna tabella, non documentato, mai popolato dall'UI | Riservato per Fase 1D (fasi di lavorazione) — documentato con commento in `tables/pins.dart`. Aggiungere FK e migrazione quando si implementerà la tabella `phases` | ✅ Documentato |
 | DT.7 | 🟡 Media | Campo `catalogId` in `RecipeIngredients` non documentato — doppio riferimento a inventory e catalog non spiegato | Documentato con commento in `tables/recipes.dart`: `paintId` = percorso principale (inventario), `catalogId` = alternativo (vernice non ancora in inventario) | ✅ Documentato |
 | DT.8 | 🟢 Bassa | Dipendenze inutilizzate in `pubspec.yaml`: `cached_network_image`, `uuid`, `dio`, `path_provider`, `path`, `intl`, `riverpod_annotation`, `riverpod_generator` | Rimuovere ora, reintrodurre quando effettivamente necessarie | ✅ Risolto |
@@ -381,7 +381,7 @@ Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task 
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
 Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ██████░░░░  60% — DT.1/2/3/4/6/7/8/9/10/12/13 risolti; DT.5 aperto
+Debito Tecnico ███████░░░  70% — DT.1/2/3/4/5/6/7/8/9/10/12/13 risolti; nessun debito aperto
 ```
 
 ### Schema DB attuale: v6
@@ -394,8 +394,7 @@ Debito Tecnico ██████░░░░  60% — DT.1/2/3/4/6/7/8/9/10/12/
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟡 `DT.5` — Allineare comportamento note progetto (autosave vs bottoni)
-3. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
-5. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
-6. 🟢 `1B.10` — Ordinamento inventario
-7. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
+1. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
+2. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
+3. 🟢 `1B.10` — Ordinamento inventario
+4. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
