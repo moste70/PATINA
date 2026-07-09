@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:drift/drift.dart' show Value;
 import '../../database/app_database.dart';
 import '../../l10n/app_localizations.dart';
@@ -591,7 +592,7 @@ class _IngredientPickerSheet extends StatefulWidget {
 class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
   final _searchCtrl = TextEditingController();
   List<_CatalogPaint>? _catalog;
-  String _query = '';
+  String? _selectedBrand;
 
   @override
   void initState() {
@@ -609,15 +610,15 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
 
   List<_CatalogPaint> get _filtered {
     if (_catalog == null) return [];
-    if (_query.isEmpty) return [];
-    final q = _query.toLowerCase();
-    return _catalog!
-        .where((p) =>
-            p.code.toLowerCase().contains(q) ||
-            p.name.toLowerCase().contains(q) ||
-            p.brand.toLowerCase().contains(q))
-        .take(40)
-        .toList();
+    final q = _searchCtrl.text.trim().toLowerCase();
+    return _catalog!.where((p) {
+      final brandMatch = _selectedBrand == null || p.brand == _selectedBrand;
+      if (!brandMatch) return false;
+      if (q.isEmpty) return true;
+      return p.code.toLowerCase().contains(q) ||
+          p.name.toLowerCase().contains(q) ||
+          p.brand.toLowerCase().contains(q);
+    }).take(60).toList();
   }
 
   @override
@@ -625,55 +626,85 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
     final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final brands = _catalog != null
+        ? (_catalog!.map((p) => p.brand).toSet().toList()..sort())
+        : <String>[];
     final filtered = _filtered;
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.7,
+        height: MediaQuery.of(context).size.height * 0.75,
         child: Column(
           children: [
             Center(
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 10),
-                width: 36,
-                height: 4,
+                width: 36, height: 4,
                 decoration: BoxDecoration(
                   color: scheme.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
+            // Brand chips
+            if (_catalog != null)
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(l.filterAllLines),
+                        selected: _selectedBrand == null,
+                        onSelected: (_) => setState(() {
+                          _selectedBrand = null;
+                          _searchCtrl.clear();
+                        }),
+                      ),
+                    ),
+                    ...brands.map((b) => Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        label: Text(b),
+                        selected: _selectedBrand == b,
+                        onSelected: (_) => setState(() {
+                          _selectedBrand = b;
+                          _searchCtrl.clear();
+                        }),
+                      ),
+                    )),
+                  ],
+                ),
+              ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
               child: TextField(
                 controller: _searchCtrl,
-                autofocus: true,
                 decoration: InputDecoration(
                   hintText: l.paintSearchHint,
                   prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _query.isNotEmpty
+                  suffixIcon: _searchCtrl.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.close),
-                          onPressed: () => setState(() {
-                            _searchCtrl.clear();
-                            _query = '';
-                          }),
+                          onPressed: () => setState(() => _searchCtrl.clear()),
                         )
                       : null,
                 ),
-                onChanged: (v) => setState(() => _query = v),
+                onChanged: (_) => setState(() {}),
               ),
             ),
             const Divider(height: 1),
             Expanded(
               child: _catalog == null
                   ? const Center(child: CircularProgressIndicator())
-                  : _query.isEmpty
+                  : _selectedBrand == null && _searchCtrl.text.isEmpty
                       ? Center(
-                          child: Text(l.paintSearchPrompt,
+                          child: Text(l.catalogEmptyPrompt,
                               style: tt.bodySmall?.copyWith(
                                   color: scheme.onSurfaceVariant)))
                       : filtered.isEmpty
@@ -687,12 +718,14 @@ class _IngredientPickerSheetState extends State<_IngredientPickerSheet> {
                                 final p = filtered[i];
                                 final color = hexToColor(p.hex);
                                 return ListTile(
-                                  leading: HexColorChip(
-                                      color: color, size: 32),
-                                  title: Text('${p.brand}  ${p.code}',
-                                      style: tt.labelMedium),
-                                  subtitle: Text(p.name,
-                                      overflow: TextOverflow.ellipsis),
+                                  leading: HexColorChip(color: color, size: 32),
+                                  title: Text(
+                                    '${p.code}  ${p.name}',
+                                    style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  subtitle: Text(p.brand, style: tt.bodySmall),
                                   onTap: () {
                                     widget.onPick(p);
                                     Navigator.pop(context);
