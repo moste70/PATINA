@@ -1042,50 +1042,46 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: ['full', 'half', 'low', 'empty'].map((q) {
-                      final active = _quantity == q;
-                      final color  = _quantityColor(q);
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: GestureDetector(
-                            onTap: () async {
-                              if (_quantity == q) return;
-                              HapticFeedback.lightImpact();
-                              setState(() => _quantity = q);
-                              await repo.updatePaintQuantity(
-                                  widget.paint.source.id, q);
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 160),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
+                  DropdownButtonFormField<String>(
+                    value: _quantity,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    items: ['full', 'half', 'low', 'empty'].map((q) {
+                      final color = _quantityColor(q);
+                      return DropdownMenuItem<String>(
+                        value: q,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
                               decoration: BoxDecoration(
-                                color: active
-                                    ? color.withOpacity(0.18)
-                                    : scheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: active ? color : scheme.outline,
-                                  width: active ? 1.5 : 1,
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _quantityLabel(l, q),
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: active
-                                      ? color
-                                      : scheme.onSurfaceVariant,
-                                ),
+                                  color: color, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              _quantityLabel(l, q),
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: color,
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       );
                     }).toList(),
+                    onChanged: (q) async {
+                      if (q == null || q == _quantity) return;
+                      HapticFeedback.lightImpact();
+                      setState(() => _quantity = q);
+                      await repo.updatePaintQuantity(
+                          widget.paint.source.id, q);
+                    },
                   ),
                 ],
               ),
