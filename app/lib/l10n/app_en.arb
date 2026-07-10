@@ -277,5 +277,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "shoppingExcludedSection": "NOT TO BUY",
+  "shoppingRestorePaint": "Restore to list"
 }

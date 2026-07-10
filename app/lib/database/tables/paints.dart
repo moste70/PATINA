@@ -43,6 +43,7 @@ class ProjectPaints extends Table {
   TextColumn get name => text()();    // denormalizzato per display offline
   TextColumn get hex => text()();     // es. "#3A3A3A"
   IntColumn get addedAt => integer()();
+  BoolColumn get excludeFromShopping => boolean().withDefault(const Constant(false))();
 
   @override
   List<Set<Column>> get uniqueKeys => [

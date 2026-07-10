@@ -15,6 +15,10 @@ final _shoppingItemsProvider = StreamProvider<List<ShoppingItem>>((ref) {
   return ref.watch(projectRepositoryProvider).watchShoppingItems();
 });
 
+final _excludedPaintsProvider = StreamProvider<List<ShoppingEntry>>((ref) {
+  return ref.watch(projectRepositoryProvider).watchExcludedShoppingPaints();
+});
+
 // Stato in-memory per le vernici automatiche spuntate (brand+code)
 final _checkedPaintsProvider = StateProvider<Set<String>>((ref) => {});
 
@@ -26,6 +30,7 @@ class ShoppingListScreen extends ConsumerWidget {
     final l = AppL10n.of(context);
     final paintsAsync = ref.watch(_shoppingListProvider);
     final itemsAsync = ref.watch(_shoppingItemsProvider);
+    final excludedAsync = ref.watch(_excludedPaintsProvider);
     final checkedPaints = ref.watch(_checkedPaintsProvider);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -124,6 +129,9 @@ class ShoppingListScreen extends ConsumerWidget {
                           return next;
                         });
                       },
+                      onExclude: () => ref
+                          .read(projectRepositoryProvider)
+                          .setShoppingExclusion(e.brand, e.code, excluded: true),
                     );
                   },
                   childCount: _flattenGroups(grouped).length,
@@ -163,6 +171,24 @@ class ShoppingListScreen extends ConsumerWidget {
                     ref: ref,
                   ),
                   childCount: items.length,
+                ),
+              );
+            },
+          ),
+          // ── Sezione escluse ───────────────────────────────────────
+          excludedAsync.when(
+            loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+            error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+            data: (excluded) {
+              if (excluded.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+              return SliverToBoxAdapter(
+                child: _ExcludedSection(
+                  entries: excluded,
+                  scheme: scheme,
+                  tt: tt,
+                  onRestore: (e) => ref
+                      .read(projectRepositoryProvider)
+                      .setShoppingExclusion(e.brand, e.code, excluded: false),
                 ),
               );
             },
@@ -302,17 +328,33 @@ class _PaintRow extends StatelessWidget {
   final TextTheme tt;
   final bool checked;
   final ValueChanged<bool> onToggle;
+  final VoidCallback onExclude;
   const _PaintRow({
     required this.entry,
     required this.scheme,
     required this.tt,
     required this.checked,
     required this.onToggle,
+    required this.onExclude,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Dismissible(
+      key: ValueKey('paint_${entry.brand}_${entry.code}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        decoration: BoxDecoration(
+          color: scheme.error,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(Icons.remove_circle_outline, color: scheme.onError),
+      ),
+      onDismissed: (_) => onExclude(),
+      child: Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       decoration: BoxDecoration(
@@ -359,6 +401,7 @@ class _PaintRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -534,5 +577,99 @@ class _AddItemSheetState extends State<_AddItemSheet> {
         ],
       ),
     );
+  }
+}
+
+// ── Excluded paints section ───────────────────────────────────────────────────
+
+class _ExcludedSection extends StatelessWidget {
+  final List<ShoppingEntry> entries;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  final void Function(ShoppingEntry) onRestore;
+
+  const _ExcludedSection({
+    required this.entries,
+    required this.scheme,
+    required this.tt,
+    required this.onRestore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: Text(
+            l.shoppingExcludedSection,
+            style: tt.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+              letterSpacing: 1.2,
+            ),
+          ),
+          iconColor: scheme.onSurfaceVariant,
+          collapsedIconColor: scheme.onSurfaceVariant,
+          children: entries.map((e) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                HexColorChip(color: _hexColor(e.hex), size: 26),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${e.brand}  ${e.code}',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        e.name,
+                        style: tt.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant.withOpacity(0.6)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Tooltip(
+                  message: l.shoppingRestorePaint,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => onRestore(e),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(Icons.undo,
+                          size: 20, color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )).toList(),
+        ),
+      ),
+    );
+  }
+
+  Color _hexColor(String hex) {
+    try {
+      return Color(int.parse(hex.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return Colors.grey;
+    }
   }
 }
