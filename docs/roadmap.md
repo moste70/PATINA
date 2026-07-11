@@ -49,7 +49,7 @@
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
 | 1A.6 | 🟢 Bassa | Modifica (wizard edit mode), stato "In pausa" (non conta verso limite Free), eliminazione con conferma | ✅ Completato |
 | 1A.7 | 🟢 Bassa | Ricerca per nome (search bar inline nell'AppBar, toggle icona lente) + filtro per stato (chip bar) + gate Free sul FAB (lock icon + paywall a 2 progetti attivi) | ✅ Completato |
-| 1A.8 | 🟡 Media | **Devlog progetto (modellista)** — diario di avanzamento a timeline verticale nella scheda progetto. Ogni voce: data, testo libero, foto opzionale, fase opzionale. Layout: linea verticale sinistra + card a destra in ordine cronologico inverso. Aggiunta via bottom sheet minimale (testo + foto, nessun wizard). DB: nuova tabella `project_logs` (id, project_id, text, photo_path, phase, created_at) → richiede schema v5 + migrazione. | ⬜ Da fare |
+| 1A.8 | 🟡 Media | **Devlog progetto** — timeline verticale nella scheda progetto. Voce: data/ora, testo, foto opzionale. Swipe-to-delete. DB: `project_logs` (schema v8). | ✅ Completato |
 
 ---
 

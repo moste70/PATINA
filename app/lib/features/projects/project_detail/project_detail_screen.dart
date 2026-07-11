@@ -11,6 +11,7 @@ import '../../../shared/constants/app_constants.dart';
 import '../project_repository.dart';
 import '../create_project/create_project_wizard.dart';
 import 'project_palette_sliver.dart';
+import 'project_devlog_sliver.dart';
 
 // Provider per il singolo progetto
 final projectByIdProvider = StreamProvider.autoDispose.family<Project, int>(
@@ -429,6 +430,9 @@ class _ProjectDetailContentState
 
           // ── Palette del kit ──
           ProjectPaletteSliver(projectId: widget.project.id),
+
+          // ── Devlog ──
+          ProjectDevlogSliver(projectId: widget.project.id),
 
           SliverToBoxAdapter(
             child: Padding(

@@ -644,5 +644,10 @@
     }
   },
   "shoppingExcludedSection": "NON DA ACQUISTARE",
-  "shoppingRestorePaint": "Ripristina nella lista"
+  "shoppingRestorePaint": "Ripristina nella lista",
+  "devlogSection": "DIARIO DI LAVORO",
+  "devlogAdd": "Aggiungi voce",
+  "devlogEmpty": "Nessuna voce ancora. Usa + per registrare l'avanzamento.",
+  "devlogHint": "Descrivi cosa hai fatto oggi...",
+  "devlogAddPhoto": "Allega foto"
 }

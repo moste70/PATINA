@@ -279,5 +279,10 @@
     }
   },
   "shoppingExcludedSection": "NOT TO BUY",
-  "shoppingRestorePaint": "Restore to list"
+  "shoppingRestorePaint": "Restore to list",
+  "devlogSection": "WORK LOG",
+  "devlogAdd": "Add entry",
+  "devlogEmpty": "No entries yet. Use + to record your progress.",
+  "devlogHint": "Describe what you did today...",
+  "devlogAddPhoto": "Attach photo"
 }

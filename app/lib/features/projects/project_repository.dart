@@ -39,6 +39,29 @@ class ProjectRepository {
   Future<void> deleteProjectPhoto(int photoId) =>
       (_db.delete(_db.projectPhotos)..where((t) => t.id.equals(photoId))).go();
 
+  // ── Devlog ───────────────────────────────────────────────────────────────
+
+  Stream<List<ProjectLog>> watchProjectLogs(int projectId) =>
+      (_db.select(_db.projectLogs)
+            ..where((t) => t.projectId.equals(projectId))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .watch();
+
+  Future<void> addProjectLog({
+    required int projectId,
+    required String text,
+    String? photoPath,
+  }) =>
+      _db.into(_db.projectLogs).insert(ProjectLogsCompanion(
+            projectId: Value(projectId),
+            text: Value(text),
+            photoPath: Value(photoPath),
+            createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+          ));
+
+  Future<void> deleteProjectLog(int id) =>
+      (_db.delete(_db.projectLogs)..where((t) => t.id.equals(id))).go();
+
   // ── Palette del kit ──────────────────────────────────────────────────────
 
   Stream<List<ProjectPaint>> watchProjectPaints(int projectId) =>

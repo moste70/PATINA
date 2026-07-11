@@ -20,3 +20,11 @@ class ProjectPhotos extends Table {
   TextColumn get caption => text().nullable()();
   IntColumn get takenAt => integer().nullable()();
 }
+
+class ProjectLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get projectId => integer().references(Projects, #id)();
+  TextColumn get text => text()();
+  TextColumn get photoPath => text().nullable()();
+  IntColumn get createdAt => integer()();
+}
