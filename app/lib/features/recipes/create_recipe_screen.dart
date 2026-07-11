@@ -331,12 +331,15 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
                     color: scheme.primary, letterSpacing: 1.2),
               ),
               const Spacer(),
-              if (_ingredients.isNotEmpty)
+              if (_ingredients.isNotEmpty) ...[
                 Text(
                   l.recipeIngredientCount(_ingredients.length),
                   style: tt.labelSmall
                       ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
+                const SizedBox(width: 8),
+                _TotalPercentBadge(total: _totalPercentage),
+              ],
               Tooltip(
                 message: l.recipeAddIngredient,
                 child: InkWell(
@@ -450,13 +453,29 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
       builder: (ctx) => _IngredientPickerSheet(
         onPick: (p) {
           setState(() {
-            final remaining = (100.0 - _totalPercentage).clamp(1.0, 100.0);
+            double newPct;
+            if (_ingredients.isEmpty) {
+              // Primo ingrediente: 100%
+              newPct = 100.0;
+            } else if (_ingredients.length == 1) {
+              // Secondo ingrediente: complemento del primo
+              final firstPct = _ingredients[0].percentage;
+              if (firstPct >= 100.0) {
+                _ingredients[0].percentage = 50.0;
+                newPct = 50.0;
+              } else {
+                newPct = 100.0 - firstPct;
+              }
+            } else {
+              // 3+ ingredienti: rimanente senza modificare gli altri
+              newPct = (100.0 - _totalPercentage).clamp(1.0, 100.0);
+            }
             _ingredients.add(_IngredientDraft(
               brand: p.brand,
               code: p.code,
               name: p.name,
               hex: p.hex,
-              percentage: remaining,
+              percentage: newPct,
             ));
           });
         },
@@ -679,6 +698,40 @@ class _IngredientEditRowState extends State<_IngredientEditRow> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Total percent badge ───────────────────────────────────────────────────────
+
+class _TotalPercentBadge extends StatelessWidget {
+  final double total;
+  const _TotalPercentBadge({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final ok = (total - 100).abs() <= 0.5;
+    final color = ok
+        ? const Color(0xFF2F8F57)
+        : total > 100
+            ? const Color(0xFF8F3030)
+            : const Color(0xFFD99B3E);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        '${total.round()}%',
+        style: GoogleFonts.jetBrainsMono(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.3,
         ),
       ),
     );

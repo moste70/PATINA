@@ -314,8 +314,7 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
       appBar: AppBar(
         title: Text(l.paintsScreenTitle),
         actions: [
-          if (_tabIndex == 0)
-            Tooltip(
+          Tooltip(
               message: l.customPaintAddTitle,
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
