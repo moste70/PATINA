@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -358,19 +359,23 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           ),
           const SizedBox(height: 8),
           ..._ingredients.asMap().entries.map((e) {
-                final othersTotal = _ingredients
-                    .where((i) => i != e.value)
-                    .fold(0.0, (s, i) => s + i.percentage);
-                final maxVal = (100.0 - othersTotal).clamp(e.value.percentage, 100.0);
                 return _IngredientEditRow(
                   key: ObjectKey(e.value),
                   index: e.key,
                   draft: e.value,
-                  maxValue: maxVal,
+                  maxValue: 100.0,
                   scheme: scheme,
                   tt: tt,
-                  onPercentageChanged: (v) =>
-                      setState(() => e.value.percentage = v),
+                  onPercentageChanged: (v) {
+                    setState(() {
+                      e.value.percentage = v;
+                      // Con 2 ingredienti l'altro si aggiorna in automatico
+                      if (_ingredients.length == 2) {
+                        final other = _ingredients.firstWhere((i) => i != e.value);
+                        other.percentage = math.max(1.0, 100.0 - v);
+                      }
+                    });
+                  },
                   onRemove: () => setState(() => _ingredients.removeAt(e.key)),
                 );
               }),

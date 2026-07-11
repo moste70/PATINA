@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,7 @@ import '../../l10n/app_localizations.dart';
 import '../../l10n/l10n_helpers.dart';
 import '../../shared/pro/pro_gate.dart';
 import '../../shared/widgets/hex_color_chip.dart';
+import 'package:image_picker/image_picker.dart';
 import 'paints_repository.dart';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -313,22 +316,7 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(l.paintsScreenTitle),
-        actions: [
-          Tooltip(
-              message: l.customPaintAddTitle,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  _showCustomPaintSheet();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(Icons.edit_note, color: scheme.primary),
-                ),
-              ),
-            ),
-        ],
+        actions: const [],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: scheme.primary,
@@ -343,10 +331,13 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
           tabs: [Tab(text: l.paintsTabInventory), Tab(text: l.paintsTabCatalog)],
         ),
       ),
-      floatingActionButton: _tabIndex == 0
+      floatingActionButton: _tabIndex == 1
           ? FloatingActionButton(
-              onPressed: _goToCatalog,
-              tooltip: l.paintsFabTooltip,
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                _showCustomPaintSheet();
+              },
+              tooltip: l.customPaintAddTitle,
               child: const Icon(Icons.add),
             )
           : null,
@@ -1668,7 +1659,7 @@ class _CustomPaintSheetState extends State<_CustomPaintSheet> {
             ),
             const SizedBox(height: 12),
 
-            // Hex + preview
+            // Hex + preview + picker buttons
             Row(
               children: [
                 Expanded(
@@ -1692,7 +1683,7 @@ class _CustomPaintSheetState extends State<_CustomPaintSheet> {
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: 48,
@@ -1707,6 +1698,59 @@ class _CustomPaintSheetState extends State<_CustomPaintSheet> {
                           ),
                         ),
                 ),
+                const SizedBox(width: 4),
+                // Color wheel
+                Tooltip(
+                  message: l.colorPickerWheel,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () async {
+                      final picked = await showModalBottomSheet<Color>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (_) => _ColorWheelSheet(
+                          initial: preview ?? Colors.grey,
+                        ),
+                      );
+                      if (picked != null && mounted) {
+                        final hex =
+                            '#${picked.red.toRadixString(16).padLeft(2, '0')}${picked.green.toRadixString(16).padLeft(2, '0')}${picked.blue.toRadixString(16).padLeft(2, '0')}'
+                                .toUpperCase();
+                        setState(() => _hexCtrl.text = hex);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(Icons.palette_outlined,
+                          color: scheme.primary, size: 22),
+                    ),
+                  ),
+                ),
+                // Photo picker
+                Tooltip(
+                  message: l.colorPickerPhoto,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () async {
+                      final picked = await showModalBottomSheet<Color>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (_) => const _PhotoColorPicker(),
+                      );
+                      if (picked != null && mounted) {
+                        final hex =
+                            '#${picked.red.toRadixString(16).padLeft(2, '0')}${picked.green.toRadixString(16).padLeft(2, '0')}${picked.blue.toRadixString(16).padLeft(2, '0')}'
+                                .toUpperCase();
+                        setState(() => _hexCtrl.text = hex);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(Icons.colorize,
+                          color: scheme.onSurfaceVariant, size: 22),
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -1720,6 +1764,502 @@ class _CustomPaintSheetState extends State<_CustomPaintSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : Text(isEdit ? l.actionSaveChanges : l.actionAdd),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Color wheel sheet ─────────────────────────────────────────────────────────
+
+class _ColorWheelSheet extends StatefulWidget {
+  final Color initial;
+  const _ColorWheelSheet({required this.initial});
+
+  @override
+  State<_ColorWheelSheet> createState() => _ColorWheelSheetState();
+}
+
+class _ColorWheelSheetState extends State<_ColorWheelSheet> {
+  late double _hue;
+  late double _sat;
+  late double _val;
+
+  @override
+  void initState() {
+    super.initState();
+    final hsv = HSVColor.fromColor(widget.initial);
+    _hue = hsv.hue;
+    _sat = hsv.saturation;
+    _val = hsv.value;
+  }
+
+  Color get _color => HSVColor.fromAHSV(1.0, _hue, _sat, _val).toColor();
+
+  String get _hex =>
+      '#${_color.red.toRadixString(16).padLeft(2, '0')}${_color.green.toRadixString(16).padLeft(2, '0')}${_color.blue.toRadixString(16).padLeft(2, '0')}'
+          .toUpperCase();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                  color: scheme.outline, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          // Preview chip + hex
+          Row(
+            children: [
+              HexColorChip(color: _color, size: 48),
+              const SizedBox(width: 16),
+              Text(
+                _hex,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // SV square (saturation × value)
+          SizedBox(
+            height: 180,
+            child: _SvSquare(
+              hue: _hue,
+              sat: _sat,
+              val: _val,
+              onChanged: (s, v) => setState(() {
+                _sat = s;
+                _val = v;
+              }),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Hue slider
+          _GradientSlider(
+            value: _hue / 360.0,
+            gradient: const LinearGradient(colors: [
+              Color(0xFFFF0000), Color(0xFFFFFF00), Color(0xFF00FF00),
+              Color(0xFF00FFFF), Color(0xFF0000FF), Color(0xFFFF00FF),
+              Color(0xFFFF0000),
+            ]),
+            onChanged: (v) => setState(() => _hue = v * 360.0),
+          ),
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, _color),
+            child: Text(l.colorPickerConfirm),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SvSquare extends StatelessWidget {
+  final double hue, sat, val;
+  final void Function(double sat, double val) onChanged;
+  const _SvSquare(
+      {required this.hue,
+      required this.sat,
+      required this.val,
+      required this.onChanged});
+
+  void _update(Offset local, Size size) {
+    final s = (local.dx / size.width).clamp(0.0, 1.0);
+    final v = 1.0 - (local.dy / size.height).clamp(0.0, 1.0);
+    onChanged(s, v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (ctx, constraints) {
+      final size = Size(constraints.maxWidth, constraints.maxHeight);
+      return GestureDetector(
+        onPanStart: (d) => _update(d.localPosition, size),
+        onPanUpdate: (d) => _update(d.localPosition, size),
+        onTapDown: (d) => _update(d.localPosition, size),
+        child: CustomPaint(
+          size: size,
+          painter: _SvPainter(hue: hue, sat: sat, val: val),
+        ),
+      );
+    });
+  }
+}
+
+class _SvPainter extends CustomPainter {
+  final double hue, sat, val;
+  const _SvPainter({required this.hue, required this.sat, required this.val});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    // Saturation gradient (white → hue color)
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(colors: [
+          Colors.white,
+          HSVColor.fromAHSV(1, hue, 1, 1).toColor(),
+        ]).createShader(rect),
+    );
+    // Value gradient (transparent → black)
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.transparent, Colors.black],
+        ).createShader(rect),
+    );
+
+    // Selector circle
+    final cx = sat * size.width;
+    final cy = (1.0 - val) * size.height;
+    final selColor = HSVColor.fromAHSV(1, hue, sat, val).toColor();
+    final isLight = selColor.computeLuminance() > 0.5;
+    canvas.drawCircle(
+      Offset(cx, cy),
+      10,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    canvas.drawCircle(
+      Offset(cx, cy),
+      8,
+      Paint()
+        ..color = isLight ? Colors.black26 : Colors.white24
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SvPainter old) =>
+      old.hue != hue || old.sat != sat || old.val != val;
+}
+
+class _GradientSlider extends StatelessWidget {
+  final double value;
+  final LinearGradient gradient;
+  final ValueChanged<double> onChanged;
+  const _GradientSlider(
+      {required this.value,
+      required this.gradient,
+      required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (ctx, constraints) {
+      final w = constraints.maxWidth;
+      return GestureDetector(
+        onPanUpdate: (d) =>
+            onChanged((d.localPosition.dx / w).clamp(0.0, 1.0)),
+        onTapDown: (d) =>
+            onChanged((d.localPosition.dx / w).clamp(0.0, 1.0)),
+        child: CustomPaint(
+          size: Size(w, 28),
+          painter: _GradientSliderPainter(value: value, gradient: gradient),
+        ),
+      );
+    });
+  }
+}
+
+class _GradientSliderPainter extends CustomPainter {
+  final double value;
+  final LinearGradient gradient;
+  const _GradientSliderPainter(
+      {required this.value, required this.gradient});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, (size.height - 14) / 2, size.width, 14);
+    final rRect = RRect.fromRectAndRadius(rect, const Radius.circular(7));
+
+    canvas.drawRRect(rRect, Paint()..shader = gradient.createShader(rect));
+
+    final cx = value * size.width;
+    canvas.drawCircle(
+      Offset(cx, size.height / 2),
+      11,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      Offset(cx, size.height / 2),
+      9,
+      Paint()
+        ..color = HSVColor.fromAHSV(1, value * 360, 1, 1).toColor()
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      Offset(cx, size.height / 2),
+      11,
+      Paint()
+        ..color = Colors.black26
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GradientSliderPainter old) =>
+      old.value != value;
+}
+
+// ── Photo color picker sheet ──────────────────────────────────────────────────
+
+class _PhotoColorPicker extends StatefulWidget {
+  const _PhotoColorPicker();
+
+  @override
+  State<_PhotoColorPicker> createState() => _PhotoColorPickerState();
+}
+
+class _PhotoColorPickerState extends State<_PhotoColorPicker> {
+  String? _imagePath;
+  ui.Image? _uiImage;
+  Offset _crosshair = Offset.zero; // in image pixels
+  Color _sampled = Colors.grey;
+
+  Future<void> _pick(ImageSource source) async {
+    final file =
+        await ImagePicker().pickImage(source: source, imageQuality: 90);
+    if (file == null || !mounted) return;
+    final bytes = await File(file.path).readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final img = frame.image;
+    if (!mounted) return;
+    setState(() {
+      _imagePath = file.path;
+      _uiImage = img;
+      _crosshair =
+          Offset(img.width / 2.0, img.height / 2.0);
+    });
+    await _sampleAt(_crosshair);
+  }
+
+  Future<void> _sampleAt(Offset imgCoord) async {
+    final img = _uiImage;
+    if (img == null) return;
+    final data = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (data == null || !mounted) return;
+    final x = imgCoord.dx.round().clamp(0, img.width - 1);
+    final y = imgCoord.dy.round().clamp(0, img.height - 1);
+    final off = (y * img.width + x) * 4;
+    setState(() {
+      _sampled = Color.fromARGB(
+        255,
+        data.getUint8(off),
+        data.getUint8(off + 1),
+        data.getUint8(off + 2),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                    color: scheme.outline,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            if (_imagePath == null) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _PickBtn(
+                    icon: Icons.camera_alt_outlined,
+                    label: AppL10n.of(context).photoSourceCamera,
+                    onTap: () => _pick(ImageSource.camera),
+                  ),
+                  _PickBtn(
+                    icon: Icons.photo_library_outlined,
+                    label: AppL10n.of(context).photoSourceGallery,
+                    onTap: () => _pick(ImageSource.gallery),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ] else ...[
+              // Image with draggable crosshair
+              LayoutBuilder(builder: (ctx, constraints) {
+                final img = _uiImage!;
+                final maxH = 280.0;
+                final maxW = constraints.maxWidth;
+                final scaleX = maxW / img.width;
+                final scaleY = maxH / img.height;
+                final scale = math.min(scaleX, scaleY);
+                final dispW = img.width * scale;
+                final dispH = img.height * scale;
+                final offX = (maxW - dispW) / 2;
+
+                // crosshair in screen coords
+                final scrX = _crosshair.dx * scale + offX;
+                final scrY = _crosshair.dy * scale;
+
+                return GestureDetector(
+                  onPanUpdate: (d) {
+                    final imgX =
+                        ((d.localPosition.dx - offX) / scale)
+                            .clamp(0.0, img.width.toDouble() - 1);
+                    final imgY = (d.localPosition.dy / scale)
+                        .clamp(0.0, img.height.toDouble() - 1);
+                    setState(() =>
+                        _crosshair = Offset(imgX, imgY));
+                    _sampleAt(_crosshair);
+                  },
+                  onTapDown: (d) {
+                    final imgX =
+                        ((d.localPosition.dx - offX) / scale)
+                            .clamp(0.0, img.width.toDouble() - 1);
+                    final imgY = (d.localPosition.dy / scale)
+                        .clamp(0.0, img.height.toDouble() - 1);
+                    setState(() =>
+                        _crosshair = Offset(imgX, imgY));
+                    _sampleAt(_crosshair);
+                  },
+                  child: SizedBox(
+                    width: maxW,
+                    height: dispH,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: offX,
+                          top: 0,
+                          child: Image.file(
+                            File(_imagePath!),
+                            width: dispW,
+                            height: dispH,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        // Crosshair ring
+                        Positioned(
+                          left: scrX - 18,
+                          top: scrY - 18,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _sampled,
+                              border: Border.all(
+                                  color: Colors.white, width: 3),
+                              boxShadow: const [
+                                BoxShadow(
+                                    color: Colors.black45, blurRadius: 4)
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+              // Preview + confirm
+              Row(
+                children: [
+                  HexColorChip(color: _sampled, size: 40),
+                  const SizedBox(width: 12),
+                  Text(
+                    '#${_sampled.red.toRadixString(16).padLeft(2, '0')}${_sampled.green.toRadixString(16).padLeft(2, '0')}${_sampled.blue.toRadixString(16).padLeft(2, '0')}'
+                        .toUpperCase(),
+                    style: GoogleFonts.jetBrainsMono(
+                        fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, _sampled),
+                    child: Text(l.colorPickerConfirm),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PickBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _PickBtn(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 32, color: scheme.primary),
+            const SizedBox(height: 8),
+            Text(label,
+                style: TextStyle(color: scheme.onSurface, fontSize: 13)),
           ],
         ),
       ),

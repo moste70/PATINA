@@ -316,5 +316,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "colorPickerWheel": "Pick from color wheel",
+  "@colorPickerWheel": {},
+  "colorPickerPhoto": "Pick colour from photo",
+  "@colorPickerPhoto": {},
+  "colorPickerConfirm": "Use this colour",
+  "@colorPickerConfirm": {}
 }

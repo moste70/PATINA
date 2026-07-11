@@ -681,5 +681,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "colorPickerWheel": "Seleziona dalla ruota colori",
+  "@colorPickerWheel": {},
+  "colorPickerPhoto": "Rileva colore da foto",
+  "@colorPickerPhoto": {},
+  "colorPickerConfirm": "Usa questo colore",
+  "@colorPickerConfirm": {}
 }
