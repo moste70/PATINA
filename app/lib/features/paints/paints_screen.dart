@@ -219,7 +219,11 @@ final _resolvedInventoryProvider =
 
   var out = resolved;
   if (brand != null) {
-    out = out.where((p) => p.brand == brand).toList();
+    if (brand == _kOtherBrandSentinel) {
+      out = out.where((p) => !_kBrands.contains(p.brand)).toList();
+    } else {
+      out = out.where((p) => p.brand == brand).toList();
+    }
   }
   if (query.isNotEmpty) {
     out = out
@@ -231,6 +235,8 @@ final _resolvedInventoryProvider =
   }
   return AsyncValue.data(out);
 });
+
+const _kOtherBrandSentinel = '_altri';
 
 // ── PaintsScreen ──────────────────────────────────────────────────────────────
 
@@ -268,6 +274,37 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
     _tabController.animateTo(1);
   }
 
+  void _showCustomPaintSheet({ResolvedPaint? editing}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _CustomPaintSheet(
+        editing: editing,
+        onSave: (brand, code, name, hex) async {
+          final repo = ref.read(paintsRepositoryProvider);
+          if (editing != null) {
+            await repo.updateCustomPaint(
+              oldBrand: editing.brand,
+              oldCode: editing.code,
+              brand: brand,
+              code: code,
+              name: name,
+              hex: hex,
+            );
+          } else {
+            await repo.addCustomPaint(
+                brand: brand, code: code, name: name, hex: hex);
+          }
+        },
+        onDelete: editing == null
+            ? null
+            : () => ref
+                .read(paintsRepositoryProvider)
+                .deleteCustomPaint(editing.brand, editing.code),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
@@ -276,6 +313,23 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(l.paintsScreenTitle),
+        actions: [
+          if (_tabIndex == 0)
+            Tooltip(
+              message: l.customPaintAddTitle,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _showCustomPaintSheet();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.edit_note, color: scheme.primary),
+                ),
+              ),
+            ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: scheme.primary,
@@ -378,6 +432,9 @@ class _BrandFilterChips extends ConsumerWidget {
     final l = AppL10n.of(context);
     final scheme   = Theme.of(context).colorScheme;
     final selected = ref.watch(_selectedBrandProvider);
+    final hasOthers = ref.watch(_resolvedInventoryProvider).value
+            ?.any((p) => !_kBrands.contains(p.brand)) ??
+        false;
 
     return SizedBox(
       height: 44,
@@ -405,6 +462,18 @@ class _BrandFilterChips extends ConsumerWidget {
                   ref.read(_selectedLineProvider.notifier).state  = null;
                 },
               )),
+          if (hasOthers)
+            _BrandChip(
+              label: l.filterOtherBrands,
+              active: selected == _kOtherBrandSentinel,
+              scheme: scheme,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                ref.read(_selectedBrandProvider.notifier).state =
+                    _kOtherBrandSentinel;
+                ref.read(_selectedLineProvider.notifier).state = null;
+              },
+            ),
         ],
       ),
     );
@@ -831,13 +900,38 @@ class _InventoryListTile extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${_brandLabel(paint.brand)}  ${paint.code}',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurface,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${_brandLabel(paint.brand)}  ${paint.code}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        if (paint.source.customBrand != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: scheme.primary.withOpacity(0.4)),
+                            ),
+                            child: Text(
+                              'C',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       paint.name,
@@ -947,18 +1041,47 @@ class _DashedHexPainter extends CustomPainter {
 
 // ── Paint detail sheet ────────────────────────────────────────────────────────
 
-void _showPaintDetail(
+void _showCustomPaintSheetFor(
     BuildContext context, WidgetRef ref, ResolvedPaint paint) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _PaintDetailSheet(paint: paint),
+    builder: (_) => _CustomPaintSheet(
+      editing: paint,
+      onSave: (brand, code, name, hex) => ref
+          .read(paintsRepositoryProvider)
+          .updateCustomPaint(
+            oldBrand: paint.brand,
+            oldCode: paint.code,
+            brand: brand,
+            code: code,
+            name: name,
+            hex: hex,
+          ),
+      onDelete: () => ref
+          .read(paintsRepositoryProvider)
+          .deleteCustomPaint(paint.brand, paint.code),
+    ),
+  );
+}
+
+void _showPaintDetail(BuildContext context, WidgetRef ref, ResolvedPaint paint) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => _PaintDetailSheet(
+      paint: paint,
+      onEdit: paint.source.customBrand != null
+          ? () => _showCustomPaintSheetFor(context, ref, paint)
+          : null,
+    ),
   );
 }
 
 class _PaintDetailSheet extends ConsumerStatefulWidget {
   final ResolvedPaint paint;
-  const _PaintDetailSheet({required this.paint});
+  final VoidCallback? onEdit;
+  const _PaintDetailSheet({required this.paint, this.onEdit});
 
   @override
   ConsumerState<_PaintDetailSheet> createState() => _PaintDetailSheetState();
@@ -1024,6 +1147,23 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
                       ],
                     ),
                   ),
+                  if (widget.onEdit != null)
+                    Tooltip(
+                      message: AppL10n.of(context).actionEdit,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.pop(context);
+                          widget.onEdit!();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(Icons.edit_outlined,
+                              color: scheme.primary, size: 22),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1300,6 +1440,290 @@ class _CatalogTab extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Custom paint sheet ────────────────────────────────────────────────────────
+
+class _CustomPaintSheet extends StatefulWidget {
+  final ResolvedPaint? editing;
+  final Future<void> Function(String brand, String code, String name, String hex)
+      onSave;
+  final VoidCallback? onDelete;
+
+  const _CustomPaintSheet({
+    required this.onSave,
+    this.editing,
+    this.onDelete,
+  });
+
+  @override
+  State<_CustomPaintSheet> createState() => _CustomPaintSheetState();
+}
+
+class _CustomPaintSheetState extends State<_CustomPaintSheet> {
+  late final TextEditingController _brandCtrl;
+  late final TextEditingController _codeCtrl;
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _hexCtrl;
+  bool _saving = false;
+  String? _hexError;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.editing;
+    _brandCtrl = TextEditingController(text: e?.brand ?? '');
+    _codeCtrl  = TextEditingController(text: e?.code  ?? '');
+    _nameCtrl  = TextEditingController(text: e?.name  ?? '');
+    _hexCtrl   = TextEditingController(
+        text: e != null ? e.hex.toUpperCase() : '#');
+  }
+
+  @override
+  void dispose() {
+    _brandCtrl.dispose();
+    _codeCtrl.dispose();
+    _nameCtrl.dispose();
+    _hexCtrl.dispose();
+    super.dispose();
+  }
+
+  Color? get _previewColor {
+    try {
+      final h = _hexCtrl.text.trim();
+      return Color(int.parse(h.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get _hexValid {
+    final h = _hexCtrl.text.trim();
+    return RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(h);
+  }
+
+  bool get _canSave =>
+      !_saving &&
+      _brandCtrl.text.trim().isNotEmpty &&
+      _codeCtrl.text.trim().isNotEmpty &&
+      _nameCtrl.text.trim().isNotEmpty &&
+      _hexValid;
+
+  Future<void> _save() async {
+    if (!_canSave) return;
+    setState(() => _saving = true);
+    await widget.onSave(
+      _brandCtrl.text.trim().toLowerCase(),
+      _codeCtrl.text.trim(),
+      _nameCtrl.text.trim(),
+      _hexCtrl.text.trim().toUpperCase(),
+    );
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _confirmDelete() async {
+    final l = AppL10n.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.customPaintDeleteConfirm),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.actionCancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.actionDelete,
+                  style: TextStyle(
+                      color: Theme.of(ctx).colorScheme.error))),
+        ],
+      ),
+    );
+    if (ok == true && mounted) {
+      widget.onDelete!();
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l      = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final tt     = Theme.of(context).textTheme;
+    final isEdit = widget.editing != null;
+    final preview = _previewColor;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: scheme.outline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title + delete
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    isEdit
+                        ? l.customPaintEditTitle
+                        : l.customPaintAddTitle,
+                    style: tt.titleMedium,
+                  ),
+                ),
+                if (isEdit && widget.onDelete != null)
+                  Tooltip(
+                    message: l.actionDelete,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: _confirmDelete,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(Icons.delete_outline,
+                            color: scheme.error, size: 22),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Brand chips predefiniti
+            Text(
+              l.customPaintBrandLabel.toUpperCase(),
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                letterSpacing: 1.2,
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: _kBrands
+                  .map((b) => _BrandChip(
+                        label: _brandLabel(b),
+                        active: _brandCtrl.text.trim().toLowerCase() == b,
+                        scheme: scheme,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() => _brandCtrl.text = b);
+                        },
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _brandCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                hintText: l.customPaintBrandHint,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+
+            // Code
+            TextField(
+              controller: _codeCtrl,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                labelText: l.customPaintCodeLabel,
+                hintText: l.customPaintCodeHint,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+
+            // Name
+            TextField(
+              controller: _nameCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: l.customPaintNameLabel,
+                hintText: l.customPaintNameHint,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+
+            // Hex + preview
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _hexCtrl,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: l.customPaintHexLabel,
+                      hintText: '#D99B3E',
+                      errorText: _hexCtrl.text.length > 1 && !_hexValid
+                          ? l.customPaintHexInvalid
+                          : null,
+                    ),
+                    onChanged: (v) {
+                      if (v.isNotEmpty && !v.startsWith('#')) {
+                        _hexCtrl.text = '#$v';
+                        _hexCtrl.selection = TextSelection.collapsed(
+                            offset: _hexCtrl.text.length);
+                      }
+                      setState(() {});
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 48,
+                  height: 48,
+                  child: preview != null
+                      ? HexColorChip(color: preview, size: 48)
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: scheme.outline),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            FilledButton(
+              onPressed: _canSave ? _save : null,
+              child: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(isEdit ? l.actionSaveChanges : l.actionAdd),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
