@@ -308,5 +308,13 @@
   "customPaintHexInvalid": "Invalid format (e.g. #D99B3E)",
   "@customPaintHexInvalid": {},
   "customPaintDeleteConfirm": "Delete this custom paint?",
-  "@customPaintDeleteConfirm": {}
+  "@customPaintDeleteConfirm": {},
+  "paintLineLabel": "Line {line}",
+  "@paintLineLabel": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  }
 }

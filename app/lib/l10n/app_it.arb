@@ -673,5 +673,13 @@
   "customPaintHexInvalid": "Formato non valido (es. #D99B3E)",
   "@customPaintHexInvalid": {},
   "customPaintDeleteConfirm": "Eliminare questa vernice personalizzata?",
-  "@customPaintDeleteConfirm": {}
+  "@customPaintDeleteConfirm": {},
+  "paintLineLabel": "Linea {line}",
+  "@paintLineLabel": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  }
 }

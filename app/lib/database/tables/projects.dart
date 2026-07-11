@@ -24,7 +24,7 @@ class ProjectPhotos extends Table {
 class ProjectLogs extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get projectId => integer().references(Projects, #id)();
-  TextColumn get text => text()();
+  TextColumn get body => text()();
   TextColumn get photoPath => text().nullable()();
   IntColumn get createdAt => integer()();
 }

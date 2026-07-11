@@ -54,7 +54,7 @@ class ProjectRepository {
   }) =>
       _db.into(_db.projectLogs).insert(ProjectLogsCompanion(
             projectId: Value(projectId),
-            text: Value(text),
+            body: Value(text),
             photoPath: Value(photoPath),
             createdAt: Value(DateTime.now().millisecondsSinceEpoch),
           ));

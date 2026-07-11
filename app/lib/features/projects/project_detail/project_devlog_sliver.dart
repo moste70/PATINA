@@ -209,7 +209,7 @@ class _LogEntry extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     // Testo
-                    Text(log.text, style: tt.bodyMedium),
+                    Text(log.body, style: tt.bodyMedium),
                     // Foto opzionale
                     if (log.photoPath != null) ...[
                       const SizedBox(height: 8),
