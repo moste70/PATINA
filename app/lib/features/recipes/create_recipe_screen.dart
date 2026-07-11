@@ -354,15 +354,23 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          ..._ingredients.asMap().entries.map((e) => _IngredientEditRow(
-                index: e.key,
-                draft: e.value,
-                scheme: scheme,
-                tt: tt,
-                onPercentageChanged: (v) =>
-                    setState(() => e.value.percentage = v),
-                onRemove: () => setState(() => _ingredients.removeAt(e.key)),
-              )),
+          ..._ingredients.asMap().entries.map((e) {
+                final othersTotal = _ingredients
+                    .where((i) => i != e.value)
+                    .fold(0.0, (s, i) => s + i.percentage);
+                final maxVal = (100.0 - othersTotal).clamp(e.value.percentage, 100.0);
+                return _IngredientEditRow(
+                  key: ObjectKey(e.value),
+                  index: e.key,
+                  draft: e.value,
+                  maxValue: maxVal,
+                  scheme: scheme,
+                  tt: tt,
+                  onPercentageChanged: (v) =>
+                      setState(() => e.value.percentage = v),
+                  onRemove: () => setState(() => _ingredients.removeAt(e.key)),
+                );
+              }),
           const SizedBox(height: 20),
 
           // ── Sezione opzionale ──────────────────────────────────────────
@@ -432,6 +440,9 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
     );
   }
 
+  double get _totalPercentage =>
+      _ingredients.fold(0.0, (s, i) => s + i.percentage);
+
   void _showIngredientPicker(BuildContext context, AppL10n l) {
     showModalBottomSheet(
       context: context,
@@ -439,17 +450,13 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
       builder: (ctx) => _IngredientPickerSheet(
         onPick: (p) {
           setState(() {
-            // Equal share for all ingredients
-            final share = 100.0 / (_ingredients.length + 1);
-            for (final i in _ingredients) {
-              i.percentage = share;
-            }
+            final remaining = (100.0 - _totalPercentage).clamp(1.0, 100.0);
             _ingredients.add(_IngredientDraft(
               brand: p.brand,
               code: p.code,
               name: p.name,
               hex: p.hex,
-              percentage: share,
+              percentage: remaining,
             ));
           });
         },
@@ -520,17 +527,20 @@ class _ColorPreviewWidget extends StatelessWidget {
 
 // ── Ingredient edit row ───────────────────────────────────────────────────────
 
-class _IngredientEditRow extends StatelessWidget {
+class _IngredientEditRow extends StatefulWidget {
   final int index;
   final _IngredientDraft draft;
+  final double maxValue;
   final ColorScheme scheme;
   final TextTheme tt;
   final ValueChanged<double> onPercentageChanged;
   final VoidCallback onRemove;
 
   const _IngredientEditRow({
+    super.key,
     required this.index,
     required this.draft,
+    required this.maxValue,
     required this.scheme,
     required this.tt,
     required this.onPercentageChanged,
@@ -538,16 +548,58 @@ class _IngredientEditRow extends StatelessWidget {
   });
 
   @override
+  State<_IngredientEditRow> createState() => _IngredientEditRowState();
+}
+
+class _IngredientEditRowState extends State<_IngredientEditRow> {
+  late final TextEditingController _pctCtrl;
+  bool _editing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pctCtrl = TextEditingController(
+        text: widget.draft.percentage.round().toString());
+  }
+
+  @override
+  void didUpdateWidget(_IngredientEditRow old) {
+    super.didUpdateWidget(old);
+    if (!_editing) {
+      final newText = widget.draft.percentage.round().toString();
+      if (_pctCtrl.text != newText) _pctCtrl.text = newText;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pctCtrl.dispose();
+    super.dispose();
+  }
+
+  void _applyText() {
+    final v = double.tryParse(_pctCtrl.text.trim());
+    if (v == null) {
+      _pctCtrl.text = widget.draft.percentage.round().toString();
+      return;
+    }
+    final clamped = v.clamp(1.0, widget.maxValue);
+    _pctCtrl.text = clamped.round().toString();
+    widget.onPercentageChanged(clamped);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final color = draft.hex.isNotEmpty
-        ? hexToColor(draft.hex)
-        : scheme.surfaceContainerHighest;
+    final color = widget.draft.hex.isNotEmpty
+        ? hexToColor(widget.draft.hex)
+        : widget.scheme.surfaceContainerHighest;
+    final divisions = (widget.maxValue - 1).round().clamp(1, 99);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHigh,
+          color: widget.scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -562,33 +614,69 @@ class _IngredientEditRow extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${draft.brand} ${draft.code}'.trim(),
-                            style: tt.labelMedium),
-                        Text(draft.name,
-                            style: tt.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant),
+                        Text(
+                            '${widget.draft.brand} ${widget.draft.code}'.trim(),
+                            style: widget.tt.labelMedium),
+                        Text(widget.draft.name,
+                            style: widget.tt.bodySmall?.copyWith(
+                                color: widget.scheme.onSurfaceVariant),
                             overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
-                  Text(
-                    '${draft.percentage.round()}%',
-                    style: tt.labelLarge,
+                  // Campo numerico digitabile
+                  SizedBox(
+                    width: 52,
+                    child: TextField(
+                      controller: _pctCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 14, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        suffixText: '%',
+                        suffixStyle: GoogleFonts.jetBrainsMono(
+                            fontSize: 12,
+                            color: widget.scheme.onSurfaceVariant),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 8),
+                        isDense: true,
+                      ),
+                      onTap: () => setState(() => _editing = true),
+                      onChanged: (_) => setState(() => _editing = true),
+                      onSubmitted: (_) {
+                        setState(() => _editing = false);
+                        _applyText();
+                      },
+                      onEditingComplete: () {
+                        setState(() => _editing = false);
+                        _applyText();
+                        FocusScope.of(context).unfocus();
+                      },
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
-                    onPressed: onRemove,
+                    onPressed: widget.onRemove,
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
             ),
             Slider(
-              value: draft.percentage,
-              min: 5,
-              max: 100,
-              divisions: 19,
-              onChanged: onPercentageChanged,
+              value: widget.draft.percentage.clamp(1.0, widget.maxValue),
+              min: 1,
+              max: widget.maxValue,
+              divisions: divisions,
+              onChanged: (v) {
+                setState(() => _editing = false);
+                _pctCtrl.text = v.round().toString();
+                widget.onPercentageChanged(v);
+              },
             ),
           ],
         ),
