@@ -5,9 +5,13 @@ import 'package:drift/drift.dart' show Value;
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n_helpers.dart';
 import '../../../shared/constants/app_constants.dart';
 import '../project_repository.dart';
+import '../create_project/create_project_wizard.dart';
 import 'project_palette_sliver.dart';
+import 'project_devlog_sliver.dart';
 
 // Provider per il singolo progetto
 final projectByIdProvider = StreamProvider.autoDispose.family<Project, int>(
@@ -20,6 +24,7 @@ class ProjectDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final projectAsync = ref.watch(projectByIdProvider(projectId));
 
     return projectAsync.when(
@@ -28,7 +33,7 @@ class ProjectDetailScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text('Errore: $e')),
+        body: Center(child: Text(l.errorGeneric(e.toString()))),
       ),
       data: (project) => _ProjectDetailContent(project: project),
     );
@@ -95,30 +100,34 @@ class _ProjectDetailContentState
   }
 
   Future<void> _updateCoverPhoto() async {
+    final l = AppL10n.of(context);
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Fotocamera'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galleria'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Annulla'),
-              onTap: () => Navigator.pop(ctx),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(ll.photoSourceCamera),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(ll.photoSourceGallery),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: Text(ll.actionCancel),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      },
     );
     if (source == null || !mounted) return;
     try {
@@ -136,22 +145,45 @@ class _ProjectDetailContentState
     } catch (_) {}
   }
 
+  Future<void> _removeCoverPhoto() async {
+    await ref.read(projectRepositoryProvider).updateProject(
+      widget.project.id,
+      ProjectsCompanion(
+        coverPhoto: const Value(null),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  void _editProject() {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CreateProjectWizard(project: widget.project),
+      ),
+    );
+  }
+
   Future<void> _deleteProject() async {
+    final l = AppL10n.of(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Elimina progetto?'),
-        content: const Text("L'azione è irreversibile."),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annulla')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Elimina',
-                  style: TextStyle(color: Colors.red))),
-        ],
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.projectDeleteTitle),
+          content: Text(ll.projectDeleteBody),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(ll.actionCancel)),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(ll.actionDelete,
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error))),
+          ],
+        );
+      },
     );
     if (confirm == true && mounted) {
       await ref
@@ -162,37 +194,41 @@ class _ProjectDetailContentState
   }
 
   void _showStatusSheet() {
+    final l = AppL10n.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Cambia stato',
-                style: Theme.of(ctx).textTheme.titleMedium),
-            const SizedBox(height: 16),
-            ...AppConstants.projectStatuses.map((s) => ListTile(
-                  title:
-                      Text(AppConstants.projectStatusLabels[s] ?? s),
-                  trailing: widget.project.status == s
-                      ? Icon(Icons.check,
-                          color: Theme.of(ctx).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    _updateStatus(s);
-                    Navigator.pop(ctx);
-                  },
-                )),
-          ],
-        ),
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(ll.statusChangeTitle,
+                  style: Theme.of(ctx).textTheme.titleMedium),
+              const SizedBox(height: 16),
+              ...AppConstants.projectStatuses.map((s) => ListTile(
+                    title: Text(ll.projectStatusLabel(s)),
+                    trailing: widget.project.status == s
+                        ? Icon(Icons.check,
+                            color: Theme.of(ctx).colorScheme.primary)
+                        : null,
+                    onTap: () {
+                      _updateStatus(s);
+                      Navigator.pop(ctx);
+                    },
+                  )),
+            ],
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final p = widget.project;
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -213,22 +249,31 @@ class _ProjectDetailContentState
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
+                  if (v == 'edit') _editProject();
                   if (v == 'status') _showStatusSheet();
                   if (v == 'cover') _updateCoverPhoto();
+                  if (v == 'remove_cover') _removeCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
                 itemBuilder: (_) => [
-                  const PopupMenuItem(
-                      value: 'status', child: Text('Cambia stato')),
-                  const PopupMenuItem(
+                  PopupMenuItem(
+                      value: 'edit', child: Text(l.projectMenuEdit)),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                      value: 'status', child: Text(l.statusChangeTitle)),
+                  PopupMenuItem(
                       value: 'cover',
-                      child: Text('Cambia foto copertina')),
+                      child: Text(l.coverPhotoChange)),
+                  if (p.coverPhoto != null)
+                    PopupMenuItem(
+                        value: 'remove_cover',
+                        child: Text(l.coverPhotoRemove)),
                   const PopupMenuDivider(),
                   PopupMenuItem(
                       value: 'delete',
                       child: Builder(
                         builder: (ctx) => Text(
-                          'Elimina',
+                          AppL10n.of(ctx).actionDelete,
                           style: TextStyle(color: Theme.of(ctx).colorScheme.error),
                         ),
                       )),
@@ -317,11 +362,11 @@ class _ProjectDetailContentState
           ),
 
           // ── Galleria Foto ──
-          _SectionHeader(title: 'Galleria'),
+          _SectionHeader(title: l.sectionGallery),
           _GallerySliver(projectId: widget.project.id),
 
           // ── Note Progetto ──
-          _SectionHeader(title: 'Note'),
+          _SectionHeader(title: l.sectionNotes),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -334,9 +379,8 @@ class _ProjectDetailContentState
                           minLines: 3,
                           maxLength: 500,
                           autofocus: true,
-                          decoration: const InputDecoration(
-                            hintText:
-                                'Aggiungi note, riferimenti, obiettivi del progetto…',
+                          decoration: InputDecoration(
+                            hintText: l.projectNotesHint,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -346,12 +390,12 @@ class _ProjectDetailContentState
                             TextButton(
                               onPressed: () =>
                                   setState(() => _editingNotes = false),
-                              child: const Text('Annulla'),
+                              child: Text(l.actionCancel),
                             ),
                             const SizedBox(width: 8),
                             FilledButton(
                               onPressed: _saveNotes,
-                              child: const Text('Salva'),
+                              child: Text(l.actionSave),
                             ),
                           ],
                         ),
@@ -370,7 +414,7 @@ class _ProjectDetailContentState
                         child: Text(
                           p.notes?.isNotEmpty == true
                               ? p.notes!
-                              : 'Aggiungi note, riferimenti, obiettivi del progetto…',
+                              : l.projectNotesHint,
                           style: tt.bodyMedium?.copyWith(
                             color: p.notes?.isNotEmpty == true
                                 ? null
@@ -386,6 +430,9 @@ class _ProjectDetailContentState
 
           // ── Palette del kit ──
           ProjectPaletteSliver(projectId: widget.project.id),
+
+          // ── Devlog ──
+          ProjectDevlogSliver(projectId: widget.project.id),
 
           SliverToBoxAdapter(
             child: Padding(
@@ -445,19 +492,21 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, bg, fg) = switch (status) {
+    final l = AppL10n.of(context);
+    final (bg, fg) = switch (status) {
       'in_progress' => (
-          'In corso',
           const Color(0xFFC87A20),
           Colors.white
         ),
       'completed' => (
-          'Completato',
           Theme.of(context).colorScheme.primary,
           Colors.black87
         ),
+      'paused' => (
+          Colors.blueGrey,
+          Colors.white
+        ),
       _ => (
-          'Da iniziare',
           Colors.transparent,
           Colors.white
         ),
@@ -477,7 +526,7 @@ class _StatusChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label,
+            Text(l.projectStatusLabel(status),
                 style: TextStyle(
                     color: fg,
                     fontSize: 12,
@@ -533,28 +582,31 @@ class _GallerySliver extends ConsumerWidget {
   Future<void> _addPhoto(BuildContext context, WidgetRef ref) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Fotocamera'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galleria'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Annulla'),
-              onTap: () => Navigator.pop(ctx),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(ll.photoSourceCamera),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(ll.photoSourceGallery),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: Text(ll.actionCancel),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      },
     );
     if (source == null) return;
     try {
@@ -568,16 +620,20 @@ class _GallerySliver extends ConsumerWidget {
   Future<void> _deletePhoto(BuildContext context, WidgetRef ref, int photoId) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Eliminare la foto?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Elimina', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.photoDeleteTitle),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ll.actionCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ll.actionDelete,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+            ),
+          ],
+        );
+      },
     );
     if (confirm == true) {
       await ref.read(projectRepositoryProvider).deleteProjectPhoto(photoId);
@@ -649,6 +705,7 @@ class _PhotoFullscreenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -657,23 +714,26 @@ class _PhotoFullscreenPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Elimina foto',
+            tooltip: l.photoDeleteTooltip,
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Eliminare la foto?'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Annulla')),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Elimina',
-                          style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
+                builder: (ctx) {
+                  final ll = AppL10n.of(ctx);
+                  return AlertDialog(
+                    title: Text(ll.photoDeleteTitle),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(ll.actionCancel)),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(ll.actionDelete,
+                            style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                      ),
+                    ],
+                  );
+                },
               );
               if (confirm == true && context.mounted) {
                 Navigator.of(context).pop();

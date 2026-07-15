@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../database/app_database.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/utils/permissions.dart';
 import '../../shared/widgets/patina_logo.dart';
 
@@ -163,17 +164,17 @@ class _Page1Welcome extends StatelessWidget {
         children: [
           const PatinaMark(size: 120),
           const SizedBox(height: 40),
-          Text('Benvenuto in Patina',
+          Text(AppL10n.of(context).onboardingWelcomeTitle,
               style: tt.displayMedium, textAlign: TextAlign.center),
           const SizedBox(height: 16),
           Text(
-            'Il taccuino digitale per i tuoi modelli in scala.',
+            AppL10n.of(context).onboardingWelcomeSubtitle,
             style: tt.bodyLarge?.copyWith(color: scheme.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'Tieni traccia dei tuoi progetti, delle vernici e delle ricette di miscelazione — tutto offline, tutto tuo.',
+            AppL10n.of(context).onboardingWelcomeBody,
             style: tt.bodyMedium?.copyWith(
                 color: scheme.onSurface.withOpacity(0.6)),
             textAlign: TextAlign.center,
@@ -183,7 +184,7 @@ class _Page1Welcome extends StatelessWidget {
             onPressed: onNext,
             style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52)),
-            child: const Text('Inizia'),
+            child: Text(AppL10n.of(context).actionStart),
           ),
         ],
       ),
@@ -208,45 +209,43 @@ class _Page2Features extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Cosa puoi fare', style: tt.displayMedium),
+          Text(AppL10n.of(context).onboardingFeaturesTitle, style: tt.displayMedium),
           const SizedBox(height: 8),
           Text(
-            'Le funzionalità di Patina, pensate per il modellismo statico.',
+            AppL10n.of(context).onboardingFeaturesSubtitle,
             style: tt.bodyMedium
                 ?.copyWith(color: scheme.onSurface.withOpacity(0.6)),
           ),
           const SizedBox(height: 28),
           _FeatureCard(
             icon: Icons.view_module_outlined,
-            title: 'Progetti',
-            description:
-                'Crea e organizza i tuoi modelli, con foto e stato di avanzamento',
+            title: AppL10n.of(context).onboardingFeatureProjectsTitle,
+            description: AppL10n.of(context).onboardingFeatureProjectsDesc,
           ),
           const SizedBox(height: 12),
           _FeatureCard(
             icon: Icons.palette_outlined,
-            title: 'Vernici',
-            description: 'Tieni traccia del tuo inventario di vernici',
+            title: AppL10n.of(context).onboardingFeaturePaintsTitle,
+            description: AppL10n.of(context).onboardingFeaturePaintsDesc,
           ),
           const SizedBox(height: 12),
           _FeatureCard(
             icon: Icons.science_outlined,
-            title: 'Ricette',
-            description: 'Salva le tue miscele personalizzate con proporzioni',
+            title: AppL10n.of(context).onboardingFeatureRecipesTitle,
+            description: AppL10n.of(context).onboardingFeatureRecipesDesc,
           ),
           const SizedBox(height: 12),
           _FeatureCard(
             icon: Icons.push_pin_outlined,
-            title: 'Pin su foto',
-            description:
-                'Documenta colori e lavorazioni direttamente sulle foto',
+            title: AppL10n.of(context).onboardingFeaturePinsTitle,
+            description: AppL10n.of(context).onboardingFeaturePinsDesc,
           ),
           const SizedBox(height: 36),
           FilledButton(
             onPressed: onNext,
             style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52)),
-            child: const Text('Avanti'),
+            child: Text(AppL10n.of(context).actionNext),
           ),
         ],
       ),
@@ -336,22 +335,20 @@ class _Page3Permissions extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Patina ha bisogno di accedere a:',
+          Text(AppL10n.of(context).onboardingPermissionsTitle,
               style: tt.titleLarge),
           const SizedBox(height: 24),
           _PermissionTile(
             icon: Icons.camera_alt_outlined,
-            title: 'Fotocamera',
-            description:
-                'Scatta foto dei tuoi modelli durante la lavorazione',
+            title: AppL10n.of(context).onboardingPermissionsCamera,
+            description: AppL10n.of(context).onboardingPermissionsCameraDesc,
             granted: cameraGranted,
           ),
           const SizedBox(height: 12),
           _PermissionTile(
             icon: Icons.photo_library_outlined,
-            title: 'Foto e file',
-            description:
-                'Importa immagini dalla galleria e salva i tuoi lavori',
+            title: AppL10n.of(context).onboardingPermissionsPhotos,
+            description: AppL10n.of(context).onboardingPermissionsPhotosDesc,
             granted: photosGranted,
           ),
           const SizedBox(height: 36),
@@ -359,20 +356,22 @@ class _Page3Permissions extends StatelessWidget {
             onPressed: _allGranted ? onNext : onRequest,
             style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52)),
-            child: Text(_allGranted ? 'Continua' : 'Concedi permessi'),
+            child: Text(_allGranted
+                ? AppL10n.of(context).actionContinue
+                : AppL10n.of(context).onboardingPermissionsGrant),
           ),
           const SizedBox(height: 12),
           Center(
             child: TextButton(
               onPressed: onSkip,
-              child: Text('Salta per ora',
+              child: Text(AppL10n.of(context).actionSkip,
                   style: TextStyle(
                       color: scheme.onSurface.withOpacity(0.5))),
             ),
           ),
           Center(
             child: Text(
-              'Puoi abilitarli in qualsiasi momento da\nImpostazioni → App → Patina',
+              AppL10n.of(context).onboardingPermissionsHint,
               style: tt.bodySmall?.copyWith(
                   color: scheme.onSurface.withOpacity(0.4)),
               textAlign: TextAlign.center,
@@ -408,11 +407,12 @@ class _PermissionTile extends StatelessWidget {
             ? const Color(0xFFC8503B)
             : scheme.onSurface.withOpacity(0.4);
 
+    final l = AppL10n.of(context);
     final statusLabel = granted == true
-        ? 'Concesso ✓'
+        ? l.onboardingPermissionsGranted
         : granted == false
-            ? 'Negato'
-            : 'In attesa';
+            ? l.onboardingPermissionsDenied
+            : l.onboardingPermissionsPending;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -472,11 +472,11 @@ class _Page4Ready extends StatelessWidget {
                 size: 56, color: scheme.primary),
           ),
           const SizedBox(height: 40),
-          Text('Sei pronto!',
+          Text(AppL10n.of(context).onboardingReadyTitle,
               style: tt.displayMedium, textAlign: TextAlign.center),
           const SizedBox(height: 16),
           Text(
-            'Crea il tuo primo progetto e inizia a documentare il tuo lavoro.',
+            AppL10n.of(context).onboardingReadyBody,
             style: tt.bodyLarge?.copyWith(color: scheme.onSurface),
             textAlign: TextAlign.center,
           ),
@@ -485,7 +485,7 @@ class _Page4Ready extends StatelessWidget {
             onPressed: onFinish,
             style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52)),
-            child: const Text('Inizia'),
+            child: Text(AppL10n.of(context).actionStart),
           ),
         ],
       ),

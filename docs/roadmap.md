@@ -26,6 +26,8 @@
 
 **Obiettivo:** creare, visualizzare e gestire progetti. Prima funzionalità usabile.
 
+> **Limiti Free:** max 2 progetti attivi contemporaneamente (i progetti Completati non contano). Max 5 foto per progetto.
+
 > **Convenzione priorità:** 🔴 Alta — sblocca altre feature · 🟡 Media — necessaria ma non bloccante · 🟢 Bassa — polish/ottimizzazione
 
 ### Documentazione (da completare prima dello sviluppo)
@@ -45,8 +47,9 @@
 | 1A.3 | 🟡 Media | Dashboard archivio (`/projects`) — card con miniatura cover photo 80×80, badge stato colorato, filter bar chip per stato | ✅ Completato |
 | 1A.4 | 🟡 Media | Galleria foto progetto — camera + galleria, miniature, viewer fullscreen con zoom (InteractiveViewer), elimina dall'AppBar | ✅ Completato |
 | 1A.5 | 🟡 Media | Sviluppa **Onboarding** — schermata primo avvio, richiesta permessi, progetto di esempio | ✅ Completato |
-| 1A.6 | 🟢 Bassa | Modifica, archiviazione ed eliminazione progetto | ⬜ Da fare |
-| 1A.7 | 🟢 Bassa | Ricerca e filtri nell'archivio (nome, categoria, stato) — filtro per stato ✅ implementato; ricerca per nome ⬜ da fare | 🔶 Parziale |
+| 1A.6 | 🟢 Bassa | Modifica (wizard edit mode), stato "In pausa" (non conta verso limite Free), eliminazione con conferma | ✅ Completato |
+| 1A.7 | 🟢 Bassa | Ricerca per nome (search bar inline nell'AppBar, toggle icona lente) + filtro per stato (chip bar) + gate Free sul FAB (lock icon + paywall a 2 progetti attivi) | ✅ Completato |
+| 1A.8 | 🟡 Media | **Devlog progetto** — timeline verticale nella scheda progetto. Voce: data/ora, testo, foto opzionale. Swipe-to-delete. DB: `project_logs` (schema v8). | ✅ Completato |
 
 ---
 
@@ -54,15 +57,25 @@
 
 **Obiettivo:** inventario personale e cataloghi marche consultabili offline.
 
+> **Limiti Free:** max 20 vernici in inventario personale. Il catalogo offline è sempre consultabile senza limiti.
+
 | Task | Descrizione | Stato |
 |------|-------------|-------|
-| 1B.1 | Schermata catalogo — sfoglia per marca e linea | ⬜ Da fare |
-| 1B.2 | Ricerca nel catalogo per codice e nome | ⬜ Da fare |
-| 1B.3 | Inventario personale — griglia chip esagonali / lista | ⬜ Da fare |
-| 1B.4 | Aggiunta vernice da catalogo o manuale | ⬜ Da fare |
-| 1B.5 | Modifica quantità con tap rapido | ⬜ Da fare |
+| 1B.1 | Schermata catalogo — sfoglia per marca e linea | ✅ Completato |
+| 1B.2 | Ricerca nel catalogo per codice e nome | ✅ Completato |
+| 1B.3 | Inventario personale — griglia chip esagonali / lista (toggle) | ✅ Completato |
+| 1B.4 | Aggiunta vernice da catalogo con bottone `+` inline | ✅ Completato |
+| 1B.5 | Modifica quantità dal detail sheet (senza chiudere il sheet) | ✅ Completato |
 | 1B.6 | Lista della spesa — sezione automatica (vernici palette kit non in inventario, checkbox in-memory, ordine checked-in-fondo) + voci manuali (DB, checkbox persistito, swipe-to-delete, FAB); schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
-| 1B.7 | Equivalenze tra marche | ⬜ Da fare |
+| 1B.7 | Indicatore limite Free nella stats row (N/20 + barra progresso) | ✅ Completato |
+| 1B.8 | Sottofiltro per linea nel catalogo (dopo selezione marca) | ✅ Completato |
+| 1B.9 | Aggiunta vernice manuale (non in catalogo) — UI per `custom_paints` | ⬜ Da fare |
+| 1B.10 | Ordinamento inventario — per marca, per quantità (esaurite prima), per data aggiunta | ⬜ Da fare |
+| 1B.11 | Long-press sul chip esagonale → cambio quantità rapido senza aprire il sheet | ⬜ Da fare |
+| 1B.12 | Badge conteggio vernici per marca nei chip filtro (es. `Vallejo (12)`) | ⬜ Da fare |
+| 1B.13 | Nome vernice visibile nella griglia esagonale (sotto il codice, font più piccolo) | ⬜ Da fare |
+| 1B.14 | Collegamento rapido lista della spesa dal detail sheet (visibile solo se `low`/`empty`) | ⬜ Da fare |
+| 1B.15 | Equivalenze tra marche | ⬜ Da fare |
 
 ---
 
@@ -70,15 +83,19 @@
 
 **Obiettivo:** creare e salvare miscele personalizzate con proporzioni.
 
+> **Limiti Free:** max 5 ricette salvate.
+
 | Task | Descrizione | Stato |
 |------|-------------|-------|
-| 1C.1 | Lista ricette con foto anteprima | ⬜ Da fare |
-| 1C.2 | Creazione ricetta — selezione vernici + proporzioni | ⬜ Da fare |
-| 1C.3 | Foto risultato dalla camera o galleria | ⬜ Da fare |
-| 1C.4 | Tag e ricerca ricette | ⬜ Da fare |
-| 1C.5 | Duplica ricetta | ⬜ Da fare |
-| 1C.6 | Algoritmo miscelazione CIELAB (HEX → suggerimento ricetta) | ⬜ Da fare |
-| 1C.7 | Collegamento ricette ↔ progetti | ⬜ Da fare |
+| 1C.1 | Lista ricette con chip colore CIELAB e tag | ✅ Completato |
+| 1C.2 | Creazione ricetta — selezione vernici da inventario/catalogo + proporzioni, finitura, numero di mani | ✅ Completato |
+| 1C.3 | Foto risultato dalla camera o galleria | ⬜ Non implementato — sostituito da colore CIELAB auto-generato |
+| 1C.4 | Tag e ricerca ricette per nome/tag | ✅ Completato |
+| 1C.5 | ~~Duplica ricetta~~ | 🚫 Eliminato |
+| 1C.6 | Colore miscelato CIELAB calcolato automaticamente dagli ingredienti (chip esagonale in tempo reale) | ✅ Completato |
+| 1C.7 | Collegamento ricette ↔ progetti — tab "Ricette personali" nel picker palette kit; sezione progetti nella scheda ricetta | ✅ Completato |
+| 1C.8 | Schermata dettaglio ricetta con colore blended, ingredienti, ΔE match e lista progetti collegati | ✅ Completato |
+| 1C.9 | Cerca ricetta per colore target (HEX picker → ΔE ranking) | 🔄 Rimosso temporaneamente — UX da riprogettare (vedi DT.14) |
 
 ---
 
@@ -299,19 +316,33 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ---
 
-## Fase 3 — Funzionalità AI e Cloud
+## Fase 3 — Funzionalità AI Pro e Cloud
 
 > Da pianificare in dettaglio al completamento della Fase 2.
+> Tutte le funzionalità di questa fase sono **riservate agli utenti Pro** (abbonamento in-app).
+> Vedere `docs/vision.md` per il modello di business completo.
+
+### Modello abbonamento (3 tier)
+- **Free**: tutte le funzionalità Fase 0–2 con limiti quantitativi (2 progetti attivi, 20 vernici inventario, 5 foto/progetto, 5 ricette)
+- **Standard** (1,99 €/mese · 12,99 €/anno): rimuove tutti i limiti quantitativi, funzionalità Fase 0–2 illimitate
+- **Pro** (3,99 €/mese · 24,99 €/anno): tutto di Standard + funzionalità AI e cloud di Fase 3
+- **Piattaforme**: Google Play Billing (Android) + Apple IAP (iOS)
+- **Gate nel codice**: `ProGate.isProUser(ref)` — `false` mostra paywall, `true` esegue la funzione
+
+### Predisposizioni già nel codice
+- `app/lib/shared/pro/pro_gate.dart` — `ProGate` helper + `proStatusProvider` (stub `false`, da collegare a billing)
+- `app/lib/shared/pro/paywall_sheet.dart` — bottom sheet paywall placeholder da sostituire con UI definitiva in Fase 3
 
 | Milestone | Descrizione |
 |-----------|-------------|
-| 3.1 | Integrazione Claude API — miscelazione AI avanzata |
-| 3.2 | Riconoscimento colore da foto (Claude Vision) |
-| 3.3 | Sistema crediti in-app (Google Play Billing) |
-| 3.4 | Sincronizzazione cloud opzionale |
-| 3.5 | Espansione cataloghi tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, Tamiya X/LP, AK, Ammo, Humbrol, Mr. Color) |
-| 3.6 | Condivisione ricette con la community |
-| 3.7 | **Istruzioni AR** — fotografia libretto istruzioni in B/N, Claude Vision riconosce i codici colore e sovrappone esagoni colorati reali (overlay interattivo, salvato nel progetto, funzionalità a crediti) |
+| 3.1 | **Sistema abbonamento** — integrazione Google Play Billing + Apple IAP; `proStatusProvider` collegato allo stato reale dell'abbonamento; paywall UI definitivo |
+| 3.2 | **AI Vision scansione istruzioni** (sostituisce OCR MLKit) — Claude Vision identifica codici colore per marca da foto del libretto; lista pronta da aggiungere alla palette |
+| 3.3 | **Miscelazione AI avanzata** — Claude API suggerisce ricette di miscelazione partendo da un colore target o da una foto |
+| 3.4 | **Riconoscimento colore da foto** — Claude Vision trova la vernice più vicina a un punto dell'immagine |
+| 3.5 | **Istruzioni AR** — overlay esagoni colorati reali su foto libretto istruzioni B/N |
+| 3.6 | **Sincronizzazione cloud** — backup automatico e sync multi-dispositivo |
+| 3.7 | **Condivisione ricette con la community** |
+| 3.8 | **Espansione cataloghi** tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, AK, Ammo) |
 
 ---
 
@@ -322,15 +353,19 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | Task | Priorità | Descrizione | Come risolvere | Stato |
 |------|----------|-------------|----------------|-------|
 | DT.1 | 🔴 Alta | `CustomPaints` non registrata in `@DriftDatabase` — la tabella non viene creata nel DB SQLite, tutto il flusso vernici manuali è non funzionante a runtime | Aggiungere `CustomPaints` alla lista tables in `app_database.dart` e incrementare `schemaVersion` a 2 con migrazione | ✅ Risolto (serve `build_runner build` per rigenerare .g.dart) |
-| DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ⬜ Da fare |
+| DT.2 | 🔴 Alta | Demo project inserito prima che l'utente completi l'onboarding — `main.dart` chiama `initializeDemoProject()` prima che l'utente veda la schermata di benvenuto | Spostare la chiamata a `initializeDemoProject()` nell'ultimo step dell'onboarding, o al primo accesso all'archivio | ✅ Già risolto — `initializeDemoProject()` è chiamata dentro `_finish()` in `onboarding_screen.dart`, cioè solo al tap su "Inizia" nell'ultimo step |
 | DT.3 | 🟡 Media | `colorScheme.background` / `onBackground` / `surfaceVariant` deprecati in Flutter 3.18+ — genera warning in build | Migrazione completa: `background→surface`, `onBackground→onSurface`, `surface→surfaceContainer`, `surfaceVariant→surfaceContainerHigh` in tutti i file dart | ✅ Risolto |
 | DT.4 | 🟡 Media | Galleria foto in `project_detail_screen.dart` — bottone `+` con `onTap: () {}` vuoto, non collegato ad alcuna funzione | Implementare durante 1A.4 (Galleria foto progetto) | ✅ Risolto |
-| DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ⬜ Da fare |
+| DT.5 | 🟡 Media | Note progetto: `features.md` descrive salvataggio automatico on blur, il codice usa bottoni Annulla/Salva espliciti | Allineare la spec o modificare il comportamento del campo note in `project_detail_screen.dart` | ✅ Risolto — bottoni espliciti Annulla/Salva scelti come comportamento definitivo; spec allineata |
 | DT.6 | 🟡 Media | Campo `phaseId` orfano in `Pins` — non referenzia nessuna tabella, non documentato, mai popolato dall'UI | Riservato per Fase 1D (fasi di lavorazione) — documentato con commento in `tables/pins.dart`. Aggiungere FK e migrazione quando si implementerà la tabella `phases` | ✅ Documentato |
 | DT.7 | 🟡 Media | Campo `catalogId` in `RecipeIngredients` non documentato — doppio riferimento a inventory e catalog non spiegato | Documentato con commento in `tables/recipes.dart`: `paintId` = percorso principale (inventario), `catalogId` = alternativo (vernice non ancora in inventario) | ✅ Documentato |
 | DT.8 | 🟢 Bassa | Dipendenze inutilizzate in `pubspec.yaml`: `cached_network_image`, `uuid`, `dio`, `path_provider`, `path`, `intl`, `riverpod_annotation`, `riverpod_generator` | Rimuovere ora, reintrodurre quando effettivamente necessarie | ✅ Risolto |
 | DT.9 | 🟢 Bassa | `docs/architecture.md` documenta solo 3 cataloghi (Vallejo MC, Citadel, Tamiya XF) — nella realtà sono 11 con ~1.000 colori | Aggiornare la sezione cataloghi in architecture.md | ✅ Risolto |
 | DT.10 | 🟢 Bassa | `CLAUDE.md` mancante — nessuna guida per Claude Code su comandi build, codegen Drift, convenzioni naming | Creare `CLAUDE.md` alla radice con: `cd app && flutter pub get`, `flutter pub run build_runner build`, convenzioni progetto | ✅ Risolto |
+| DT.11 | 🟢 Bassa | OCR istruzioni kit — MLKit offline riconosce il testo ma fallisce su font piccoli, layout multi-colonna e codici parzialmente sovrapposti a icone (es. Tamiya). La funzione è utile come aiuto alla compilazione ma non affidabile al 100%. Limite strutturale dell'OCR testuale; da risolvere in Fase 3 con **AI Vision** (vedi milestone 3.8). Nessun intervento necessario ora. | Rimandato a Fase 3 — milestone 3.8 | ⏳ Rimandato |
+| DT.12 | 🟢 Bassa | `HexColorChip` — bordo fisso `scheme.outline` non visibile sui colori molto scuri (nero, navy) su sfondo scuro, né sui colori molto chiari (bianco, avorio) su sfondo chiaro | `HexColorChip.build()`: calcola luminanza relativa WCAG del colore; se luminanza > 0.18 applica bordo `nero/25%`, altrimenti `bianco/35%`. Applicato globalmente a tutte le schermate (palette, shopping, scan, inventario, ricette). | ✅ Risolto |
+| DT.13 | 🟡 Media | Selector quantità inventario — 4 bottoni GestureDetector+AnimatedContainer sostituiti con `DropdownButtonFormField` nel detail sheet (`paints_screen.dart`). | ✅ Risolto |
+| DT.14 | 🟡 Media | "Cerca ricetta per colore target" (1C.9) — funzionalità rimossa temporaneamente perché poco comprensibile (UX confusa). Da riprogettare: entry point più chiaro, tutorial inline, possibilmente fotocamera come input alternativo al HEX picker. | Da riprogettare in fase futura |
 
 ---
 
@@ -338,24 +373,29 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ```
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
-Fase 1A      █████████░   93%  — card+foto+badge+filtro stato OK; viewer foto OK; manca modifica progetto, ricerca per nome
-Fase 1B      █░░░░░░░░░   14%  — lista della spesa (1B.6) completata; catalogo + inventario da fare
-Fase 1C      ░░░░░░░░░░    0%  — Ricette
+Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa
+Fase 1B      ████████░░   80%  — inventario + catalogo + lista spesa completati; mancano 1B.9/10/11/12/13/14/15
+Fase 1C      ██████████  100%  — completa
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
-Fase 2       ███░░░░░░░   30%  — i18n IT+EN + selezione lingua completati; manca migrazione stringhe + ES/FR
+Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
 Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ████░░░░░░  40% — DT.1/3/4/6/7/8/9/10 risolti; DT.2/5 aperti
+Debito Tecnico ███████░░░  70% — DT.1/2/3/4/5/6/7/8/9/10/12/13 risolti; nessun debito aperto
 ```
+
+### Schema DB attuale: v6
+- v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
+- v2 → aggiunta `custom_paints`
+- v3 → aggiunta `project_paints` (palette del kit)
+- v4 → aggiunta `shopping_items` (lista della spesa manuale)
+- v5 → aggiunta colonne `paint_id`, `catalog_id`, `hex` a `recipe_ingredients`
+- v6 → aggiunta colonne `finish`, `coats` a `recipes`
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🔴 `DT.2` — Fix ordine demo project / onboarding
-2. 🟡 `1A.6` — Modifica, archiviazione, eliminazione progetto
-3. 🟡 `2.3` — Migrazione stringhe hardcoded → `AppL10n` (feature per feature)
-4. 🟡 `1B.1` — Schermata catalogo vernici (sfoglia per marca e linea, legge JSON on-demand)
-5. 🟡 `1B.2` — Ricerca nel catalogo per codice e nome
-6. 🟡 `1B.3` — Inventario personale — griglia chip esagonali / lista
-7. 🟢 `1A.7` — Ricerca per nome nell'archivio (filtro stato già fatto)
+1. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
+2. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
+3. 🟢 `1B.10` — Ordinamento inventario
+4. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`

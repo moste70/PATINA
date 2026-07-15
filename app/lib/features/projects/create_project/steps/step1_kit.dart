@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n_helpers.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../wizard_state.dart';
 
@@ -53,6 +55,7 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final state = ref.watch(createProjectProvider);
     final notifier = ref.read(createProjectProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
@@ -62,15 +65,15 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
     final brandError = _brandTouched && (state.brand == null || state.brand!.trim().isEmpty);
     final scaleValue = state.scale ?? '';
     final scaleError = _scaleTouched && scaleValue.trim().isEmpty
-        ? 'La scala è obbligatoria'
+        ? l.errorScaleRequired
         : _scaleTouched && scaleValue.trim().isNotEmpty && !_scaleRegex.hasMatch(scaleValue.trim())
-            ? 'Formato non valido (es. 1/35)'
+            ? l.errorScaleFormat
             : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
       children: [
-        Text('Il Kit', style: tt.displaySmall),
+        Text(l.projectStepKit, style: tt.displaySmall),
         const SizedBox(height: 24),
 
         // Nome
@@ -80,9 +83,9 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
           maxLength: 80,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
-            labelText: 'Nome modello *',
-            hintText: 'es. Tiger I Ausf. E',
-            errorText: nameError ? 'Il nome è obbligatorio' : null,
+            labelText: l.projectNameLabelRequired,
+            hintText: l.projectNameHint,
+            errorText: nameError ? l.errorNameRequired : null,
             counterText: '${_nameCtrl.text.length}/80',
           ),
           onChanged: (v) {
@@ -97,9 +100,9 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
           controller: _brandCtrl,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
-            labelText: 'Marca kit *',
-            hintText: 'es. Tamiya, Revell, Hasegawa',
-            errorText: brandError ? 'La marca è obbligatoria' : null,
+            labelText: l.projectBrandLabelRequired,
+            hintText: l.projectBrandHint,
+            errorText: brandError ? l.errorBrandRequired : null,
           ),
           onChanged: (v) {
             setState(() => _brandTouched = true);
@@ -112,8 +115,8 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         TextField(
           controller: _scaleCtrl,
           decoration: InputDecoration(
-            labelText: 'Scala *',
-            hintText: 'es. 1/35',
+            labelText: l.projectScaleLabelRequired,
+            hintText: l.projectScaleHint,
             errorText: scaleError,
           ),
           onChanged: (v) {
@@ -149,13 +152,13 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Categoria *',
+                l.projectCategoryLabelRequired,
                 style: tt.titleSmall?.copyWith(color: labelColor),
               ),
               if (categoryError) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Seleziona una categoria',
+                  l.errorCategoryRequired,
                   style: tt.bodySmall?.copyWith(color: Theme.of(ctx).colorScheme.error),
                 ),
               ],
@@ -175,7 +178,7 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
                 size: 16,
                 color: selected ? scheme.primary : scheme.onSurface,
               ),
-              label: Text(AppConstants.categoryLabels[cat] ?? cat),
+              label: Text(l.categoryLabel(cat)),
               onSelected: (_) {
                 setState(() => _categoryTouched = true);
                 notifier.setCategory(cat);
@@ -200,7 +203,7 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
             });
             if (state.step1Valid) widget.onNext();
           },
-          child: const Text('Avanti'),
+          child: Text(l.actionNext),
         ),
       ],
     );

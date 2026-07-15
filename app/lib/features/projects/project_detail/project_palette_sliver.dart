@@ -6,21 +6,28 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'scan_instructions_sheet.dart';
 import '../../../database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../shared/utils/lab_mixer.dart';
+import '../../../shared/widgets/hex_color_chip.dart';
+import '../../recipes/recipe_repository.dart';
 import '../project_repository.dart';
+
+const _kRecipeBrand = 'ricetta';
 
 // ── Catalog search ────────────────────────────────────────────────────────────
 
 class _CatalogPaint {
   final String brand;
+  final String line;
   final String code;
   final String name;
   final String hex;
   _CatalogPaint(
       {required this.brand,
+      required this.line,
       required this.code,
       required this.name,
       required this.hex});
-
 }
 
 const _catalogAssets = [
@@ -46,10 +53,12 @@ Future<List<_CatalogPaint>> _loadAllCatalogs() async {
       final raw = await rootBundle.loadString(asset);
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final brand = data['brand'] as String;
+      final line = (data['line'] as String?) ?? '';
       final paints = data['paints'] as List<dynamic>;
       for (final p in paints) {
         result.add(_CatalogPaint(
           brand: brand,
+          line: line,
           code: p['code'] as String,
           name: p['name'] as String,
           hex: p['hex'] as String,
@@ -71,6 +80,13 @@ final _projectPaintsProvider =
   return ref.watch(projectRepositoryProvider).watchProjectPaints(id);
 });
 
+final _allRecipesProvider = StreamProvider.autoDispose<List<Recipe>>((ref) =>
+    ref.watch(recipeRepositoryProvider).watchAllRecipes());
+
+final _allIngredientsForSheetProvider =
+    StreamProvider.autoDispose<List<RecipeIngredient>>((ref) =>
+        ref.watch(recipeRepositoryProvider).watchAllIngredients());
+
 // ── Main widget ───────────────────────────────────────────────────────────────
 
 class ProjectPaletteSliver extends ConsumerWidget {
@@ -79,6 +95,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final paintsAsync = ref.watch(_projectPaintsProvider(projectId));
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -95,7 +112,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    'COLORI DEL KIT',
+                    l.paletteSectionTitle,
                     style: tt.labelSmall?.copyWith(
                       color: scheme.primary,
                       letterSpacing: 1.2,
@@ -104,7 +121,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   const Spacer(),
                   _HeaderIconButton(
                     icon: Icons.shopping_cart_outlined,
-                    tooltip: 'Lista della spesa',
+                    tooltip: l.paletteShoppingTooltip,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       context.push('/shopping');
@@ -113,7 +130,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   ),
                   _HeaderIconButton(
                     icon: Icons.camera_alt_outlined,
-                    tooltip: 'Scansiona istruzioni',
+                    tooltip: l.paletteScanTooltip,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       _scan(context, ref);
@@ -122,7 +139,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
                   ),
                   _HeaderIconButton(
                     icon: Icons.add,
-                    tooltip: 'Aggiungi vernice',
+                    tooltip: l.paletteAddPaintTooltip,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       _showAddSheet(context, ref);
@@ -162,6 +179,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
   }
 
   Future<void> _scan(BuildContext context, WidgetRef ref) async {
+    final l = AppL10n.of(context);
     final repo = ref.read(projectRepositoryProvider);
     await showScanSheet(
       context,
@@ -178,9 +196,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
         if (context.mounted && results.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                '${results.length} vernic${results.length == 1 ? 'e aggiunta' : 'i aggiunte'} alla palette.',
-              ),
+              content: Text(l.paletteSnackAdded(results.length)),
             ),
           );
         }
@@ -215,6 +231,7 @@ class _HeaderIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
+      preferBelow: false,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
@@ -242,6 +259,7 @@ class _EmptyPalette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Column(
       children: [
         // Auto-load tile (supported brands)
@@ -266,13 +284,12 @@ class _EmptyPalette extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Caricamento automatico',
+                        l.paletteAutoloadTitle,
                         style: tt.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        'Fotografia il foglio istruzioni\n'
-                        '${supportedBrands.join(' · ')}',
+                        l.paletteAutoloadBody,
                         style: tt.bodySmall
                             ?.copyWith(color: scheme.onSurfaceVariant),
                       ),
@@ -301,7 +318,7 @@ class _EmptyPalette extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Cerca nel catalogo',
+                    l.paletteCatalogSearch,
                     style: tt.bodyMedium,
                   ),
                 ),
@@ -325,6 +342,7 @@ class _PaletteRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final repo = ref.read(projectRepositoryProvider);
@@ -343,59 +361,50 @@ class _PaletteRow extends ConsumerWidget {
         child: Icon(Icons.delete_outline, color: scheme.onError),
       ),
       onDismissed: (_) => repo.deleteProjectPaint(paint.id),
-      child: FutureBuilder<bool>(
-        future: repo.isPaintInInventory(paint.brand, paint.code),
-        builder: (context, snap) {
-          final inStock = snap.data ?? false;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
+      child: paint.brand == _kRecipeBrand
+          ? _RecipePaletteRow(paint: paint, scheme: scheme, tt: tt)
+          : FutureBuilder<bool>(
+              future: repo.isPaintInInventory(paint.brand, paint.code),
+              builder: (context, snap) {
+                final inStock = snap.data ?? false;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _hexColor(paint.hex),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: scheme.outline.withOpacity(0.4), width: 1),
+                    color: scheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        paint.code,
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurface,
-                          letterSpacing: 0.3,
+                      HexColorChip(color: _hexColor(paint.hex), size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              paint.code,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onSurface,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            Text(paint.name,
+                                style: tt.bodySmall,
+                                overflow: TextOverflow.ellipsis),
+                          ],
                         ),
                       ),
-                      Text(
-                        paint.name,
-                        style: tt.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      const SizedBox(width: 8),
+                      _StockBadge(inStock: inStock, scheme: scheme),
                     ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                _StockBadge(inStock: inStock, scheme: scheme),
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
@@ -408,6 +417,62 @@ class _PaletteRow extends ConsumerWidget {
   }
 }
 
+// ── Recipe palette row ────────────────────────────────────────────────────────
+
+class _RecipePaletteRow extends StatelessWidget {
+  final ProjectPaint paint;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _RecipePaletteRow(
+      {required this.paint, required this.scheme, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => context.push('/recipes/${paint.code}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: scheme.primary.withOpacity(0.25), width: 1),
+        ),
+        child: Row(
+          children: [
+            HexColorChip(
+              color: Color(
+                  int.tryParse(paint.hex.replaceFirst('#', '0xFF')) ??
+                      0xFF888888),
+              size: 32,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(paint.name,
+                      style: tt.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis),
+                  Text(l.paletteRecipeLabel,
+                      style: tt.labelSmall
+                          ?.copyWith(color: scheme.primary)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right,
+                color: scheme.onSurfaceVariant.withOpacity(0.5), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Stock badge ───────────────────────────────────────────────────────────────
 
 class _StockBadge extends StatelessWidget {
@@ -417,6 +482,7 @@ class _StockBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -441,7 +507,7 @@ class _StockBadge extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            inStock ? 'In magazzino' : 'Da acquistare',
+            inStock ? l.paletteInStock : l.paletteToBuy,
             style: GoogleFonts.jetBrainsMono(
               fontSize: 9,
               fontWeight: FontWeight.w600,
@@ -458,8 +524,6 @@ class _StockBadge extends StatelessWidget {
 }
 
 // ── Add paint bottom sheet ────────────────────────────────────────────────────
-// Se initialResults è valorizzato, la sheet mostra quei risultati direttamente
-// (modalità post-scansione). L'utente può comunque cercare altro nel catalogo.
 
 class _AddPaintSheet extends ConsumerStatefulWidget {
   final int projectId;
@@ -469,9 +533,15 @@ class _AddPaintSheet extends ConsumerStatefulWidget {
   ConsumerState<_AddPaintSheet> createState() => _AddPaintSheetState();
 }
 
+const _kRecipesVirtualBrand = '__recipes__';
+
 class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
   final _controller = TextEditingController();
-  List<_CatalogPaint> _results = [];
+  String? _selectedBrand; // null = all, _kRecipesVirtualBrand = recipes mode
+  String? _selectedLine;
+  final Set<_CatalogPaint> _selected = {};
+  final Set<int> _selectedRecipeIds = {};
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -479,39 +549,134 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
     super.dispose();
   }
 
-  void _search(String query, List<_CatalogPaint> all) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) {
-      setState(() => _results = []);
-      return;
-    }
+  bool get _recipesMode => _selectedBrand == _kRecipesVirtualBrand;
+
+  List<String> _linesForBrand(List<_CatalogPaint> all) {
+    if (_selectedBrand == null) return [];
+    return all
+        .where((p) => p.brand == _selectedBrand && p.line.isNotEmpty)
+        .map((p) => p.line)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  List<_CatalogPaint> _filtered(List<_CatalogPaint> all) {
+    final q = _controller.text.trim().toLowerCase();
+    return all.where((p) {
+      if (_selectedBrand != null && p.brand != _selectedBrand) return false;
+      if (_selectedLine != null && p.line != _selectedLine) return false;
+      if (q.isEmpty) return true;
+      return p.code.toLowerCase().contains(q) ||
+          p.name.toLowerCase().contains(q) ||
+          p.brand.toLowerCase().contains(q);
+    }).take(60).toList();
+  }
+
+  void _toggle(_CatalogPaint p) {
+    HapticFeedback.selectionClick();
     setState(() {
-      _results = all
-          .where((p) =>
-              p.code.toLowerCase().contains(q) ||
-              p.name.toLowerCase().contains(q) ||
-              p.brand.toLowerCase().contains(q))
-          .take(40)
-          .toList();
+      if (_selected.contains(p)) {
+        _selected.remove(p);
+      } else {
+        _selected.add(p);
+      }
     });
   }
 
-  Future<void> _add(_CatalogPaint p) async {
-    await ref.read(projectRepositoryProvider).addProjectPaint(
-          projectId: widget.projectId,
-          brand: p.brand,
-          code: p.code,
-          name: p.name,
-          hex: p.hex,
-        );
+  void _toggleRecipe(int recipeId) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_selectedRecipeIds.contains(recipeId)) {
+        _selectedRecipeIds.remove(recipeId);
+      } else {
+        _selectedRecipeIds.add(recipeId);
+      }
+    });
+  }
+
+  Future<void> _confirm(
+      List<Recipe> recipes, List<RecipeIngredient> allIngredients) async {
+    final repo = ref.read(projectRepositoryProvider);
+    setState(() => _isSaving = true);
+
+    for (final p in _selected) {
+      await repo.addProjectPaint(
+        projectId: widget.projectId,
+        brand: p.brand,
+        code: p.code,
+        name: p.name,
+        hex: p.hex,
+      );
+    }
+    for (final id in _selectedRecipeIds) {
+      final recipe = recipes.firstWhere((r) => r.id == id);
+      final ings = allIngredients
+          .where((i) => i.recipeId == id && i.hex != null && i.hex!.isNotEmpty)
+          .toList();
+      final blended = ings.isNotEmpty
+          ? blendColorsInLab(
+              ings.map((i) => (hex: i.hex!, weight: i.percentage)).toList())
+          : const Color(0xFF888888);
+      final hex =
+          '#${blended.value.toRadixString(16).substring(2).toUpperCase()}';
+      await repo.addProjectPaint(
+        projectId: widget.projectId,
+        brand: _kRecipeBrand,
+        code: id.toString(),
+        name: recipe.name,
+        hex: hex,
+      );
+    }
+
     if (mounted) Navigator.pop(context);
   }
 
+  int get _count => _selected.length + _selectedRecipeIds.length;
+
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final catalogAsync = ref.watch(_catalogProvider);
+    final recipesAsync = ref.watch(_allRecipesProvider);
+    final ingredientsAsync = ref.watch(_allIngredientsForSheetProvider);
+
+    final catalog = catalogAsync.value ?? [];
+    final brands = catalog.map((p) => p.brand).toSet().toList()..sort();
+    final lines = _linesForBrand(catalog);
+    final recipes = recipesAsync.value ?? [];
+    final allIngs = ingredientsAsync.value ?? [];
+
+    final listItems = _recipesMode
+        ? <Widget>[]
+        : _filtered(catalog).map<Widget>((p) {
+            final sel = _selected.contains(p);
+            return ListTile(
+              key: ValueKey('${p.brand}${p.code}'),
+              leading: HexColorChip(color: _hexColor(p.hex), size: 32),
+              title: Text(
+                '${p.code}  ${p.name}',
+                style: GoogleFonts.jetBrainsMono(
+                    fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              subtitle: Text(p.brand, style: tt.bodySmall),
+              trailing: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: sel
+                    ? Icon(Icons.check_circle,
+                        key: const ValueKey('on'),
+                        color: scheme.primary, size: 24)
+                    : Icon(Icons.radio_button_unchecked,
+                        key: const ValueKey('off'),
+                        color: scheme.outline, size: 24),
+              ),
+              selected: sel,
+              selectedTileColor: scheme.primary.withOpacity(0.08),
+              onTap: () => _toggle(p),
+            );
+          }).toList();
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -524,97 +689,210 @@ class _AddPaintSheetState extends ConsumerState<_AddPaintSheet> {
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 8),
             child: Container(
-              width: 36,
-              height: 4,
+              width: 36, height: 4,
               decoration: BoxDecoration(
                 color: scheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          // Title
+          // Title row
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-            child: Text('Aggiungi vernice', style: tt.titleMedium),
+            child: Row(
+              children: [
+                Expanded(child: Text(l.paletteAddPaintsTitle, style: tt.titleMedium)),
+                if (_count > 0)
+                  FilledButton(
+                    onPressed: _isSaving
+                        ? null
+                        : () => _confirm(recipes, allIngs),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(l.paletteAddCountButton(_count)),
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          // Search field
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: catalogAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (all) => TextField(
+          // Brand chips
+          catalogAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: LinearProgressIndicator(),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (_) => SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  // Ricette personali chip — colore secondary, per prima
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.paletteRecipesTab),
+                      avatar: const Icon(Icons.science_outlined, size: 14),
+                      selected: _recipesMode,
+                      selectedColor: scheme.secondaryContainer,
+                      labelStyle: TextStyle(
+                        color: _recipesMode
+                            ? scheme.onSecondaryContainer
+                            : scheme.secondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      side: BorderSide(color: scheme.secondary.withOpacity(0.5)),
+                      onSelected: (_) => setState(() {
+                        _selectedBrand = _kRecipesVirtualBrand;
+                        _controller.clear();
+                      }),
+                    ),
+                  ),
+                  // "Tutti" chip
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.filterAllLines),
+                      selected: _selectedBrand == null,
+                      onSelected: (_) => setState(() {
+                        _selectedBrand = null;
+                        _selectedLine = null;
+                        _controller.clear();
+                      }),
+                    ),
+                  ),
+                  // Brand chips
+                  ...brands.map((b) => Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(b),
+                      selected: _selectedBrand == b,
+                      onSelected: (_) => setState(() {
+                        _selectedBrand = b;
+                        _selectedLine = null;
+                        _controller.clear();
+                      }),
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ),
+          // Line sub-chips — visibili solo se marca selezionata ha più linee
+          if (!_recipesMode && lines.length > 1)
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.filterAllLines),
+                      selected: _selectedLine == null,
+                      onSelected: (_) => setState(() => _selectedLine = null),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                  ...lines.map((ln) => Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(l.paintLineLabel(ln)),
+                      selected: _selectedLine == ln,
+                      onSelected: (_) => setState(() => _selectedLine = ln),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          // Search field (catalog only)
+          if (!_recipesMode)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+              child: TextField(
                 controller: _controller,
-                autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Cerca per codice, nome o marca…',
+                  hintText: l.paintSearchHint,
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            _search('', all);
-                          },
+                          onPressed: () => setState(() => _controller.clear()),
                         )
                       : null,
                 ),
-                onChanged: (q) => _search(q, all),
+                onChanged: (_) => setState(() {}),
               ),
             ),
-          ),
           // Results
           Expanded(
-            child: catalogAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (_, __) =>
-                  const Center(child: Text('Errore caricamento catalogo')),
-              data: (_) {
-                if (_results.isEmpty && _controller.text.isEmpty) {
-                  return Center(
-                    child: Text('Cerca per trovare una vernice',
-                        style: tt.bodySmall),
-                  );
-                }
-                if (_results.isEmpty) {
-                  return Center(
-                    child: Text('Nessun risultato', style: tt.bodySmall),
-                  );
-                }
-                return ListView.builder(
-                  controller: scrollCtrl,
-                  itemCount: _results.length,
-                  itemBuilder: (_, i) {
-                    final p = _results[i];
-                    return ListTile(
-                      leading: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: _hexColor(p.hex),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: scheme.outline.withOpacity(0.4)),
-                        ),
-                      ),
-                      title: Text(
-                        '${p.code}  ${p.name}',
-                        style: GoogleFonts.jetBrainsMono(
-                            fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(p.brand, style: tt.bodySmall),
-                      trailing: IconButton(
-                        icon: Icon(Icons.add, color: scheme.primary),
-                        onPressed: () => _add(p),
-                      ),
-                      onTap: () => _add(p),
-                    );
-                  },
-                );
-              },
-            ),
+            child: _recipesMode
+                ? recipes.isEmpty
+                    ? Center(child: Text(l.recipesEmptyTitle, style: tt.bodySmall))
+                    : ListView.builder(
+                        controller: scrollCtrl,
+                        itemCount: recipes.length,
+                        itemBuilder: (_, i) {
+                          final r = recipes[i];
+                          final ings = allIngs
+                              .where((ing) =>
+                                  ing.recipeId == r.id &&
+                                  ing.hex != null &&
+                                  ing.hex!.isNotEmpty)
+                              .toList();
+                          final blended = ings.isNotEmpty
+                              ? blendColorsInLab(ings
+                                  .map((ing) => (hex: ing.hex!, weight: ing.percentage))
+                                  .toList())
+                              : scheme.surfaceContainerHighest;
+                          final sel = _selectedRecipeIds.contains(r.id);
+                          return ListTile(
+                            leading: HexColorChip(color: blended, size: 32),
+                            title: Text(r.name, style: tt.bodyMedium),
+                            subtitle: Text(
+                              l.recipeIngredientCount(ings.length),
+                              style: tt.bodySmall,
+                            ),
+                            trailing: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              child: sel
+                                  ? Icon(Icons.check_circle,
+                                      key: const ValueKey('on'),
+                                      color: scheme.secondary, size: 24)
+                                  : Icon(Icons.radio_button_unchecked,
+                                      key: const ValueKey('off'),
+                                      color: scheme.outline, size: 24),
+                            ),
+                            selected: sel,
+                            selectedTileColor: scheme.secondaryContainer.withOpacity(0.3),
+                            onTap: () => _toggleRecipe(r.id),
+                          );
+                        },
+                      )
+                : catalogAsync.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (_, __) => Center(child: Text(l.errorCatalogLoad)),
+                    data: (_) {
+                      if (_selectedBrand == null && _controller.text.isEmpty) {
+                        return Center(child: Text(l.catalogEmptyPrompt, style: tt.bodySmall));
+                      }
+                      if (listItems.isEmpty) {
+                        return Center(child: Text(l.searchNoResults, style: tt.bodySmall));
+                      }
+                      return ListView(
+                        controller: scrollCtrl,
+                        children: listItems,
+                      );
+                    },
+                  ),
           ),
         ],
       ),

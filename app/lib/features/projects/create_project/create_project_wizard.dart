@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
 import 'wizard_state.dart';
 import 'steps/step1_kit.dart';
 import 'steps/step2_status.dart';
 import 'steps/step3_photo.dart';
 
 class CreateProjectWizard extends ConsumerStatefulWidget {
-  const CreateProjectWizard({super.key});
+  /// Se fornito, il wizard opera in modalità modifica (pre-popola i campi e fa update).
+  final Project? project;
+  const CreateProjectWizard({super.key, this.project});
 
   @override
   ConsumerState<CreateProjectWizard> createState() =>
@@ -16,6 +20,16 @@ class CreateProjectWizard extends ConsumerStatefulWidget {
 
 class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
   final _pageController = PageController();
+
+  bool get _isEditing => widget.project != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      ref.read(createProjectProvider.notifier).initFromProject(widget.project!);
+    }
+  }
 
   @override
   void dispose() {
@@ -33,45 +47,59 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
   }
 
   Future<void> _save() async {
+    final l = AppL10n.of(context);
     try {
-      final id = await ref.read(createProjectProvider.notifier).save();
-      if (mounted) {
-        Navigator.of(context).pop();
-        context.go('/projects/$id');
+      if (_isEditing) {
+        await ref
+            .read(createProjectProvider.notifier)
+            .update(widget.project!.id);
+        if (mounted) Navigator.of(context).pop();
+      } else {
+        final id = await ref.read(createProjectProvider.notifier).save();
+        if (mounted) {
+          Navigator.of(context).pop();
+          context.go('/projects/$id');
+        }
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Errore nel salvataggio, riprova')),
+          SnackBar(content: Text(l.errorSaveRetry)),
         );
       }
     }
   }
 
   Future<bool> _onWillPop() async {
+    if (_isEditing) return true;
     final state = ref.read(createProjectProvider);
     if (!state.hasData) return true;
+    final l = AppL10n.of(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Vuoi scartare il progetto?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annulla'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Scarta'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.projectDiscardTitle),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ll.actionCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ll.actionDiscard),
+            ),
+          ],
+        );
+      },
     );
     return confirm ?? false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final state = ref.watch(createProjectProvider);
     final scheme = Theme.of(context).colorScheme;
 
@@ -89,7 +117,7 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
               if (await _onWillPop()) Navigator.of(context).pop();
             },
           ),
-          title: const Text('Nuovo Progetto'),
+          title: Text(_isEditing ? l.projectEditTitle : l.projectNewTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
             child: _StepIndicator(
@@ -105,7 +133,11 @@ class _CreateProjectWizardState extends ConsumerState<CreateProjectWizard> {
           children: [
             Step1Kit(onNext: () => _goTo(1)),
             Step2Status(onNext: () => _goTo(2), onBack: () => _goTo(0)),
-            Step3Photo(onBack: () => _goTo(1), onSave: _save),
+            Step3Photo(
+              onBack: () => _goTo(1),
+              onSave: _save,
+              saveLabel: _isEditing ? l.actionSaveChanges : null,
+            ),
           ],
         ),
       ),

@@ -5,10 +5,13 @@ import '../features/onboarding/onboarding_screen.dart';
 import '../features/onboarding/splash_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/projects/project_detail/project_detail_screen.dart';
-import '../shared/widgets/placeholder_screen.dart';
 import '../shared/widgets/nav_icons.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shopping/shopping_list_screen.dart';
+import '../features/paints/paints_screen.dart';
+import '../features/recipes/recipes_screen.dart';
+import '../features/recipes/recipe_detail_screen.dart';
+import '../l10n/app_localizations.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -58,18 +61,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/paints',
             name: 'paints',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Vernici',
-              icon: Icons.palette_outlined,
-            ),
+            builder: (context, state) => const PaintsScreen(),
           ),
           GoRoute(
             path: '/recipes',
             name: 'recipes',
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Ricette',
-              icon: Icons.science_outlined,
-            ),
+            builder: (context, state) => const RecipesScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                name: 'recipe-detail',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return RecipeDetailScreen(recipeId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/settings',
@@ -95,6 +102,7 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final location = GoRouterState.of(context).uri.path;
+    final l = AppL10n.of(context);
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -110,22 +118,22 @@ class AppShell extends StatelessWidget {
             NavigationDestination(
               icon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
-              label: 'Progetti',
+              label: l.navProjects,
             ),
             NavigationDestination(
               icon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
-              label: 'Vernici',
+              label: l.navPaints,
             ),
             NavigationDestination(
               icon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
-              label: 'Ricette',
+              label: l.navRecipes,
             ),
             NavigationDestination(
               icon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
               selectedIcon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
-              label: 'Impostazioni',
+              label: l.navSettings,
             ),
           ],
         ),

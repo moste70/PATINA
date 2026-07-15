@@ -40,6 +40,9 @@ dependencies:
   # Preferenze utente (tema dark/light)
   shared_preferences: ^2.2.3
 
+  # Condivisione nativa (iOS/Android share sheet)
+  share_plus: ^10.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

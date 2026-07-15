@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../shared/widgets/hex_color_chip.dart';
 
 // ── Public result type ────────────────────────────────────────────────────────
 
@@ -54,16 +56,14 @@ const _catalogAssets = <(String, String)>[
 // ── Regex patterns ────────────────────────────────────────────────────────────
 
 final _patterns = <({RegExp re, int group, String brand})>[
-  // XF, X, AS, LP: max 2 cifre (XF-90, X-35, AS-30, LP-80).
-  // \d{1,2} evita falsi positivi da errori OCR tipo "XF-855" invece di "XF-85".
   (re: RegExp(r'\bXF-\d{1,2}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
   (re: RegExp(r'\bAS-\d{1,2}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
-  (re: RegExp(r'\bTS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'), // TS arriva a 100+
+  (re: RegExp(r'\bTS-\d{1,3}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
   (re: RegExp(r'\bLP-\d{1,2}\b', caseSensitive: false),  group: 0, brand: 'tamiya'),
   (re: RegExp(r'\bX-\d{1,2}\b',  caseSensitive: false),  group: 0, brand: 'tamiya'),
   (re: RegExp(r'\b(70|71|72|73|74|75|76|77|78|79)\.\d{3}\b'), group: 0, brand: 'vallejo'),
-  (re: RegExp(r'\bC\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'), // Mr.Color C1–C512
-  (re: RegExp(r'\bH\d{1,2}\b',   caseSensitive: false),  group: 0, brand: 'gunze'), // Aqueous H1–H90
+  (re: RegExp(r'\bC\d{1,3}\b',   caseSensitive: false),  group: 0, brand: 'gunze'),
+  (re: RegExp(r'\bH\d{1,2}\b',   caseSensitive: false),  group: 0, brand: 'gunze'),
   (re: RegExp(r'\bHumbrol\s+(\d{1,3})\b', caseSensitive: false), group: 1, brand: 'humbrol'),
   (re: RegExp(r'\bLC-?\d{1,3}\b', caseSensitive: false), group: 0, brand: 'lifecolor'),
   (re: RegExp(r'\bUA-?\d{1,3}\b', caseSensitive: false), group: 0, brand: 'lifecolor'),
@@ -111,10 +111,6 @@ class ScanStateError extends ScanState {
 }
 
 // ── Pre-processing immagine per OCR ──────────────────────────────────────────
-//
-// Converte l'immagine in scala di grigi ad alto contrasto prima di passarla
-// a MLKit. Su fogli di istruzioni B&N (font piccoli, layout denso) questo
-// aumenta la nitidezza percepita dal motore OCR.
 
 Future<String> _preprocessForOcr(String imagePath) async {
   final bytes = await File(imagePath).readAsBytes();
@@ -123,7 +119,6 @@ Future<String> _preprocessForOcr(String imagePath) async {
   final img = frame.image;
 
   final recorder = ui.PictureRecorder();
-  // Grayscale + contrasto +30: scurisce il testo, schiarisce lo sfondo.
   Canvas(recorder).drawImage(
     img,
     Offset.zero,
@@ -158,7 +153,7 @@ Stream<ScanState> _runScan(String imagePath) async* {
         .processImage(InputImage.fromFilePath(preprocessedPath));
     recognizer.close();
 
-    final codeMap = _extractCodesWithBrand(result.text); // code → brand
+    final codeMap = _extractCodesWithBrand(result.text);
     final matched = <ScanPaintResult>[];
     final seen = <String>{};
 
@@ -186,7 +181,6 @@ Stream<ScanState> _runScan(String imagePath) async* {
               hex: p['hex'] as String,
             ));
             seen.add(key);
-            // mark as resolved
             codeMap.remove(code);
           }
         }
@@ -200,7 +194,6 @@ Stream<ScanState> _runScan(String imagePath) async* {
       );
     }
 
-    // Codici riconosciuti ma non trovati in nessun catalogo
     for (final entry in codeMap.entries) {
       matched.add(ScanPaintResult(
         brand: entry.value,
@@ -227,7 +220,6 @@ Future<void> showScanSheet(
   BuildContext context, {
   required Future<void> Function(List<ScanPaintResult>) onComplete,
 }) async {
-  // Prima mostra le istruzioni su come scattare la foto
   final proceed = await showModalBottomSheet<bool>(
     context: context,
     useRootNavigator: true,
@@ -243,7 +235,6 @@ Future<void> showScanSheet(
   );
   if (file == null || !context.mounted) return;
 
-  // Crop manuale: l'utente seleziona solo l'area con i codici colore
   final croppedPath = await Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(
       fullscreenDialog: true,
@@ -272,6 +263,7 @@ class _TipsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -292,35 +284,35 @@ class _TipsSheet extends StatelessWidget {
               ),
             ),
           ),
-          Text('Come fotografare il foglio', style: tt.titleMedium),
+          Text(l.scanTipsTitle, style: tt.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Per ottenere il miglior riconoscimento automatico dei colori:',
+            l.scanTipsSubtitle,
             style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           _Tip(
             icon: Icons.stay_current_portrait,
-            label: 'Tieni il telefono verticale',
-            detail: 'Orienta il dispositivo in portrait — le tabelle colori sono solitamente orizzontali sul foglio e leggibili meglio così.',
+            label: l.scanTip1Label,
+            detail: l.scanTip1Detail,
             scheme: scheme, tt: tt,
           ),
           _Tip(
             icon: Icons.crop_free,
-            label: 'Inquadra solo la tabella colori',
-            detail: 'Avvicinati fino a far occupare la tabella l\'intera schermata. Meno testo inutile = meno errori.',
+            label: l.scanTip2Label,
+            detail: l.scanTip2Detail,
             scheme: scheme, tt: tt,
           ),
           _Tip(
             icon: Icons.wb_sunny_outlined,
-            label: 'Buona illuminazione, senza riflessi',
-            detail: 'Evita ombre sul foglio e riflessi della luce. La luce naturale o una lampada da tavolo funzionano bene.',
+            label: l.scanTip3Label,
+            detail: l.scanTip3Detail,
             scheme: scheme, tt: tt,
           ),
           _Tip(
             icon: Icons.warning_amber_outlined,
-            label: 'Marche riconosciute',
-            detail: 'Tamiya (XF, X, LP, TS) · Vallejo · Gunze · Humbrol · Lifecolor.\nCitadel usa nomi testuali e non viene riconosciuta automaticamente.',
+            label: l.scanTip4Label,
+            detail: l.scanTip4Detail,
             scheme: scheme, tt: tt,
           ),
           const SizedBox(height: 20),
@@ -328,7 +320,7 @@ class _TipsSheet extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               icon: const Icon(Icons.camera_alt_outlined),
-              label: const Text('Scatta foto'),
+              label: Text(l.scanActionPhoto),
               onPressed: () => Navigator.pop(context, true),
             ),
           ),
@@ -455,6 +447,7 @@ class _ScanSheetState extends State<_ScanSheet> {
   }
 
   Widget _buildHeader(ColorScheme scheme, TextTheme tt) {
+    final l = AppL10n.of(context);
     return switch (_state) {
       ScanStateOcr() => Row(children: [
           SizedBox(
@@ -462,7 +455,7 @@ class _ScanSheetState extends State<_ScanSheet> {
             child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary),
           ),
           const SizedBox(width: 12),
-          Text('Analisi del testo…', style: tt.titleSmall),
+          Text(l.scanStateOcr, style: tt.titleSmall),
         ]),
       ScanStateCatalog(
         catalogName: final label,
@@ -482,7 +475,7 @@ class _ScanSheetState extends State<_ScanSheet> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Ricerca in $label…',
+              child: Text(l.scanStateCatalog(label),
                   style: tt.titleSmall, overflow: TextOverflow.ellipsis),
             ),
             Text('$cur/$tot',
@@ -491,7 +484,7 @@ class _ScanSheetState extends State<_ScanSheet> {
           if (found.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              '${found.length} vernic${found.length == 1 ? 'e trovata' : 'i trovate'}',
+              l.scanPaintsFound(found.length),
               style: tt.bodySmall?.copyWith(color: const Color(0xFF2F8F57)),
             ),
           ],
@@ -501,9 +494,7 @@ class _ScanSheetState extends State<_ScanSheet> {
               color: const Color(0xFF2F8F57), size: 20),
           const SizedBox(width: 10),
           Text(
-            r.isEmpty
-                ? 'Nessun codice riconosciuto'
-                : '${r.length} vernic${r.length == 1 ? 'e aggiunta' : 'i aggiunte'}',
+            r.isEmpty ? l.scanNoCodes : l.scanPaintsAdded(r.length),
             style: tt.titleSmall,
           ),
         ]),
@@ -511,7 +502,7 @@ class _ScanSheetState extends State<_ScanSheet> {
           Icon(Icons.error_outline, color: scheme.error, size: 20),
           const SizedBox(width: 10),
           Expanded(
-              child: Text('Errore: $msg',
+              child: Text(l.errorGeneric(msg),
                   style: tt.bodySmall?.copyWith(color: scheme.error))),
         ]),
       _ => const SizedBox.shrink(),
@@ -520,6 +511,7 @@ class _ScanSheetState extends State<_ScanSheet> {
 
   Widget _buildResultsList(
       ColorScheme scheme, TextTheme tt, ScrollController ctrl) {
+    final l = AppL10n.of(context);
     final found = switch (_state) {
       ScanStateCatalog(found: final f) => f,
       ScanStateDone(results: final r) => r,
@@ -529,9 +521,7 @@ class _ScanSheetState extends State<_ScanSheet> {
     if (found.isEmpty) {
       return Center(
         child: Text(
-          _state is ScanStateOcr
-              ? 'Lettura del foglio in corso…'
-              : 'Nessuna corrispondenza trovata',
+          _state is ScanStateOcr ? l.scanReading : l.scanNoMatch,
           style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
@@ -545,20 +535,11 @@ class _ScanSheetState extends State<_ScanSheet> {
         final p = found[i];
         return ListTile(
           dense: true,
-          leading: Container(
-            width: 28, height: 28,
-            decoration: BoxDecoration(
-              color: _hexColor(p.hex),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: p.unknownInCatalog
-                    ? scheme.outline
-                    : scheme.outline.withOpacity(0.4),
-                width: 1,
-              ),
-            ),
+          leading: HexColorChip(
+            color: _hexColor(p.hex),
+            size: 28,
             child: p.unknownInCatalog
-                ? Icon(Icons.question_mark, size: 14, color: scheme.onSurfaceVariant)
+                ? Icon(Icons.question_mark, size: 12, color: scheme.onSurfaceVariant)
                 : null,
           ),
           title: Text(
@@ -570,7 +551,7 @@ class _ScanSheetState extends State<_ScanSheet> {
             ),
           ),
           subtitle: Text(
-            p.unknownInCatalog ? '${p.brand} · non in catalogo' : p.brand,
+            p.unknownInCatalog ? l.scanUnknownInCatalog(p.brand) : p.brand,
             style: tt.bodySmall?.copyWith(
               color: p.unknownInCatalog ? scheme.error.withOpacity(0.7) : null,
             ),
@@ -590,10 +571,6 @@ class _ScanSheetState extends State<_ScanSheet> {
 }
 
 // ── Crop page ─────────────────────────────────────────────────────────────────
-//
-// La selezione è memorizzata come Rect in coordinate RELATIVE [0..1]×[0..1]
-// rispetto all'immagine. In questo modo è sempre valida (nessun postFrameCallback
-// o dipendenza dalla dimensione del widget), ed è pronta non appena _image è caricata.
 
 enum _Corner { tl, tr, bl, br }
 
@@ -607,12 +584,11 @@ class _CropPage extends StatefulWidget {
 
 class _CropPageState extends State<_CropPage> {
   ui.Image? _image;
-  // Selezione in coordinate relative [0..1] — inizializzata con 8% di inset
   Rect _relSel = const Rect.fromLTRB(0.08, 0.08, 0.92, 0.92);
   bool _cropping = false;
 
   static const double _handleRadius = 16;
-  static const double _minRel = 0.05; // dimensione minima selezione (5% per lato)
+  static const double _minRel = 0.05;
 
   @override
   void initState() {
@@ -627,8 +603,6 @@ class _CropPageState extends State<_CropPage> {
     if (mounted) setState(() => _image = frame.image);
   }
 
-  /// Restituisce il Rect (in coordinate widget) in cui l'immagine è effettivamente
-  /// renderizzata con BoxFit.contain, data la dimensione del widget [ws].
   Rect _imgRect(ui.Image img, Size ws) {
     final ia = img.width / img.height;
     final wa = ws.width / ws.height;
@@ -641,7 +615,6 @@ class _CropPageState extends State<_CropPage> {
     }
   }
 
-  /// Converte _relSel in coordinate assolute del widget dati imgRect.
   Rect _displaySel(Rect ir) => Rect.fromLTWH(
         ir.left + _relSel.left * ir.width,
         ir.top + _relSel.top * ir.height,
@@ -688,7 +661,6 @@ class _CropPageState extends State<_CropPage> {
     setState(() => _cropping = true);
 
     final img = _image!;
-    // Converti selezione relativa in pixel dell'immagine reale
     final px = Rect.fromLTWH(
       _relSel.left * img.width,
       _relSel.top * img.height,
@@ -713,6 +685,7 @@ class _CropPageState extends State<_CropPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -721,12 +694,12 @@ class _CropPageState extends State<_CropPage> {
         automaticallyImplyLeading: false,
         leading: TextButton(
           onPressed: () => Navigator.pop(context, null),
-          child:
-              const Text('Annulla', style: TextStyle(color: Colors.white70)),
+          child: Text(l.actionCancel,
+              style: const TextStyle(color: Colors.white70)),
         ),
         leadingWidth: 90,
-        title: const Text('Seleziona area',
-            style: TextStyle(color: Colors.white, fontSize: 16)),
+        title: Text(l.scanCropTitle,
+            style: const TextStyle(color: Colors.white, fontSize: 16)),
         actions: [
           TextButton(
             onPressed: _cropping || _image == null ? null : _confirm,
@@ -736,8 +709,8 @@ class _CropPageState extends State<_CropPage> {
                     height: 18,
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Colors.white))
-                : const Text('Analizza',
-                    style: TextStyle(
+                : Text(l.scanCropConfirm,
+                    style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 8),
@@ -751,16 +724,13 @@ class _CropPageState extends State<_CropPage> {
               final ir = _imgRect(_image!, ws);
               final sel = _displaySel(ir);
               return Stack(children: [
-                // Immagine
                 Positioned.fill(
                   child: Image.file(File(widget.imagePath),
                       fit: BoxFit.contain),
                 ),
-                // Overlay scurito + bordo selezione
                 Positioned.fill(
                   child: CustomPaint(painter: _CropOverlayPainter(sel)),
                 ),
-                // Area centrale: sposta l'intera selezione
                 Positioned(
                   left: sel.left + _handleRadius,
                   top: sel.top + _handleRadius,
@@ -771,7 +741,6 @@ class _CropPageState extends State<_CropPage> {
                     behavior: HitTestBehavior.opaque,
                   ),
                 ),
-                // Handle angoli
                 for (final c in _Corner.values)
                   _CornerHandle(
                     corner: c,
@@ -785,10 +754,9 @@ class _CropPageState extends State<_CropPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: Text(
-            'Trascina gli angoli per inquadrare solo la tabella colori',
+            l.scanCropHint,
             textAlign: TextAlign.center,
-            style:
-                TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
           ),
         ),
       ),
