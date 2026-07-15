@@ -11,7 +11,9 @@ import '../../database/app_database.dart' show InventoryPaint, databaseProvider;
 import '../../l10n/app_localizations.dart';
 import '../../l10n/l10n_helpers.dart';
 import '../../shared/pro/pro_gate.dart';
+import '../../shared/utils/lab_mixer.dart' show deltaE;
 import '../../shared/widgets/hex_color_chip.dart';
+import '../projects/project_repository.dart';
 import 'package:image_picker/image_picker.dart';
 import 'paints_repository.dart';
 
@@ -175,28 +177,12 @@ final _availableLinesProvider =
   return AsyncValue.data(lines);
 });
 
-final _resolvedInventoryProvider =
-    Provider.autoDispose<AsyncValue<List<ResolvedPaint>>>((ref) {
-  final catAsync = ref.watch(_catalogIndexProvider);
-  final invAsync = ref.watch(_rawInventoryProvider);
-  final cusAsync = ref.watch(_customIndexProvider);
-  final brand    = ref.watch(_selectedBrandProvider);
-  final query    = ref.watch(_searchQueryProvider).trim().toLowerCase();
-
-  if (catAsync is AsyncLoading || invAsync is AsyncLoading) {
-    return const AsyncValue.loading();
-  }
-  if (catAsync is AsyncError) {
-    return AsyncValue.error(catAsync.error!, catAsync.stackTrace!);
-  }
-  if (invAsync is AsyncError) {
-    return AsyncValue.error(invAsync.error!, invAsync.stackTrace!);
-  }
-
-  final catalog   = catAsync.value!;
-  final inventory = invAsync.value!;
-  final custom    = cusAsync.value ?? {};
-
+List<ResolvedPaint> _resolveAll(
+  Map<String, _CatalogEntry> catalog,
+  List<InventoryPaint> inventory,
+  Map<String, CustomPaintRef> custom,
+  String query,
+) {
   final resolved = <ResolvedPaint>[];
   for (final ip in inventory) {
     String? b, c, n, h;
@@ -221,13 +207,6 @@ final _resolvedInventoryProvider =
   }
 
   var out = resolved;
-  if (brand != null) {
-    if (brand == _kOtherBrandSentinel) {
-      out = out.where((p) => !_kBrands.contains(p.brand)).toList();
-    } else {
-      out = out.where((p) => p.brand == brand).toList();
-    }
-  }
   if (query.isNotEmpty) {
     out = out
         .where((p) =>
@@ -236,10 +215,88 @@ final _resolvedInventoryProvider =
             p.brand.toLowerCase().contains(query))
         .toList();
   }
+  return out;
+}
+
+final _resolvedInventoryProvider =
+    Provider.autoDispose<AsyncValue<List<ResolvedPaint>>>((ref) {
+  final catAsync = ref.watch(_catalogIndexProvider);
+  final invAsync = ref.watch(_rawInventoryProvider);
+  final cusAsync = ref.watch(_customIndexProvider);
+  final brand    = ref.watch(_selectedBrandProvider);
+  final query    = ref.watch(_searchQueryProvider).trim().toLowerCase();
+  final sortMode = ref.watch(_sortModeProvider);
+
+  if (catAsync is AsyncLoading || invAsync is AsyncLoading) {
+    return const AsyncValue.loading();
+  }
+  if (catAsync is AsyncError) {
+    return AsyncValue.error(catAsync.error!, catAsync.stackTrace!);
+  }
+  if (invAsync is AsyncError) {
+    return AsyncValue.error(invAsync.error!, invAsync.stackTrace!);
+  }
+
+  var out = _resolveAll(catAsync.value!, invAsync.value!, cusAsync.value ?? {}, query);
+  if (brand != null) {
+    if (brand == _kOtherBrandSentinel) {
+      out = out.where((p) => !_kBrands.contains(p.brand)).toList();
+    } else {
+      out = out.where((p) => p.brand == brand).toList();
+    }
+  }
+  out = _sortPaints(out, sortMode);
   return AsyncValue.data(out);
 });
 
 const _kOtherBrandSentinel = '_altri';
+
+// ── Sorting ───────────────────────────────────────────────────────────────────
+
+enum _SortMode { brand, quantity, dateAdded }
+
+final _sortModeProvider = StateProvider.autoDispose<_SortMode>((ref) => _SortMode.brand);
+
+const _kQuantityOrder = {'empty': 0, 'low': 1, 'half': 2, 'full': 3};
+
+List<ResolvedPaint> _sortPaints(List<ResolvedPaint> paints, _SortMode mode) {
+  final out = List<ResolvedPaint>.of(paints);
+  switch (mode) {
+    case _SortMode.brand:
+      out.sort((a, b) {
+        final c = a.brand.compareTo(b.brand);
+        return c != 0 ? c : a.code.compareTo(b.code);
+      });
+      break;
+    case _SortMode.quantity:
+      out.sort((a, b) {
+        final c = (_kQuantityOrder[a.source.quantity] ?? 9)
+            .compareTo(_kQuantityOrder[b.source.quantity] ?? 9);
+        return c != 0 ? c : a.code.compareTo(b.code);
+      });
+      break;
+    case _SortMode.dateAdded:
+      out.sort((a, b) => b.source.createdAt.compareTo(a.source.createdAt));
+      break;
+  }
+  return out;
+}
+
+// ── Brand counts (per badge nei chip filtro) ─────────────────────────────────
+
+final _brandCountsProvider = Provider.autoDispose<Map<String, int>>((ref) {
+  final catAsync = ref.watch(_catalogIndexProvider);
+  final invAsync = ref.watch(_rawInventoryProvider);
+  final cusAsync = ref.watch(_customIndexProvider);
+  final query = ref.watch(_searchQueryProvider).trim().toLowerCase();
+  if (catAsync is! AsyncData || invAsync is! AsyncData) return {};
+  final all = _resolveAll(catAsync.value!, invAsync.value!, cusAsync.value ?? {}, query);
+  final counts = <String, int>{};
+  for (final p in all) {
+    counts[p.brand] = (counts[p.brand] ?? 0) + 1;
+  }
+  return counts;
+});
 
 // ── PaintsScreen ──────────────────────────────────────────────────────────────
 
@@ -347,7 +404,7 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
           child: Column(
             children: [
               const _SearchBar(),
-              const _BrandFilterChips(),
+              _BrandFilterChips(showCounts: _tabIndex == 0),
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -415,16 +472,19 @@ class _SearchBarState extends ConsumerState<_SearchBar> {
 // ── Brand filter chips ────────────────────────────────────────────────────────
 
 class _BrandFilterChips extends ConsumerWidget {
-  const _BrandFilterChips();
+  final bool showCounts;
+  const _BrandFilterChips({this.showCounts = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final scheme   = Theme.of(context).colorScheme;
     final selected = ref.watch(_selectedBrandProvider);
-    final hasOthers = ref.watch(_resolvedInventoryProvider).value
-            ?.any((p) => !_kBrands.contains(p.brand)) ??
-        false;
+    final counts   = ref.watch(_brandCountsProvider);
+    final hasOthers = counts.keys.any((b) => !_kBrands.contains(b));
+
+    String suffix(int? count) =>
+        showCounts && count != null && count > 0 ? ' ($count)' : '';
 
     return SizedBox(
       height: 44,
@@ -443,7 +503,7 @@ class _BrandFilterChips extends ConsumerWidget {
             },
           ),
           ..._kBrands.map((b) => _BrandChip(
-                label: _brandLabel(b),
+                label: '${_brandLabel(b)}${suffix(counts[b])}',
                 active: selected == b,
                 scheme: scheme,
                 onTap: () {
@@ -633,6 +693,7 @@ class _StatsRow extends ConsumerWidget {
                   ),
                 ),
               ),
+              const _SortBtn(),
               _ViewBtn(
                 icon: Icons.grid_view,
                 active: viewMode == _ViewMode.grid,
@@ -708,6 +769,69 @@ class _ViewBtn extends StatelessWidget {
   }
 }
 
+class _SortBtn extends ConsumerWidget {
+  const _SortBtn();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l      = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final mode   = ref.watch(_sortModeProvider);
+
+    String labelFor(_SortMode m) => switch (m) {
+      _SortMode.brand      => l.inventorySortBrand,
+      _SortMode.quantity   => l.inventorySortQuantity,
+      _SortMode.dateAdded  => l.inventorySortDate,
+    };
+
+    return Tooltip(
+      message: l.inventorySortLabel,
+      child: Builder(builder: (btnContext) {
+        return InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () async {
+            HapticFeedback.lightImpact();
+            final box = btnContext.findRenderObject() as RenderBox;
+            final overlay = Navigator.of(btnContext).overlay!.context
+                .findRenderObject() as RenderBox;
+            final topLeft = box.localToGlobal(
+                Offset(0, box.size.height), ancestor: overlay);
+            final selected = await showMenu<_SortMode>(
+              context: btnContext,
+              position: RelativeRect.fromLTRB(
+                topLeft.dx, topLeft.dy, topLeft.dx, 0,
+              ),
+              items: _SortMode.values
+                  .map((m) => PopupMenuItem<_SortMode>(
+                        value: m,
+                        child: Row(
+                          children: [
+                            Icon(
+                              m == mode ? Icons.check : null,
+                              size: 16,
+                              color: scheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(labelFor(m)),
+                          ],
+                        ),
+                      ))
+                  .toList(),
+            );
+            if (selected != null) {
+              ref.read(_sortModeProvider.notifier).state = selected;
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(Icons.sort, size: 20, color: scheme.onSurfaceVariant),
+          ),
+        );
+      }),
+    );
+  }
+}
+
 // ── Honeycomb grid ────────────────────────────────────────────────────────────
 
 class _HoneycombGrid extends ConsumerWidget {
@@ -755,6 +879,56 @@ class _HexCell extends ConsumerWidget {
   final double size;
   const _HexCell({required this.paint, required this.size});
 
+  Future<void> _showQuickQuantityMenu(
+      BuildContext context, WidgetRef ref, Offset globalPosition) async {
+    HapticFeedback.mediumImpact();
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        globalPosition.dx, globalPosition.dy, globalPosition.dx, 0,
+      ),
+      items: [
+        PopupMenuItem<String>(enabled: false, child: Text(
+          l.paintQuickQuantityTitle,
+          style: GoogleFonts.jetBrainsMono(
+              fontSize: 10, letterSpacing: 1, color: scheme.onSurfaceVariant),
+        )),
+        ...['full', 'half', 'low', 'empty'].map((q) {
+          final color = _quantityColor(q);
+          return PopupMenuItem<String>(
+            value: q,
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  _quantityLabel(l, q),
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    fontWeight: q == paint.source.quantity
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+    if (selected != null && selected != paint.source.quantity) {
+      HapticFeedback.lightImpact();
+      ref.read(paintsRepositoryProvider).updatePaintQuantity(paint.source.id, selected);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -763,6 +937,8 @@ class _HexCell extends ConsumerWidget {
         HapticFeedback.lightImpact();
         _showPaintDetail(context, ref, paint);
       },
+      onLongPressStart: (details) =>
+          _showQuickQuantityMenu(context, ref, details.globalPosition),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -783,6 +959,16 @@ class _HexCell extends ConsumerWidget {
             style: GoogleFonts.jetBrainsMono(
               fontSize: 9,
               color: scheme.onSurfaceVariant,
+            ),
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+          Text(
+            paint.name,
+            style: TextStyle(
+              fontSize: 7.5,
+              color: scheme.onSurfaceVariant.withOpacity(0.7),
             ),
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -1213,9 +1399,31 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
                           widget.paint.source.id, q);
                     },
                   ),
+                  if (_quantity == 'low' || _quantity == 'empty') ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.add_shopping_cart_outlined,
+                            size: 18, color: scheme.primary),
+                        label: Text(l.paintAddToShoppingList),
+                        onPressed: () async {
+                          HapticFeedback.lightImpact();
+                          await ref.read(projectRepositoryProvider).addShoppingItem(
+                              '${_brandLabel(widget.paint.brand)} ${widget.paint.code} — ${widget.paint.name}');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l.paintAddedToShoppingList)),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
+            _SimilarPaintsSection(paint: widget.paint),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -1239,6 +1447,129 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Colori simili in altre marche (1B.15) ─────────────────────────────────────
+
+class _SimilarMatch {
+  final String brand;
+  final String code;
+  final String name;
+  final String hex;
+  final double deltaE;
+  const _SimilarMatch({
+    required this.brand,
+    required this.code,
+    required this.name,
+    required this.hex,
+    required this.deltaE,
+  });
+}
+
+const double _kSimilarMaxDeltaE = 8.0;
+
+List<_SimilarMatch> _findSimilarPaints(
+    Map<String, _CatalogEntry> catalog, ResolvedPaint paint) {
+  final target = _hexColor(paint.hex);
+  final bestByBrand = <String, _SimilarMatch>{};
+  for (final entry in catalog.values) {
+    if (entry.brand == paint.brand) continue;
+    final d = deltaE(target, _hexColor(entry.hex));
+    if (d > _kSimilarMaxDeltaE) continue;
+    final existing = bestByBrand[entry.brand];
+    if (existing == null || d < existing.deltaE) {
+      bestByBrand[entry.brand] = _SimilarMatch(
+        brand: entry.brand,
+        code: entry.code,
+        name: entry.name,
+        hex: entry.hex,
+        deltaE: d,
+      );
+    }
+  }
+  final list = bestByBrand.values.toList()
+    ..sort((a, b) => a.deltaE.compareTo(b.deltaE));
+  return list.take(5).toList();
+}
+
+class _SimilarPaintsSection extends ConsumerWidget {
+  final ResolvedPaint paint;
+  const _SimilarPaintsSection({required this.paint});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final catalogAsync = ref.watch(_catalogIndexProvider);
+
+    return catalogAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (catalog) {
+        final matches = _findSimilarPaints(catalog, paint);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.paintSimilarInOtherBrands,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (matches.isEmpty)
+                Text(
+                  l.paintNoSimilarFound,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                )
+              else
+                ...matches.map((m) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          HexColorChip(color: _hexColor(m.hex), size: 30),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_brandLabel(m.brand)}  ${m.code}',
+                                  style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: scheme.onSurface,
+                                  ),
+                                ),
+                                Text(
+                                  m.name,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            'ΔE ${m.deltaE.toStringAsFixed(1)}',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 10,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -55,6 +55,7 @@ class PaintsRepository {
           catalogBrand: Value(brand),
           catalogCode: Value(code),
           quantity: Value(quantity),
+          createdAt: Value(DateTime.now().millisecondsSinceEpoch),
         ));
   }
 
@@ -92,6 +93,7 @@ class PaintsRepository {
             customBrand: Value(brand),
             customCode: Value(code),
             quantity: Value(quantity),
+            createdAt: Value(DateTime.now().millisecondsSinceEpoch),
           ));
     }
   }
