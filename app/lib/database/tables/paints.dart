@@ -76,4 +76,5 @@ class InventoryPaints extends Table {
   TextColumn get quantity => text().withDefault(const Constant('full'))();  // full|half|low|empty
   TextColumn get notes => text().nullable()();
   IntColumn get purchasedAt => integer().nullable()();
+  IntColumn get createdAt => integer().withDefault(const Constant(0))();  // epoch ms, per ordinamento 1B.10
 }

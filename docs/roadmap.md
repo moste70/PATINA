@@ -69,13 +69,13 @@
 | 1B.6 | Lista della spesa — sezione automatica (vernici palette kit non in inventario, checkbox in-memory, ordine checked-in-fondo) + voci manuali (DB, checkbox persistito, swipe-to-delete, FAB); schermata `/shopping` con `ShoppingItems` (DB v4) | ✅ Completato |
 | 1B.7 | Indicatore limite Free nella stats row (N/20 + barra progresso) | ✅ Completato |
 | 1B.8 | Sottofiltro per linea nel catalogo (dopo selezione marca) | ✅ Completato |
-| 1B.9 | Aggiunta vernice manuale (non in catalogo) — UI per `custom_paints` | ⬜ Da fare |
-| 1B.10 | Ordinamento inventario — per marca, per quantità (esaurite prima), per data aggiunta | ⬜ Da fare |
-| 1B.11 | Long-press sul chip esagonale → cambio quantità rapido senza aprire il sheet | ⬜ Da fare |
-| 1B.12 | Badge conteggio vernici per marca nei chip filtro (es. `Vallejo (12)`) | ⬜ Da fare |
-| 1B.13 | Nome vernice visibile nella griglia esagonale (sotto il codice, font più piccolo) | ⬜ Da fare |
-| 1B.14 | Collegamento rapido lista della spesa dal detail sheet (visibile solo se `low`/`empty`) | ⬜ Da fare |
-| 1B.15 | Equivalenze tra marche | ⬜ Da fare |
+| 1B.9 | Aggiunta vernice manuale (non in catalogo) — UI per `custom_paints`, color wheel + photo picker | ✅ Completato |
+| 1B.10 | Ordinamento inventario — per marca, per quantità (esaurite prima), per data aggiunta (schema v9: `createdAt` su `InventoryPaints`) | ✅ Completato |
+| 1B.11 | Long-press sul chip esagonale → cambio quantità rapido senza aprire il sheet | ✅ Completato |
+| 1B.12 | Badge conteggio vernici per marca nei chip filtro (es. `Vallejo (12)`) | ✅ Completato |
+| 1B.13 | Nome vernice visibile nella griglia esagonale (sotto il codice, font più piccolo) | ✅ Completato |
+| 1B.14 | Collegamento rapido lista della spesa dal detail sheet (visibile solo se `low`/`empty`) | ✅ Completato |
+| 1B.15 | Equivalenze tra marche — sezione "Colori simili in altre marche" nel detail sheet, ΔE CIELAB via cataloghi JSON (soglia ΔE ≤ 8, un match per marca, max 5) | ✅ Completato |
 
 ---
 
@@ -374,7 +374,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 ```
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
 Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa
-Fase 1B      ████████░░   80%  — inventario + catalogo + lista spesa completati; mancano 1B.9/10/11/12/13/14/15
+Fase 1B      ██████████  100%  — completa: inventario, catalogo, lista spesa, vernice manuale, ordinamento, quantità rapida, badge marca, equivalenze ΔE
 Fase 1C      ██████████  100%  — completa
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
@@ -385,17 +385,20 @@ Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo
 Debito Tecnico ███████░░░  70% — DT.1/2/3/4/5/6/7/8/9/10/12/13 risolti; nessun debito aperto
 ```
 
-### Schema DB attuale: v6
+### Schema DB attuale: v9
 - v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
 - v2 → aggiunta `custom_paints`
 - v3 → aggiunta `project_paints` (palette del kit)
 - v4 → aggiunta `shopping_items` (lista della spesa manuale)
 - v5 → aggiunta colonne `paint_id`, `catalog_id`, `hex` a `recipe_ingredients`
 - v6 → aggiunta colonne `finish`, `coats` a `recipes`
+- v7 → aggiunta colonna `exclude_from_shopping` a `project_paints`
+- v8 → aggiunta `project_logs` (devlog progetto)
+- v9 → aggiunta colonna `created_at` a `inventory_paints` (ordinamento per data aggiunta, 1B.10)
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟡 `1B.9` — Aggiunta vernice manuale (custom_paints)
-2. 🟡 `1A.8` — Devlog progetto (diario avanzamento a timeline)
-3. 🟢 `1B.10` — Ordinamento inventario
-4. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
+1. 🔴 `1D` — Pin su foto (fase interamente da fare, sblocca documentazione visiva)
+2. 🟡 `1E` — Rifinitura e Release: backup ZIP (1E.1/1E.2), test dispositivi reali
+3. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
+4. 🟢 `1F` — Supporto Tablet (fondamenta 1F.1-1F.3)

@@ -5,6 +5,51 @@
 
 ---
 
+## Sessione 2026-07-15 — Fase 1B completa: ordinamento, quantità rapida, equivalenze ΔE
+
+### Cosa è stato fatto
+
+**Schema DB v9:**
+- Aggiunta colonna `createdAt` (int, epoch ms, default 0) a `InventoryPaints`
+- Migrazione `if (from < 9)` in `app_database.dart`
+- Valorizzata in `addInventoryPaint` e `addCustomPaint` (`paints_repository.dart`)
+
+**1B.10 — Ordinamento inventario:**
+- `_SortMode` (brand/quantity/dateAdded) + `_sortModeProvider` in `paints_screen.dart`
+- Bottone ordina (`_SortBtn`) nella stats row, popup menu ancorato al bottone
+- Refactor: estratta `_resolveAll()` da `_resolvedInventoryProvider` per riuso
+
+**1B.11 — Quantità rapida:**
+- Long-press sul chip esagonale in griglia → popup compatto con le 4 quantità, senza aprire il detail sheet completo
+
+**1B.12 — Badge conteggio marca:**
+- Nuovo `_brandCountsProvider` (riusa `_resolveAll`); chip filtro mostrano `Marca (N)` solo nel tab Inventario (`showCounts`)
+
+**1B.13 — Nome in griglia:**
+- Seconda riga di testo (7.5px) sotto il codice nel chip esagonale
+
+**1B.14 — Link rapido lista della spesa:**
+- Bottone "Aggiungi alla lista della spesa" nel detail sheet, visibile solo se quantità `low`/`empty`; crea una voce manuale via `ProjectRepository.addShoppingItem`
+
+**1B.15 — Equivalenze tra marche:**
+- Sezione "Colori simili in altre marche" nel detail sheet: ΔE CIELAB (riuso `deltaE()` da `lab_mixer.dart`, già usato per le ricette) contro tutti i cataloghi JSON, un solo match per marca (il più vicino), soglia ΔE ≤ 8, max 5 risultati
+
+### Decisioni
+
+- **1B.15 senza tabella di equivalenze curata**: calcolo ΔE on-the-fly sui 13 cataloghi già bundlati, zero dati da mantenere; consistente con l'approccio già validato per le ricette (Fase 1C)
+- **Badge conteggio solo su tab Inventario**: i chip marca sono condivisi tra Inventario e Catalogo; mostrare conteggi inventario nel tab Catalogo sarebbe fuorviante
+- **`createdAt` con default 0** anziché nullable: le righe esistenti pre-v9 finiscono in fondo nell'ordinamento per data senza richiedere una migrazione dati speciale
+
+### Problemi risolti
+
+- Bug introdotto e corretto in fase di scrittura: `switch` statement in `_sortPaints` senza `break` tra i case (errore di compilazione in Dart) — aggiunto `break;` esplicito su ogni case
+
+### Nota — ambiente di sessione
+
+Flutter/Dart SDK non disponibile in questo ambiente di esecuzione: le modifiche sono state verificate solo a livello sorgente (bilanciamento parentesi, JSON degli `.arb`, coerenza dei riferimenti). **Eseguire `flutter pub run build_runner build --delete-conflicting-outputs` e `flutter analyze` prima del prossimo build**, come da checklist in `CLAUDE.md`.
+
+---
+
 ## Sessione 2026-07-09 — Fase 1C completa: Ricette, collegamento progetti, UX inventario
 
 ### Cosa è stato fatto
