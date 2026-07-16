@@ -64,10 +64,34 @@ class ProjectDevlogSliver extends ConsumerWidget {
       if (logs.isEmpty)
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              l.devlogEmpty,
-              style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: InkWell(
+              onTap: () => _showAddSheet(context, ref),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: scheme.outline.withOpacity(0.3),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_note_outlined,
+                        size: 22, color: scheme.onSurfaceVariant.withOpacity(0.45)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l.devlogEmpty,
+                        style: tt.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant.withOpacity(0.6)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         )

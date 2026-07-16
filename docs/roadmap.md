@@ -124,7 +124,7 @@
 | 1E.1 | Export backup ZIP (tutti i dati + foto) | ⬜ Da fare |
 | 1E.2 | Import backup | ⬜ Da fare |
 | 1E.3 | Impostazioni app (tema dark/light, lingua) | ✅ Completato |
-| 1E.4 | Empty state e onboarding primo avvio | ⬜ Da fare |
+| 1E.4 | Empty state e onboarding primo avvio | ✅ Completato |
 | 1E.5 | Test su dispositivi reali | ⬜ Da fare |
 | 1E.6 | Ottimizzazione performance (immagini, DB) | ⬜ Da fare |
 | 1E.7 | Preparazione store listing Google Play | ⬜ Da fare |

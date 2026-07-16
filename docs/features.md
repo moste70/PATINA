@@ -367,7 +367,7 @@ Creato il 01 giu 2026  ·  Modificato 3 giorni fa
 |--------|--------------|
 | Pull to refresh | Ricarica dati dal DB (per futura sync cloud) |
 | Back navigation | Torna all'archivio (`/projects`) |
-| Empty state foto | Illustrazione + testo "Aggiungi la prima foto del modello" + bottone |
+| Empty state foto | ✅ Implementato — banner cliccabile con icona + testo "Aggiungi la prima foto" al posto del pulsante `+` quando la galleria è vuota |
 
 ---
 
