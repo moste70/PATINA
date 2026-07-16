@@ -515,7 +515,7 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto); brand+scala obbligatori, validazione on-press |
 | Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile con brand/scala in overlay, palette, galleria, note |
 | Colori del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe-to-delete, pulsanti header con haptic |
-| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, tap → viewer fullscreen con zoom, elimina dall'AppBar |
+| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature (ResizeImage 240px in memoria), tap → viewer fullscreen con zoom, elimina dall'AppBar; empty state cliccabile quando vuota |
 | Pin su foto | (viewer foto fullscreen) | ✅ Implementato — tap apre context menu Colore/Nota; pin colore via `PaintPickerSheet` (catalogo con brand/linea/ricerca); pin nota con testo libero; marcatore callout (chip esagonale sempre in alto a sinistra + linea diagonale + dot sul pixel esatto, fisso indipendentemente dallo zoom); long-press apre tooltip overlay con swatch + dettagli + azioni modifica/elimina; filter bar in alto a sinistra (visibile solo se presenti entrambi i tipi) per mostrare/nascondere colori e/o note (1D.6) |
 | Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app; sezione Dati con export ZIP (share sheet nativo) e import ZIP (file picker + dialog conferma + snackbar riavvio) |
 | Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (quelle nella palette kit non presenti in inventario) con swipe per escludere/ripristinare singola vernice (schema v7) + voci manuali (DB), swipe-to-delete; FAB per aggiunta manuale |
@@ -557,6 +557,13 @@ La lingua viene persistita in `SharedPreferences` (chiave `app_locale`) e applic
 |------|--------|
 | Versione | `1.0.0-beta.1` (hardcoded, aggiornato a ogni release) |
 
+#### Sezione Dati (1E.1 + 1E.2)
+
+| Voce | Comportamento |
+|------|--------------|
+| Esporta backup | Crea ZIP (patina_db + foto) in temp e apre share sheet nativo |
+| Importa backup | File picker `.zip` → dialog conferma → estrazione in isolate → sostituzione DB + foto → snackbar riavvio |
+
 ---
 
 ## Aree da Progettare (Buchi)
@@ -566,11 +573,11 @@ di poter essere inserite nella roadmap.
 
 | Area | Note |
 |------|------|
-| **Backup e ripristino** | Export ZIP (DB + foto) e import ZIP. Le foto sono nella memoria interna privata dell'app — senza backup vengono perse alla disinstallazione. Configurare anche le regole backup Android (`backup_rules.xml`) per il backup automatico Google One. |
+| **Backup e ripristino** | ✅ Implementato (1E.1+1E.2) — vedi sezione Impostazioni › Dati. Da valutare: `backup_rules.xml` per backup automatico Google One. |
 | **Paywall** | Modello monetizzazione Fase 2: crediti, subscription o one-time — da decidere prima dell'implementazione AI |
-| **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |
-| **Creazione Pin Lavorazione** | Flusso inserimento pin tecnica: selezione tipo lavorazione, prodotto usato, collegamento a fase |
-| **Visualizzatore Foto con Pin** | Viewer full-screen: zoom/pan via InteractiveViewer, overlay pin su canvas, controlli visibilità |
+| **Editor Ricetta** | ✅ Implementato (1C.2) — selezione vernici da inventario/catalogo, slider %, colore CIELAB in tempo reale, finitura, numero di mani |
+| **Creazione Pin Lavorazione** | ✅ Implementato (1D.3) — context menu Colore/Nota al tap sulla foto; pin nota con testo libero |
+| **Visualizzatore Foto con Pin** | ✅ Implementato (1D) — zoom/pan, overlay callout marker fuori dall'InteractiveViewer, filter bar per tipo |
 | **Light Mode** | Palette light definita in `PatinaColors` (Design System Ottone) — da verificare su tutti i componenti |
 | **Autenticazione** | Necessaria per Fase 3 — provider OAuth, flusso login/registrazione, gestione token |
 | **Stati di Sistema** | Pattern uniforme da definire: loading spinner, empty state con CTA, errori di rete, permessi negati |
