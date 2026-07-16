@@ -125,7 +125,7 @@
 | 1E.2 | Import backup | ✅ Completato |
 | 1E.3 | Impostazioni app (tema dark/light, lingua) | ✅ Completato |
 | 1E.4 | Empty state e onboarding primo avvio | ✅ Completato |
-| 1E.5 | Test su dispositivi reali | ⬜ Da fare |
+| 1E.5 | Test su dispositivi reali | ✅ Completato — eseguito manualmente a ogni rilascio APK |
 | 1E.6 | Ottimizzazione performance (immagini, DB) | ✅ Completato |
 | 1E.7 | Preparazione store listing Google Play | ⬜ Da fare |
 | 1E.8 | Release beta (Google Play Internal Testing) | ⬜ Da fare |
