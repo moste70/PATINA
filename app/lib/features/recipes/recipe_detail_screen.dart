@@ -419,27 +419,10 @@ class _DetailsSection extends StatelessWidget {
           value: l.finishLabel(recipe.finish),
           tt: tt,
           scheme: scheme));
-    if (recipe.dilution != null && recipe.dilution!.isNotEmpty)
-      rows.add(_DetailRow(
-          label: l.recipeDilutionLabel,
-          value: recipe.dilution!,
-          tt: tt,
-          scheme: scheme));
-    if (recipe.surface != null && recipe.surface!.isNotEmpty)
-      rows.add(_DetailRow(
-          label: l.recipeSurfaceLabel,
-          value: recipe.surface!,
-          tt: tt,
-          scheme: scheme));
     if (recipe.notes != null && recipe.notes!.isNotEmpty)
       rows.add(_DetailRow(
           label: l.recipeNotesLabel,
           value: recipe.notes!,
-          tt: tt,
-          scheme: scheme));
-    if (recipe.tags != null && recipe.tags!.isNotEmpty)
-      rows.add(_TagRow(
-          tags: recipe.tags!.split(',').map((t) => t.trim()).toList(),
           tt: tt,
           scheme: scheme));
 
@@ -494,38 +477,6 @@ class _DetailRow extends StatelessWidget {
           ),
           Expanded(child: Text(value, style: tt.bodySmall)),
         ],
-      ),
-    );
-  }
-}
-
-class _TagRow extends StatelessWidget {
-  final List<String> tags;
-  final TextTheme tt;
-  final ColorScheme scheme;
-  const _TagRow(
-      {required this.tags, required this.tt, required this.scheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 4,
-        children: tags
-            .map((t) => Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: scheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(t,
-                      style: tt.labelSmall
-                          ?.copyWith(color: scheme.onSecondaryContainer)),
-                ))
-            .toList(),
       ),
     );
   }

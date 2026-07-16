@@ -89,10 +89,7 @@ class CreateRecipeScreen extends ConsumerStatefulWidget {
 
 class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
   final _nameCtrl = TextEditingController();
-  final _dilutionCtrl = TextEditingController();
-  final _surfaceCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
-  final _tagsCtrl = TextEditingController();
 
   String? _finish;
   final List<_IngredientDraft> _ingredients = [];
@@ -109,10 +106,7 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
       _nameCtrl.text = r.name;
       _finish = r.finish;
 
-      _dilutionCtrl.text = r.dilution ?? '';
-      _surfaceCtrl.text = r.surface ?? '';
       _notesCtrl.text = r.notes ?? '';
-      _tagsCtrl.text = r.tags ?? '';
       // Load existing ingredients
       _loadExistingIngredients(r.id);
     }
@@ -137,10 +131,7 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _dilutionCtrl.dispose();
-    _surfaceCtrl.dispose();
     _notesCtrl.dispose();
-    _tagsCtrl.dispose();
     super.dispose();
   }
 
@@ -193,17 +184,8 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           RecipesCompanion(
             name: Value(name),
             finish: Value(_finish),
-
-            dilution: Value(_dilutionCtrl.text.trim().isEmpty
-                ? null
-                : _dilutionCtrl.text.trim()),
-            surface: Value(_surfaceCtrl.text.trim().isEmpty
-                ? null
-                : _surfaceCtrl.text.trim()),
             notes: Value(
                 _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim()),
-            tags: Value(
-                _tagsCtrl.text.trim().isEmpty ? null : _tagsCtrl.text.trim()),
             updatedAt: Value(now),
           ),
         );
@@ -224,16 +206,8 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
         final id = await repo.createRecipe(RecipesCompanion(
           name: Value(name),
           finish: Value(_finish),
-          dilution: Value(_dilutionCtrl.text.trim().isEmpty
-              ? null
-              : _dilutionCtrl.text.trim()),
-          surface: Value(_surfaceCtrl.text.trim().isEmpty
-              ? null
-              : _surfaceCtrl.text.trim()),
           notes: Value(
               _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim()),
-          tags: Value(
-              _tagsCtrl.text.trim().isEmpty ? null : _tagsCtrl.text.trim()),
           createdAt: Value(now),
           updatedAt: Value(now),
         ));
@@ -409,22 +383,6 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
           if (_showOptional) ...[
             const SizedBox(height: 8),
             TextField(
-              controller: _dilutionCtrl,
-              decoration: InputDecoration(
-                labelText: l.recipeDilutionLabel,
-                hintText: l.recipeDilutionHint,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _surfaceCtrl,
-              decoration: InputDecoration(
-                labelText: l.recipeSurfaceLabel,
-                hintText: l.recipeSurfaceHint,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
               controller: _notesCtrl,
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
@@ -432,14 +390,6 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
                 labelText: l.recipeNotesLabel,
                 hintText: l.recipeNotesHint,
                 alignLabelWithHint: true,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tagsCtrl,
-              decoration: InputDecoration(
-                labelText: l.recipeTagsLabel,
-                hintText: l.recipeTagsHint,
               ),
             ),
           ],
