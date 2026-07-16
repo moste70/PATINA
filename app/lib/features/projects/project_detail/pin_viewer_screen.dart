@@ -57,27 +57,25 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
     super.dispose();
   }
 
-  // Converts a global screen position → normalized [0,1]×[0,1] image coords,
-  // accounting for zoom/pan applied by InteractiveViewer.
+  // Converts a global screen position → normalized [0,1]×[0,1] image coords.
+  // box.globalToLocal already traverses all parent transforms (including
+  // InteractiveViewer), so no manual matrix math is needed.
   Offset? _toImageCoords(Offset globalPos) {
     final box = _imageKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return null;
     final local = box.globalToLocal(globalPos);
-    final inv = Matrix4.inverted(_transformCtrl.value);
-    final t = MatrixUtils.transformPoint(inv, local);
     final w = box.size.width;
     final h = box.size.height;
     if (w == 0 || h == 0) return null;
-    return Offset((t.dx / w).clamp(0.0, 1.0), (t.dy / h).clamp(0.0, 1.0));
+    return Offset((local.dx / w).clamp(0.0, 1.0), (local.dy / h).clamp(0.0, 1.0));
   }
 
-  // Global screen position of a normalised pin coord
+  // Global screen position of a normalised pin coord.
+  // box.localToGlobal already applies all parent transforms.
   Offset _toScreenPos(double nx, double ny) {
     final box = _imageKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return Offset.zero;
-    final local = Offset(nx * box.size.width, ny * box.size.height);
-    final transformed = MatrixUtils.transformPoint(_transformCtrl.value, local);
-    return box.localToGlobal(transformed);
+    return box.localToGlobal(Offset(nx * box.size.width, ny * box.size.height));
   }
 
   void _closeTooltip() {
@@ -156,10 +154,11 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
 
   void _onPinLongPress(Pin pin) {
     HapticFeedback.mediumImpact();
-    final pos = _toScreenPos(pin.x, pin.y);
+    // _toScreenPos returns the dot anchor; the tooltip should appear near the chip.
+    final dotPos = _toScreenPos(pin.x, pin.y);
     setState(() {
       _tooltipPin = pin;
-      _tooltipPos = pos;
+      _tooltipPos = dotPos.translate(0, -_kPinTotalHeight);
     });
   }
 
@@ -253,12 +252,13 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
             //    GestureDetector.onLongPress doesn't compete with pan) ────────
             ...pins.map((pin) {
               final pos = _toScreenPos(pin.x, pin.y);
+              // Anchor = bottom-center of the marker (dot tip).
+              // Total height = chipSize(28) + stem(8) + dot(6) = 42
               return Positioned(
-                left: pos.dx - 14,
-                top: pos.dy - 14,
+                left: pos.dx - _kPinChipSize / 2,
+                top: pos.dy - _kPinTotalHeight,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  // Consume taps so they don't bubble to the background handler
                   onTap: () {},
                   onLongPress: () => _onPinLongPress(pin),
                   child: _PinMarkerWidget(pin: pin),
@@ -391,7 +391,19 @@ Future<String?> _showNoteInput(BuildContext context,
   return result;
 }
 
+// ── Pin marker constants ───────────────────────────────────────────────────────
+
+const _kPinChipSize   = 28.0;
+const _kPinStemHeight =  8.0;
+const _kPinDotSize    =  6.0;
+// Total height chip + stem + dot: anchor is at the bottom center (dot center).
+const _kPinTotalHeight = _kPinChipSize + _kPinStemHeight + _kPinDotSize;
+
 // ── Pin marker widget (positioned in the overlay Stack by the screen) ─────────
+//
+// Shape: chip (color hex or note icon) → thin stem → small dot.
+// The DOT marks the exact image coordinate; the chip is always at fixed screen
+// size regardless of zoom level.
 
 class _PinMarkerWidget extends StatelessWidget {
   final Pin pin;
@@ -400,19 +412,42 @@ class _PinMarkerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
+    Widget chip;
     if (pin.type == 'color') {
       final hex = _parseField(pin.notes, 'hex') ?? '#808080';
-      return HexColorChip(color: _hexColor(hex), size: 28);
+      chip = HexColorChip(color: _hexColor(hex), size: _kPinChipSize);
+    } else {
+      chip = Container(
+        width: _kPinChipSize,
+        height: _kPinChipSize,
+        decoration: BoxDecoration(
+          color: scheme.tertiary,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: const Icon(Icons.build_outlined, color: Colors.white, size: 14),
+      );
     }
-    return Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: scheme.tertiary,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: const Icon(Icons.build_outlined, color: Colors.white, size: 14),
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        chip,
+        Container(
+          width: 2,
+          height: _kPinStemHeight,
+          color: Colors.white,
+        ),
+        Container(
+          width: _kPinDotSize,
+          height: _kPinDotSize,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ],
     );
   }
 }
