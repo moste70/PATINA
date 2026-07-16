@@ -517,12 +517,14 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Colori del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe-to-delete, pulsanti header con haptic |
 | Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature, tap → viewer fullscreen con zoom, elimina dall'AppBar |
 | Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app |
-| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (checkbox in-memory) + voci manuali (DB), swipe-to-delete |
+| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (quelle nella palette kit non presenti in inventario) con swipe per escludere/ripristinare singola vernice (schema v7) + voci manuali (DB), swipe-to-delete; FAB per aggiunta manuale |
 | Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — crop manuale, preprocessing scala di grigi, MLKit OCR, riconosce codici, aggiunge a palette |
-| Vernici / Inventario | `/paints` | ✅ Implementato — inventario con griglia esagonale, catalogo offline, aggiunta/rimozione, quantità dropdown, stats Free |
-| Catalogo vernici | (tab in /paints) | ✅ Implementato — sfoglia per marca e linea, ricerca codice/nome, aggiunta all'inventario |
-| Ricette | `/recipes` | ✅ Implementato — lista, creazione/modifica, ingredienti con proporzioni, colore CIELAB auto, finitura, mani, tag, ricerca, collegamento progetti |
-| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — palette con tab Catalogo + Ricette personali, scan OCR, shopping list automatica, swipe-to-delete |
+| Vernici / Inventario | `/paints` | ✅ Implementato — inventario con griglia esagonale, catalogo offline, aggiunta/rimozione, quantità dropdown, stats Free; filtro "Altri" per brand non standard |
+| Catalogo vernici | (tab in /paints) | ✅ Implementato — sfoglia per marca e linea, ricerca codice/nome, aggiunta all'inventario; FAB `+` per aggiungere vernice personalizzata |
+| Vernici personalizzate | (FAB nel tab Catalogo) | ✅ Implementato — inserimento brand (chip predefiniti o testo libero; brand non standard → chip "Altri"), codice, nome, HEX; colore selezionabile da ruota HSV o campionamento pixel da foto; CRUD completo; tabella `custom_paints` (schema v2) |
+| Ricette | `/recipes` | ✅ Implementato — lista con chip colore CIELAB, creazione/modifica, ingredienti con slider %, auto-calcolo 2 ingredienti, finitura, numero di mani, diluizione, superficie, tag, ricerca per nome/tag, collegamento ai progetti |
+| Devlog progetto | (sezione in scheda progetto) | ✅ Implementato — timeline verticale con voci testo + foto opzionale, data/ora auto, swipe-to-delete; tabella `project_logs` (schema v8) |
+| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — palette con chip marca unificato (Catalogo + Ricette personali), scan OCR, shopping list automatica, swipe-to-delete, pulsanti header con haptic |
 
 ---
 

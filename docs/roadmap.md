@@ -373,7 +373,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ```
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
-Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa
+Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa, devlog
 Fase 1B      ██████████  100%  — completa: inventario, catalogo, lista spesa, vernice manuale, ordinamento, quantità rapida, badge marca, equivalenze ΔE
 Fase 1C      ██████████  100%  — completa
 Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
@@ -382,7 +382,7 @@ Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task 
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
 Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ███████░░░  70% — DT.1/2/3/4/5/6/7/8/9/10/12/13 risolti; nessun debito aperto
+Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; DT.14 rimandato
 ```
 
 ### Schema DB attuale: v9
@@ -390,10 +390,10 @@ Debito Tecnico ███████░░░  70% — DT.1/2/3/4/5/6/7/8/9/10/1
 - v2 → aggiunta `custom_paints`
 - v3 → aggiunta `project_paints` (palette del kit)
 - v4 → aggiunta `shopping_items` (lista della spesa manuale)
-- v5 → aggiunta colonne `paint_id`, `catalog_id`, `hex` a `recipe_ingredients`
+- v5 → aggiunta colonne `brand`, `code`, `paintName`, `hex` a `recipe_ingredients`
 - v6 → aggiunta colonne `finish`, `coats` a `recipes`
 - v7 → aggiunta colonna `exclude_from_shopping` a `project_paints`
-- v8 → aggiunta `project_logs` (devlog progetto)
+- v8 → aggiunta tabella `project_logs` (devlog progetto)
 - v9 → aggiunta colonna `created_at` a `inventory_paints` (ordinamento per data aggiunta, 1B.10)
 
 ### Prossimi step immediati (ordine esecuzione)
