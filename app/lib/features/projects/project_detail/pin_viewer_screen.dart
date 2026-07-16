@@ -45,6 +45,9 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
   // Which pin types are currently visible ('color' and/or 'note')
   final Set<String> _visibleTypes = {'color', 'note'};
 
+  // Whether the pin list panel is expanded
+  bool _panelOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -349,6 +352,19 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
               ),
             ),
 
+            // ── Pin list panel ───────────────────────────────────────────────
+            if (allPins.isNotEmpty)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _PinListPanel(
+                  pins: allPins,
+                  open: _panelOpen,
+                  onToggle: () => setState(() => _panelOpen = !_panelOpen),
+                ),
+              ),
+
             // ── Tooltip overlay ─────────────────────────────────────────────
             if (_tooltipPin != null)
               _PinTooltipOverlay(
@@ -470,7 +486,21 @@ class _PinMarkerWidget extends StatelessWidget {
     Widget chip;
     if (pin.type == 'color') {
       final hex = _parseField(pin.notes, 'hex') ?? '#808080';
-      chip = HexColorChip(color: _hexColor(hex), size: _kPinChip);
+      // Wrap in a Container to get a drop shadow behind the hexagonal chip
+      chip = Container(
+        width: _kPinChip,
+        height: _kPinChip,
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 6,
+              offset: Offset(1, 2),
+            ),
+          ],
+        ),
+        child: HexColorChip(color: _hexColor(hex), size: _kPinChip),
+      );
     } else {
       chip = Container(
         width: _kPinChip,
@@ -479,6 +509,13 @@ class _PinMarkerWidget extends StatelessWidget {
           color: scheme.tertiary,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 6,
+              offset: Offset(1, 2),
+            ),
+          ],
         ),
         child: const Icon(Icons.build_outlined, color: Colors.white, size: 14),
       );
@@ -489,7 +526,7 @@ class _PinMarkerWidget extends StatelessWidget {
       height: _kPinH,
       child: Stack(
         children: [
-          // Callout line + dot
+          // Callout line + dot (with shadow pass inside painter)
           Positioned.fill(
             child: CustomPaint(
               painter: _CalloutPainter(
@@ -519,6 +556,23 @@ class _CalloutPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Shadow pass — drawn first so it appears behind
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.7)
+      ..strokeWidth = 3.5
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    canvas.drawLine(lineFrom, lineTo, shadowPaint);
+    canvas.drawCircle(
+      lineTo,
+      dotRadius + 1.5,
+      Paint()
+        ..color = Colors.black.withOpacity(0.7)
+        ..style = PaintingStyle.fill
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+
+    // Foreground pass
     final linePaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 1.5
@@ -811,6 +865,215 @@ class _TooltipAction extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           child: Icon(icon, color: color, size: 18),
         ),
+      ),
+    );
+  }
+}
+
+// ── Pin list panel ────────────────────────────────────────────────────────────
+//
+// Collapsible bottom panel listing all pins divided by type.
+// Slides up via AnimatedSlide; height is fixed so the animation is smooth.
+
+const _kPanelHeight = 280.0;
+const _kHandleHeight = 40.0; // always visible handle strip
+
+class _PinListPanel extends StatelessWidget {
+  final List<Pin> pins;
+  final bool open;
+  final VoidCallback onToggle;
+
+  const _PinListPanel({
+    required this.pins,
+    required this.open,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final colorPins = pins.where((p) => p.type == 'color').toList();
+    final notePins  = pins.where((p) => p.type == 'note').toList();
+
+    return AnimatedSlide(
+      offset: open ? Offset.zero : Offset(0, 1 - _kHandleHeight / _kPanelHeight),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
+      child: SizedBox(
+        height: _kPanelHeight,
+        child: Material(
+          color: Colors.black.withOpacity(0.85),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: Column(
+            children: [
+              // ── Handle / toggle ────────────────────────────────────────────
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onToggle,
+                child: SizedBox(
+                  height: _kHandleHeight,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedRotation(
+                        turns: open ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 280),
+                        curve: Curves.easeInOut,
+                        child: const Icon(
+                          Icons.expand_less,
+                          color: Colors.white54,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l.pinListPanelTitle(pins.length),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          letterSpacing: 1.1,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Scrollable pin list ────────────────────────────────────────
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+                  children: [
+                    if (colorPins.isNotEmpty) ...[
+                      _PanelSectionHeader(
+                        icon: Icons.palette_outlined,
+                        label: l.pinTypeColor.toUpperCase(),
+                        scheme: scheme,
+                        tt: tt,
+                      ),
+                      for (final pin in colorPins)
+                        _ColorPinRow(pin: pin, scheme: scheme, tt: tt),
+                    ],
+                    if (notePins.isNotEmpty) ...[
+                      _PanelSectionHeader(
+                        icon: Icons.sticky_note_2_outlined,
+                        label: l.pinTypeNote.toUpperCase(),
+                        scheme: scheme,
+                        tt: tt,
+                      ),
+                      for (final pin in notePins)
+                        _NotePinRow(pin: pin, scheme: scheme, tt: tt),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PanelSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _PanelSectionHeader({
+    required this.icon,
+    required this.label,
+    required this.scheme,
+    required this.tt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: scheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 10,
+              letterSpacing: 1.2,
+              color: scheme.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColorPinRow extends StatelessWidget {
+  final Pin pin;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _ColorPinRow({required this.pin, required this.scheme, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    final hex   = _parseField(pin.notes, 'hex')   ?? '#808080';
+    final name  = _parseField(pin.notes, 'name')  ?? '';
+    final brand = _parseField(pin.notes, 'brand') ?? '';
+    final code  = _parseField(pin.notes, 'code')  ?? '';
+    final label = name.isNotEmpty ? name : '$brand $code'.trim();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      child: Row(
+        children: [
+          HexColorChip(color: _hexColor(hex), size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label.isNotEmpty ? label : hex,
+              style: tt.bodySmall?.copyWith(color: Colors.white70),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotePinRow extends StatelessWidget {
+  final Pin pin;
+  final ColorScheme scheme;
+  final TextTheme tt;
+  const _NotePinRow({required this.pin, required this.scheme, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = pin.notes?.isNotEmpty == true ? pin.notes! : '—';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(Icons.sticky_note_2_outlined,
+                size: 16, color: scheme.tertiary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: tt.bodySmall?.copyWith(color: Colors.white70),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -777,6 +777,13 @@
   "colorPickerConfirm": "Usa questo colore",
   "@colorPickerConfirm": {},
 
+  "pinListPanelTitle": "{count} PIN",
+  "@pinListPanelTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
   "hintProjectsSwipe": "Scorri a sinistra su un progetto per eliminarlo",
   "@hintProjectsSwipe": {},
   "hintInventoryLongPress": "Tieni premuto su un chip colore per cambiare rapidamente la quantità",

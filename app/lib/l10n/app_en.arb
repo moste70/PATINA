@@ -368,6 +368,13 @@
   "colorPickerConfirm": "Use this colour",
   "@colorPickerConfirm": {},
 
+  "pinListPanelTitle": "{count} PINS",
+  "@pinListPanelTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
   "hintProjectsSwipe": "Swipe left on a project to delete it",
   "@hintProjectsSwipe": {},
   "hintInventoryLongPress": "Long-press a colour chip to quickly change its quantity",
