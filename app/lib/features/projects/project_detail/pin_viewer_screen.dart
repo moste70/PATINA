@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../database/app_database.dart';
+import '../../../database/app_database.dart' hide CustomPaint, CustomPainter;
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
 import '../../../shared/widgets/paint_picker_sheet.dart';
