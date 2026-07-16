@@ -12,6 +12,7 @@ import '../project_repository.dart';
 import '../create_project/create_project_wizard.dart';
 import 'project_palette_sliver.dart';
 import 'project_devlog_sliver.dart';
+import 'pin_viewer_screen.dart';
 
 // Provider per il singolo progetto
 final projectByIdProvider = StreamProvider.autoDispose.family<Project, int>(
@@ -673,7 +674,7 @@ class _PhotoThumbnail extends StatelessWidget {
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _PhotoFullscreenPage(photo: photo, onDelete: onDelete),
+        builder: (_) => PinViewerScreen(photo: photo, onDelete: onDelete),
       ),
     );
   }
@@ -692,60 +693,6 @@ class _PhotoThumbnail extends StatelessWidget {
             image: FileImage(File(photo.path)),
             fit: BoxFit.cover,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PhotoFullscreenPage extends StatelessWidget {
-  final ProjectPhoto photo;
-  final VoidCallback onDelete;
-  const _PhotoFullscreenPage({required this.photo, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: l.photoDeleteTooltip,
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) {
-                  final ll = AppL10n.of(ctx);
-                  return AlertDialog(
-                    title: Text(ll.photoDeleteTitle),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(ll.actionCancel)),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: Text(ll.actionDelete,
-                            style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
-                      ),
-                    ],
-                  );
-                },
-              );
-              if (confirm == true && context.mounted) {
-                Navigator.of(context).pop();
-                onDelete();
-              }
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          child: Image.file(File(photo.path), fit: BoxFit.contain),
         ),
       ),
     );
