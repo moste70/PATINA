@@ -344,6 +344,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | 3.6 | **Sincronizzazione cloud** — backup automatico e sync multi-dispositivo |
 | 3.7 | **Condivisione ricette con la community** |
 | 3.8 | **Espansione cataloghi** tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, AK, Ammo) |
+| 3.9 | **Estrazione fasi di montaggio da istruzioni (AI Vision)** — l'utente fotografa una o più pagine del manuale di montaggio; Claude Vision analizza le immagini ed estrae automaticamente le fasi di lavorazione (numerazione step, nome sotto-assemblaggio, materiali citati), popolando una checklist fasi nel progetto. Applicabile a qualsiasi kit: plastico (Tamiya, Revell), navale in legno (Amati, Mantua, Corel), figure. Il flusso prevede: (1) acquisizione foto pagine con crop/raddrizzamento manuale o automatico, (2) invio a Claude con prompt strutturato per estrarre step ordinati, (3) preview editabile prima dell'import nel progetto. Fattibile con `claude-opus-4-8` o `claude-sonnet-5` vision; qualità dipende dalla leggibilità delle foto. |
 
 ---
 
