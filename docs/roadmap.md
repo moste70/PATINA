@@ -345,6 +345,52 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | 3.7 | **Condivisione ricette con la community** |
 | 3.8 | **Espansione cataloghi** tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, AK, Ammo) |
 | 3.9 | **Estrazione fasi di montaggio da istruzioni (AI Vision)** — l'utente fotografa una o più pagine del manuale di montaggio; Claude Vision analizza le immagini ed estrae automaticamente le fasi di lavorazione (numerazione step, nome sotto-assemblaggio, materiali citati), popolando una checklist fasi nel progetto. Applicabile a qualsiasi kit: plastico (Tamiya, Revell), navale in legno (Amati, Mantua, Corel), figure. Il flusso prevede: (1) acquisizione foto pagine con crop/raddrizzamento manuale o automatico, (2) invio a Claude con prompt strutturato per estrarre step ordinati, (3) preview editabile prima dell'import nel progetto. Fattibile con `claude-opus-4-8` o `claude-sonnet-5` vision; qualità dipende dalla leggibilità delle foto. |
+| 3.10 | **Wizard acquisizione manuale — contestuale alla tipologia di kit (Pro)** — vedi spec dettagliata sotto |
+
+### Spec milestone 3.10 — Wizard acquisizione manuale (Pro)
+
+**Entry point:** nella scheda progetto, sezione "MANUALE", bottone `Analizza istruzioni` visibile solo agli utenti Pro (gate `ProGate.isProUser(ref)`); utenti Free vedono il bottone disabilitato con badge `PRO` che apre il paywall.
+
+**Struttura wizard — 3 step comuni + step contestuali per tipologia:**
+
+---
+
+**Step 1 — Selezione modalità di input** (uguale per tutti i tipi)
+
+| Opzione | Descrizione |
+|---------|-------------|
+| Fotocamera — scansiona pagine | Apre camera con overlay guida (rettangolo di ritaglio), scatto multiplo sequenziale, anteprima stack pagine |
+| Galleria — importa immagini | File picker multi-selezione, ordina pagine manualmente drag-and-drop |
+
+---
+
+**Step 2 — Tipo di analisi** (adattivo alla `category` del progetto, pre-selezionato automaticamente)
+
+| Categoria progetto | Analisi estratta | Prompt AI specializzato |
+|-------------------|-----------------|------------------------|
+| `tank` · `aircraft` · `car` · `motorcycle` | Fasi di verniciatura + codici colore per marca + posizionamento decal | Identifica step numerati, estrai codici colore Tamiya/Vallejo/Citadel con sotto-assemblaggio di riferimento, segnala le pagine decal |
+| `figure` | Ricette di pittura per zona anatomica + tecniche (layering, washing, NMM) | Identifica zone (pelle, tessuti, metalli, basi), estrai colori suggeriti e tecniche menzionate per ciascuna |
+| `ship` (nave in legno) | Fasi di costruzione per sotto-assemblaggio + lista ferramenta + schema sartiame | Identifica fasi costruttive (chiglia, fasciame, coperta, alberi, rigging), estrai elenco pezzi ferramenteria per fase, segnala le tavole sartiame |
+| `diorama` | Fasi ambiente + materiali scenici + sequenza di assemblaggio | Identifica fasi (base, terreno, vegetazione, figure, veicoli), estrai materiali citati per fase |
+| `other` | Estrazione generica fasi numerate | Estrai step ordinati, nomi sotto-assemblaggio, materiali o colori menzionati |
+
+---
+
+**Step 3 — Preview e conferma** (uguale per tutti)
+
+- Lista editabile degli step estratti dall'AI: drag-and-drop per riordinare, tap per rinominare/eliminare, bottone `+ Aggiungi step manuale`
+- Per categorie con colori estratti: chip colore inline con suggerimento "Aggiungi alla palette?"
+- Per `ship`: sezione separata "Ferramenta rilevata" e "Tavole sartiame trovate a pag. X"
+- Bottone `Importa nel progetto` → popola checklist fasi nel devlog o in una nuova sezione `FASI` della scheda progetto
+
+---
+
+**Note implementative**
+- Ogni tipologia usa un system prompt diverso per Claude; i prompt sono costanti Dart in `lib/features/projects/ai/manual_prompts.dart`
+- Le immagini vengono ridimensionate a ≤ 1600 px lato lungo e compresse JPEG 85% prima dell'invio (costo token)
+- Invio batch: max 8 immagini per chiamata; pagine in eccesso → chiamate sequenziali con merge risultati
+- Risultato AI → struttura `ManualAnalysisResult` con lista `phases`, lista opzionale `colorHints`, lista opzionale `fittings`, flag `riggingPagesFound`
+- Tutte le chiamate API sono tracciate in un provider `manualAnalysisProvider` (AsyncNotifier) con stato loading / success / error
 
 ---
 
