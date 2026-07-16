@@ -133,7 +133,7 @@ class _ProjectDetailContentState
     if (source == null || !mounted) return;
     try {
       final file =
-          await ImagePicker().pickImage(source: source, imageQuality: 85);
+          await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
       if (file != null) {
         await ref.read(projectRepositoryProvider).updateProject(
           widget.project.id,
@@ -304,7 +304,8 @@ class _ProjectDetailContentState
                   // Cover photo o placeholder
                   p.coverPhoto != null
                       ? Image.file(File(p.coverPhoto!),
-                          fit: BoxFit.cover)
+                          fit: BoxFit.cover,
+                          cacheWidth: 800)
                       : Container(
                           color: scheme.surfaceContainerHigh,
                           child: Icon(Icons.view_module_outlined,
@@ -611,7 +612,7 @@ class _GallerySliver extends ConsumerWidget {
     );
     if (source == null) return;
     try {
-      final file = await ImagePicker().pickImage(source: source, imageQuality: 85);
+      final file = await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
       if (file != null) {
         await ref.read(projectRepositoryProvider).addProjectPhoto(projectId, file.path);
       }
@@ -731,7 +732,10 @@ class _PhotoThumbnail extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           image: DecorationImage(
-            image: FileImage(File(photo.path)),
+            image: ResizeImage(
+              FileImage(File(photo.path)),
+              width: 240, // 80 dp × 3× density
+            ),
             fit: BoxFit.cover,
           ),
         ),

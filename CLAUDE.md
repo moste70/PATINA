@@ -131,7 +131,7 @@ Breakpoint Material 3 adottati per PATINA:
 
 ## Versioning DB
 
-Schema corrente: **v9**
+Schema corrente: **v10**
 - v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
 - v2 → aggiunta `custom_paints` (vernici inserite manualmente dall'utente)
 - v3 → aggiunta `project_paints` (palette del kit — vernici associate a un progetto)
@@ -141,6 +141,7 @@ Schema corrente: **v9**
 - v7 → aggiunta colonna `exclude_from_shopping` a `project_paints`
 - v8 → aggiunta tabella `project_logs` (devlog progetto)
 - v9 → aggiunta colonna `created_at` a `inventory_paints`
+- v10 → indici su `pins(photo_id)`, `project_photos(project_id)`, `project_logs(project_id)`, `project_paints(project_id)`
 
 ## Modello di business (3 tier)
 

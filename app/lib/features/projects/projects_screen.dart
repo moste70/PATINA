@@ -342,6 +342,7 @@ class _ProjectCard extends StatelessWidget {
                       ? Image.file(
                           File(p.coverPhoto!),
                           fit: BoxFit.cover,
+                          cacheWidth: 240, // 80 dp × 3× density
                           errorBuilder: (_, __, ___) =>
                               _PlaceholderThumb(scheme),
                         )

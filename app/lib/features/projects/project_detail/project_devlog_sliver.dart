@@ -333,7 +333,7 @@ class _AddLogSheetState extends State<_AddLogSheet> {
     );
     if (source == null) return;
     final file =
-        await ImagePicker().pickImage(source: source, imageQuality: 85);
+        await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
     if (file != null && mounted) setState(() => _photoPath = file.path);
   }
 
