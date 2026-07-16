@@ -775,5 +775,41 @@
   "colorPickerPhoto": "Rileva colore da foto",
   "@colorPickerPhoto": {},
   "colorPickerConfirm": "Usa questo colore",
-  "@colorPickerConfirm": {}
+  "@colorPickerConfirm": {},
+
+  "pinListPanelTitle": "{count} PIN",
+  "@pinListPanelTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hintProjectsSwipe": "Scorri a sinistra su un progetto per eliminarlo",
+  "@hintProjectsSwipe": {},
+  "hintInventoryLongPress": "Tieni premuto su un chip colore per cambiare rapidamente la quantità",
+  "@hintInventoryLongPress": {},
+  "hintPinViewerLongPress": "Tieni premuto su un pin per modificarlo o eliminarlo",
+  "@hintPinViewerLongPress": {},
+
+  "settingsHelpSection": "Aiuto",
+  "@settingsHelpSection": {},
+  "settingsGesturesTitle": "Gesti e scorciatoie",
+  "@settingsGesturesTitle": {},
+  "settingsGesturesSubtitle": "Tutte le gesture disponibili nell'app",
+  "@settingsGesturesSubtitle": {},
+
+  "gestureSwipeDelete": "Scorri a sinistra → Elimina voce (progetti, palette, lista della spesa)",
+  "@gestureSwipeDelete": {},
+  "gestureLongPressQuantity": "Tieni premuto su un chip colore → Cambia quantità rapidamente",
+  "@gestureLongPressQuantity": {},
+  "gestureLongPressPin": "Tieni premuto su un pin → Modifica o elimina il pin",
+  "@gestureLongPressPin": {},
+  "gestureLongPressPalette": "Tieni premuto su una vernice in palette → Esclude dalla lista della spesa",
+  "@gestureLongPressPalette": {},
+  "gestureTapPhotoEmpty": "Tocca il riquadro foto vuoto → Aggiungi la prima foto",
+  "@gestureTapPhotoEmpty": {},
+  "gesturePinchPhoto": "Pizzica / allarga su una foto → Zoom in/out",
+  "@gesturePinchPhoto": {},
+  "gestureSwipeShoppingCheck": "Tocca una vernice nella lista spesa → Segna come acquistata",
+  "@gestureSwipeShoppingCheck": {}
 }
