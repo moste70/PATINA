@@ -77,6 +77,15 @@ In tutti gli altri casi preferire sempre il minor numero di passaggi possibile:
 inserire, confermare o navigare in un tap solo quando fattibile, senza sheet o
 dialoghi intermedi non necessari.
 
+## Regola: aggiornamento documentazione
+
+Al termine di **ogni task o punto del roadmap** aggiornare sempre:
+
+1. **`docs/roadmap.md`** — cambiare lo stato del task da `⬜ Da fare` a `✅ Completato`; aggiornare la barra di avanzamento della Fase; aggiornare la sezione "Prossimi step immediati"
+2. **`docs/features.md`** — aggiungere o aggiornare la riga/sezione relativa alla funzionalità implementata
+
+Questo deve avvenire **nello stesso commit** del codice, non in un commit separato successivo.
+
 ## Convenzioni
 
 - **State management:** Riverpod con `StateNotifierProvider` e `Provider` scritti a mano (no codegen `@riverpod`)
@@ -127,10 +136,10 @@ Schema corrente: **v9**
 - v2 → aggiunta `custom_paints` (vernici inserite manualmente dall'utente)
 - v3 → aggiunta `project_paints` (palette del kit — vernici associate a un progetto)
 - v4 → aggiunta `shopping_items` (lista della spesa manuale)
-- v5 → aggiunta colonne `paint_id`, `catalog_id`, `hex` a `recipe_ingredients`
+- v5 → aggiunta colonne `brand`, `code`, `paintName`, `hex` a `recipe_ingredients`
 - v6 → aggiunta colonne `finish`, `coats` a `recipes`
 - v7 → aggiunta colonna `exclude_from_shopping` a `project_paints`
-- v8 → aggiunta `project_logs` (devlog progetto)
+- v8 → aggiunta tabella `project_logs` (devlog progetto)
 - v9 → aggiunta colonna `created_at` a `inventory_paints`
 
 ## Modello di business (3 tier)
