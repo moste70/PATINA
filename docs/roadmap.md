@@ -110,7 +110,7 @@
 | 1D.3 | Aggiunta pin lavorazione con tipo e note | ✅ Completato |
 | 1D.4 | Visualizzazione chip esagonale sul pin | ✅ Completato |
 | 1D.5 | Modifica e spostamento pin esistenti | ✅ Completato |
-| 1D.6 | Toggle visibilità e filtro per tipo | ⬜ Da fare |
+| 1D.6 | Toggle visibilità e filtro per tipo | ✅ Completato |
 | 1D.7 | Vista lista di tutti i pin di una foto | ✅ Completato |
 
 ---
