@@ -43,6 +43,18 @@ dependencies:
   # Condivisione nativa (iOS/Android share sheet)
   share_plus: ^10.0.3
 
+  # Backup: compressione ZIP
+  archive: ^3.6.1
+
+  # Backup: selezione file ZIP per import
+  file_picker: ^8.1.7
+
+  # Percorsi file sistema (documenti, temp)
+  path_provider: ^2.1.4
+
+  # Utilità percorsi (p.join, p.basename, ecc.)
+  path: ^1.9.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

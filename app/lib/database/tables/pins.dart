@@ -16,4 +16,12 @@ class Pins extends Table {
   // Riservato per le fasi di lavorazione (Fase 1D). Non esiste ancora
   // una tabella phases — aggiungere FK e migrazione quando sarà implementata.
   IntColumn get phaseId => integer().nullable()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [];
+
+  @override
+  Set<Index> get indices => {
+    Index('pins_photo_idx', [photoId]),
+  };
 }

@@ -133,7 +133,7 @@ class _ProjectDetailContentState
     if (source == null || !mounted) return;
     try {
       final file =
-          await ImagePicker().pickImage(source: source, imageQuality: 85);
+          await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
       if (file != null) {
         await ref.read(projectRepositoryProvider).updateProject(
           widget.project.id,
@@ -304,7 +304,8 @@ class _ProjectDetailContentState
                   // Cover photo o placeholder
                   p.coverPhoto != null
                       ? Image.file(File(p.coverPhoto!),
-                          fit: BoxFit.cover)
+                          fit: BoxFit.cover,
+                          cacheWidth: 800)
                       : Container(
                           color: scheme.surfaceContainerHigh,
                           child: Icon(Icons.view_module_outlined,
@@ -611,7 +612,7 @@ class _GallerySliver extends ConsumerWidget {
     );
     if (source == null) return;
     try {
-      final file = await ImagePicker().pickImage(source: source, imageQuality: 85);
+      final file = await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
       if (file != null) {
         await ref.read(projectRepositoryProvider).addProjectPhoto(projectId, file.path);
       }
@@ -645,6 +646,47 @@ class _GallerySliver extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final photosAsync = ref.watch(_projectPhotosProvider(projectId));
     final photos = photosAsync.valueOrNull ?? [];
+
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (photos.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: InkWell(
+            onTap: () => _addPhoto(context, ref),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 88,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: scheme.outline.withOpacity(0.4),
+                  width: 1.5,
+                  // ignore: deprecated_member_use
+                  strokeAlign: BorderSide.strokeAlignInside,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_photo_alternate_outlined,
+                      size: 28, color: scheme.onSurfaceVariant.withOpacity(0.5)),
+                  const SizedBox(width: 10),
+                  Text(
+                    l.photoGalleryEmptyHint,
+                    style: tt.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant.withOpacity(0.6)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return SliverToBoxAdapter(
       child: SizedBox(
@@ -690,7 +732,10 @@ class _PhotoThumbnail extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           image: DecorationImage(
-            image: FileImage(File(photo.path)),
+            image: ResizeImage(
+              FileImage(File(photo.path)),
+              width: 240, // 80 dp × 3× density
+            ),
             fit: BoxFit.cover,
           ),
         ),
