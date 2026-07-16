@@ -376,7 +376,7 @@ Fase 0       ██████████  100%  — completata (incl. icone n
 Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa, devlog
 Fase 1B      ██████████  100%  — completa
 Fase 1C      ██████████  100%  — completa
-Fase 1D      █████████░   86%  — 1D.1-1D.5/1D.7 completati; manca 1D.6 (toggle visibilità)
+Fase 1D      █████████░   86%  — 1D.1-1D.7 completati (UX redesign con PaintPickerSheet e tooltip overlay); manca 1D.6 (toggle visibilità)
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR

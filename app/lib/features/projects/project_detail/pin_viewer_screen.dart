@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
+import '../../../shared/widgets/paint_picker_sheet.dart';
 import 'pin_repository.dart';
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -34,10 +34,12 @@ class PinViewerScreen extends ConsumerStatefulWidget {
 
 class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
   final _transformCtrl = TransformationController();
-  // Dimensioni reali dell'immagine, lette una volta
-  Size? _imageSize;
-  // Dimensioni del widget Image nell'layout
   final _imageKey = GlobalKey();
+
+  // Pin whose tooltip is currently shown (null = none)
+  Pin? _tooltipPin;
+  // Screen position of the tooltip origin
+  Offset _tooltipPos = Offset.zero;
 
   @override
   void dispose() {
@@ -45,154 +47,147 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
     super.dispose();
   }
 
-  // Converte coordinate globali del tap in coordinate normalizzate [0,1]×[0,1]
-  // rispetto all'immagine, tenendo conto della trasformazione zoom/pan.
+  // Converts a global screen position → normalized [0,1]×[0,1] image coords,
+  // accounting for zoom/pan applied by InteractiveViewer.
   Offset? _toImageCoords(Offset globalPos) {
     final box = _imageKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return null;
     final local = box.globalToLocal(globalPos);
-    // Inverti la trasformazione del viewer
-    final invMatrix = Matrix4.inverted(_transformCtrl.value);
-    final transformed = MatrixUtils.transformPoint(invMatrix, local);
+    final inv = Matrix4.inverted(_transformCtrl.value);
+    final t = MatrixUtils.transformPoint(inv, local);
     final w = box.size.width;
     final h = box.size.height;
     if (w == 0 || h == 0) return null;
-    final nx = (transformed.dx / w).clamp(0.0, 1.0);
-    final ny = (transformed.dy / h).clamp(0.0, 1.0);
-    return Offset(nx, ny);
+    return Offset((t.dx / w).clamp(0.0, 1.0), (t.dy / h).clamp(0.0, 1.0));
   }
 
-  void _onTapUp(TapUpDetails details, List<Pin> pins) {
-    // Ignora se c'è stato uno zoom significativo (scale > 1.05)
+  // Global screen position of a normalised pin coord
+  Offset _toScreenPos(double nx, double ny) {
+    final box = _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return Offset.zero;
+    final local = Offset(nx * box.size.width, ny * box.size.height);
+    final transformed = MatrixUtils.transformPoint(_transformCtrl.value, local);
+    return box.localToGlobal(transformed);
+  }
+
+  void _closeTooltip() {
+    if (_tooltipPin != null) setState(() => _tooltipPin = null);
+  }
+
+  void _onBackgroundTapUp(TapUpDetails d, List<Pin> pins) {
+    if (_tooltipPin != null) {
+      _closeTooltip();
+      return;
+    }
+    // Don't add pins while zoomed in significantly
     final scale = _transformCtrl.value.getMaxScaleOnAxis();
-    if (scale > 1.5) return; // Lascia lo zoom libero senza aggiungere pin
+    if (scale > 1.5) return;
 
-    final coords = _toImageCoords(details.globalPosition);
+    final coords = _toImageCoords(d.globalPosition);
     if (coords == null) return;
-    _showAddPinSheet(coords);
+    _showContextMenu(d.globalPosition, coords);
   }
 
-  void _showAddPinSheet(Offset coords) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _AddPinSheet(
-        photoId: widget.photo.id,
-        x: coords.dx,
-        y: coords.dy,
-      ),
-    );
-  }
-
-  void _showEditPinSheet(Pin pin) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _EditPinSheet(pin: pin),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _showContextMenu(Offset screenPos, Offset imageCoords) async {
     final l = AppL10n.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final pinsAsync = ref.watch(_pinsProvider(widget.photo.id));
-    final pins = pinsAsync.valueOrNull ?? [];
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(
-          l.pinViewerTitle,
-          style: GoogleFonts.jetBrainsMono(fontSize: 14),
+    final result = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        screenPos.dx, screenPos.dy, screenPos.dx + 1, screenPos.dy + 1),
+      items: [
+        PopupMenuItem(
+          value: 'color',
+          child: Row(children: [
+            const Icon(Icons.palette_outlined, size: 18),
+            const SizedBox(width: 10),
+            Text(l.pinTypeColor),
+          ]),
         ),
-        actions: [
-          // Toggle lista pin
-          if (pins.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.list_outlined),
-              tooltip: l.pinListTooltip,
-              onPressed: () => _showPinList(pins),
-            ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: l.photoDeleteTooltip,
-            onPressed: () => _confirmDelete(),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTapUp: (d) => _onTapUp(d, pins),
-              child: InteractiveViewer(
-                transformationController: _transformCtrl,
-                minScale: 0.5,
-                maxScale: 8.0,
-                child: Stack(
-                  children: [
-                    Image.file(
-                      File(widget.photo.path),
-                      key: _imageKey,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                    ),
-                    // Pin overlay — usa LayoutBuilder per conoscere le dimensioni
-                    Positioned.fill(
-                      child: LayoutBuilder(
-                        builder: (ctx, constraints) {
-                          return Stack(
-                            children: pins.map((pin) {
-                              return _PinMarker(
-                                pin: pin,
-                                containerSize: constraints.biggest,
-                                onTap: () => _showEditPinSheet(pin),
-                              );
-                            }).toList(),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Hint aggiunta pin
-          Container(
-            width: double.infinity,
-            color: Colors.black,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              l.pinAddHint,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 11,
-                color: Colors.white38,
-              ),
-            ),
-          ),
-        ],
+        PopupMenuItem(
+          value: 'note',
+          child: Row(children: [
+            const Icon(Icons.build_outlined, size: 18),
+            const SizedBox(width: 10),
+            Text(l.pinTypeNote),
+          ]),
+        ),
+      ],
+    );
+
+    if (!mounted || result == null) return;
+
+    if (result == 'color') {
+      await _addColorPin(imageCoords);
+    } else {
+      await _addNotePin(imageCoords);
+    }
+  }
+
+  Future<void> _addColorPin(Offset coords) async {
+    final selection = await showPaintPickerSheet(context);
+    if (!mounted || selection == null) return;
+    await ref.read(pinRepositoryProvider).addPin(PinsCompanion(
+      photoId: Value(widget.photo.id),
+      type: const Value('color'),
+      x: Value(coords.dx),
+      y: Value(coords.dy),
+      notes: Value('hex:${selection.hex}|brand:${selection.brand}'
+          '|code:${selection.code}|name:${selection.name}'),
+    ));
+  }
+
+  Future<void> _addNotePin(Offset coords) async {
+    final text = await _showNoteInput(context);
+    if (!mounted || text == null || text.isEmpty) return;
+    await ref.read(pinRepositoryProvider).addPin(PinsCompanion(
+      photoId: Value(widget.photo.id),
+      type: const Value('note'),
+      x: Value(coords.dx),
+      y: Value(coords.dy),
+      notes: Value(text),
+    ));
+  }
+
+  void _onPinLongPress(Pin pin) {
+    HapticFeedback.mediumImpact();
+    final pos = _toScreenPos(pin.x, pin.y);
+    setState(() {
+      _tooltipPin = pin;
+      _tooltipPos = pos;
+    });
+  }
+
+  Future<void> _editColorPin(Pin pin) async {
+    _closeTooltip();
+    final selection = await showPaintPickerSheet(context);
+    if (!mounted || selection == null) return;
+    await ref.read(pinRepositoryProvider).updatePin(
+      pin.id,
+      PinsCompanion(
+        notes: Value('hex:${selection.hex}|brand:${selection.brand}'
+            '|code:${selection.code}|name:${selection.name}'),
       ),
     );
   }
 
-  void _showPinList(List<Pin> pins) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => _PinListSheet(
-        pins: pins,
-        onEdit: _showEditPinSheet,
-      ),
+  Future<void> _editNotePin(Pin pin) async {
+    _closeTooltip();
+    final text = await _showNoteInput(context, initial: pin.notes ?? '');
+    if (!mounted || text == null) return;
+    await ref.read(pinRepositoryProvider).updatePin(
+      pin.id,
+      PinsCompanion(notes: Value(text)),
     );
   }
 
-  Future<void> _confirmDelete() async {
+  Future<void> _deletePin(Pin pin) async {
+    _closeTooltip();
+    await ref.read(pinRepositoryProvider).deletePin(pin.id);
+  }
+
+  Future<void> _confirmDeletePhoto() async {
     final l = AppL10n.of(context);
-    final confirm = await showDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) {
         final ll = AppL10n.of(ctx);
@@ -205,18 +200,186 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(ll.actionDelete,
-                  style:
-                      TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
             ),
           ],
         );
       },
     );
-    if (confirm == true && mounted) {
+    if (ok == true && mounted) {
       Navigator.of(context).pop();
       widget.onDelete();
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final pinsAsync = ref.watch(_pinsProvider(widget.photo.id));
+    final pins = pinsAsync.valueOrNull ?? [];
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTapUp: (d) => _onBackgroundTapUp(d, pins),
+        child: Stack(
+          children: [
+            // ── Photo + pin markers ─────────────────────────────────────────
+            InteractiveViewer(
+              transformationController: _transformCtrl,
+              minScale: 0.5,
+              maxScale: 8.0,
+              child: SizedBox.expand(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Image.file(
+                      File(widget.photo.path),
+                      key: _imageKey,
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                    ),
+                    Positioned.fill(
+                      child: LayoutBuilder(
+                        builder: (_, cst) => Stack(
+                          children: pins.map((pin) => _PinMarker(
+                            pin: pin,
+                            containerSize: cst.biggest,
+                            onLongPress: () => _onPinLongPress(pin),
+                          )).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Delete photo button (top-right) ─────────────────────────────
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Material(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: _confirmDeletePhoto,
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.delete_outline,
+                            color: Colors.white70, size: 22),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Hint ────────────────────────────────────────────────────────
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    l.pinAddHint,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 11,
+                      color: Colors.white38,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Tooltip overlay ─────────────────────────────────────────────
+            if (_tooltipPin != null)
+              _PinTooltipOverlay(
+                pin: _tooltipPin!,
+                screenPos: _tooltipPos,
+                onClose: _closeTooltip,
+                onEdit: _tooltipPin!.type == 'color'
+                    ? () => _editColorPin(_tooltipPin!)
+                    : () => _editNotePin(_tooltipPin!),
+                onDelete: () => _deletePin(_tooltipPin!),
+                scheme: scheme,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+Color _hexColor(String hex) {
+  try {
+    final h = hex.replaceFirst('#', '');
+    return Color(int.parse('FF$h', radix: 16));
+  } catch (_) {
+    return Colors.grey;
+  }
+}
+
+String? _parseField(String? notes, String key) {
+  if (notes == null) return null;
+  final m = RegExp('$key:([^|]*)').firstMatch(notes);
+  return m?.group(1)?.trim();
+}
+
+Future<String?> _showNoteInput(BuildContext context,
+    {String initial = ''}) async {
+  final ctrl = TextEditingController(text: initial);
+  final l = AppL10n.of(context);
+  final result = await showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 20,
+        bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppL10n.of(ctx).pinNoteLabel,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 11,
+              letterSpacing: 1.2,
+              color: Theme.of(ctx).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: ctrl,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(hintText: AppL10n.of(ctx).pinNoteHint),
+            maxLines: 3,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
+              child: Text(AppL10n.of(ctx).actionSave),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+  ctrl.dispose();
+  return result;
 }
 
 // ── Pin marker ────────────────────────────────────────────────────────────────
@@ -224,12 +387,12 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
 class _PinMarker extends StatelessWidget {
   final Pin pin;
   final Size containerSize;
-  final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   const _PinMarker({
     required this.pin,
     required this.containerSize,
-    required this.onTap,
+    required this.onLongPress,
   });
 
   @override
@@ -239,570 +402,216 @@ class _PinMarker extends StatelessWidget {
     final top = pin.y * containerSize.height;
 
     Widget marker;
-    if (pin.type == 'color' && pin.notes != null) {
-      // Leggi hex dal campo notes (formato: "hex:#RRGGBB|label:testo")
-      final hex = _parseHex(pin.notes);
-      final label = _parseLabel(pin.notes);
-      marker = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          HexColorChip(
-            color: hex != null ? _hexToColor(hex) : scheme.primary,
-            size: 28,
-          ),
-          if (label != null && label.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(top: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                label,
-                style: GoogleFonts.jetBrainsMono(
-                    fontSize: 8, color: Colors.white),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
-      );
+    if (pin.type == 'color') {
+      final hex = _parseField(pin.notes, 'hex') ?? '#808080';
+      marker = HexColorChip(color: _hexColor(hex), size: 28);
     } else {
-      // Pin note
-      final label = pin.notes ?? '';
-      marker = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: scheme.tertiary,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
-            ),
-            child: const Icon(Icons.sticky_note_2_outlined,
-                color: Colors.white, size: 14),
-          ),
-          if (label.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(top: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                label,
-                style: GoogleFonts.jetBrainsMono(
-                    fontSize: 8, color: Colors.white),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
+      marker = Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: scheme.tertiary,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: const Icon(Icons.build_outlined, color: Colors.white, size: 14),
       );
     }
 
     return Positioned(
-      left: left - 14, // centra il marker
+      left: left - 14,
       top: top - 14,
       child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
+        behavior: HitTestBehavior.opaque,
+        onLongPress: onLongPress,
         child: marker,
       ),
     );
   }
-
-  String? _parseHex(String? notes) {
-    if (notes == null) return null;
-    final m = RegExp(r'hex:([#\w]+)').firstMatch(notes);
-    return m?.group(1);
-  }
-
-  String? _parseLabel(String? notes) {
-    if (notes == null) return null;
-    final m = RegExp(r'label:(.*)').firstMatch(notes);
-    return m?.group(1)?.trim();
-  }
-
-  Color _hexToColor(String hex) {
-    try {
-      final h = hex.replaceFirst('#', '');
-      return Color(int.parse('FF$h', radix: 16));
-    } catch (_) {
-      return Colors.grey;
-    }
-  }
 }
 
-// ── Add pin sheet ─────────────────────────────────────────────────────────────
+// ── Tooltip overlay ───────────────────────────────────────────────────────────
 
-class _AddPinSheet extends ConsumerStatefulWidget {
-  final int photoId;
-  final double x;
-  final double y;
-  const _AddPinSheet(
-      {required this.photoId, required this.x, required this.y});
-
-  @override
-  ConsumerState<_AddPinSheet> createState() => _AddPinSheetState();
-}
-
-class _AddPinSheetState extends ConsumerState<_AddPinSheet> {
-  String _type = 'color'; // 'color' | 'note'
-  final _labelCtrl = TextEditingController();
-  final _hexCtrl = TextEditingController();
-  String? _selectedInventoryKey; // 'brand:code'
-
-  @override
-  void dispose() {
-    _labelCtrl.dispose();
-    _hexCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final repo = ref.read(pinRepositoryProvider);
-    String? notesPayload;
-    if (_type == 'color') {
-      final hex = _hexCtrl.text.trim().isNotEmpty
-          ? _hexCtrl.text.trim()
-          : '#808080';
-      final label = _labelCtrl.text.trim();
-      notesPayload = 'hex:$hex|label:$label';
-    } else {
-      notesPayload = _labelCtrl.text.trim();
-    }
-    await repo.addPin(PinsCompanion(
-      photoId: Value(widget.photoId),
-      type: Value(_type),
-      x: Value(widget.x),
-      y: Value(widget.y),
-      notes: Value(notesPayload),
-    ));
-    if (mounted) Navigator.of(context).pop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final invAsync = ref.watch(_rawInventoryForPinProvider);
-    final inventory = invAsync.value ?? [];
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.pinAddTitle,
-              style: GoogleFonts.jetBrainsMono(
-                  fontSize: 11,
-                  letterSpacing: 1.2,
-                  color: scheme.primary)),
-          const SizedBox(height: 12),
-          // Tipo pin
-          SegmentedButton<String>(
-            segments: [
-              ButtonSegment(
-                  value: 'color',
-                  label: Text(l.pinTypeColor),
-                  icon: const Icon(Icons.palette_outlined, size: 16)),
-              ButtonSegment(
-                  value: 'note',
-                  label: Text(l.pinTypeNote),
-                  icon: const Icon(Icons.sticky_note_2_outlined, size: 16)),
-            ],
-            selected: {_type},
-            onSelectionChanged: (s) => setState(() => _type = s.first),
-          ),
-          const SizedBox(height: 16),
-          if (_type == 'color') ...[
-            // Picker vernice dall'inventario
-            if (inventory.isNotEmpty) ...[
-              Text(l.pinPickFromInventory,
-                  style: tt.labelSmall
-                      ?.copyWith(color: scheme.onSurfaceVariant)),
-              const SizedBox(height: 6),
-              SizedBox(
-                height: 44,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: inventory.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (ctx, i) {
-                    final p = inventory[i];
-                    final key = '${p.brand}:${p.code}';
-                    final selected = _selectedInventoryKey == key;
-                    return GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() {
-                          _selectedInventoryKey = key;
-                          _hexCtrl.text = p.hex;
-                          _labelCtrl.text = '${p.brand.toUpperCase()} ${p.code}';
-                        });
-                      },
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          HexColorChip(
-                            color: _hexToColor(p.hex),
-                            size: selected ? 32 : 26,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            TextField(
-              controller: _hexCtrl,
-              decoration: InputDecoration(
-                labelText: l.pinHexLabel,
-                hintText: '#D4A017',
-                prefixIcon: _hexCtrl.text.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: CircleAvatar(
-                          radius: 10,
-                          backgroundColor: _hexToColor(_hexCtrl.text),
-                        ),
-                      )
-                    : null,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-          ],
-          TextField(
-            controller: _labelCtrl,
-            decoration: InputDecoration(
-              labelText: _type == 'color' ? l.pinLabelLabel : l.pinNoteLabel,
-              hintText: _type == 'color' ? 'XF-1 Flat Black' : l.pinNoteHint,
-            ),
-            textCapitalization: TextCapitalization.sentences,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _save,
-              child: Text(l.actionSave),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _hexToColor(String hex) {
-    try {
-      final h = hex.replaceFirst('#', '');
-      return Color(int.parse('FF$h', radix: 16));
-    } catch (_) {
-      return Colors.grey;
-    }
-  }
-}
-
-// Provider leggero per l'inventario vernici (brand+code+hex)
-// Carica cataloghi JSON una volta sola e li usa per risolvere l'hex
-final _rawInventoryForPinProvider =
-    FutureProvider.autoDispose<List<_PinPaint>>((ref) async {
-  final db = ref.watch(databaseProvider);
-  final rows = await db.select(db.inventoryPaints).get();
-
-  // Indice catalogo: 'brand+code' → hex
-  final catalogIndex = <String, String>{};
-  const assets = [
-    'assets/catalogs/tamiya_xf.json',
-    'assets/catalogs/tamiya_x.json',
-    'assets/catalogs/tamiya_lp.json',
-    'assets/catalogs/tamiya_ts.json',
-    'assets/catalogs/vallejo_model_color.json',
-    'assets/catalogs/vallejo_model_air.json',
-    'assets/catalogs/citadel_base.json',
-    'assets/catalogs/gunze_mr_color.json',
-    'assets/catalogs/gunze_aqueous.json',
-    'assets/catalogs/gunze_mr_metal.json',
-    'assets/catalogs/humbrol_enamel.json',
-    'assets/catalogs/lifecolor_lc.json',
-    'assets/catalogs/lifecolor_ua.json',
-  ];
-  for (final asset in assets) {
-    try {
-      final raw = await rootBundle.loadString(asset);
-      final data = jsonDecode(raw) as Map<String, dynamic>;
-      final brand = data['brand'] as String;
-      final paints = data['paints'] as List<dynamic>;
-      for (final p in paints) {
-        final m = p as Map<String, dynamic>;
-        catalogIndex['${brand}+${m['code']}'] = m['hex'] as String? ?? '#808080';
-      }
-    } catch (_) {}
-  }
-
-  // Indice custom paints
-  final customRows = await db.select(db.customPaints).get();
-  final customIndex = <String, String>{
-    for (final r in customRows) '${r.brand}+${r.code}': r.hex,
-  };
-
-  final result = <_PinPaint>[];
-  for (final ip in rows) {
-    if (ip.catalogBrand != null && ip.catalogCode != null) {
-      final key = '${ip.catalogBrand}+${ip.catalogCode}';
-      result.add(_PinPaint(
-        brand: ip.catalogBrand!,
-        code: ip.catalogCode!,
-        hex: catalogIndex[key] ?? '#808080',
-      ));
-    } else if (ip.customBrand != null && ip.customCode != null) {
-      final key = '${ip.customBrand}+${ip.customCode}';
-      result.add(_PinPaint(
-        brand: ip.customBrand!,
-        code: ip.customCode!,
-        hex: customIndex[key] ?? '#808080',
-      ));
-    }
-  }
-  return result;
-});
-
-class _PinPaint {
-  final String brand, code, hex;
-  const _PinPaint({required this.brand, required this.code, required this.hex});
-}
-
-// ── Edit pin sheet ────────────────────────────────────────────────────────────
-
-class _EditPinSheet extends ConsumerStatefulWidget {
+class _PinTooltipOverlay extends StatelessWidget {
   final Pin pin;
-  const _EditPinSheet({required this.pin});
+  final Offset screenPos;
+  final VoidCallback onClose;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final ColorScheme scheme;
 
-  @override
-  ConsumerState<_EditPinSheet> createState() => _EditPinSheetState();
-}
-
-class _EditPinSheetState extends ConsumerState<_EditPinSheet> {
-  late TextEditingController _labelCtrl;
-  late TextEditingController _hexCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.pin.type == 'color') {
-      _hexCtrl = TextEditingController(
-          text: _parseField(widget.pin.notes, 'hex') ?? '');
-      _labelCtrl = TextEditingController(
-          text: _parseField(widget.pin.notes, 'label') ?? '');
-    } else {
-      _hexCtrl = TextEditingController();
-      _labelCtrl = TextEditingController(text: widget.pin.notes ?? '');
-    }
-  }
-
-  @override
-  void dispose() {
-    _labelCtrl.dispose();
-    _hexCtrl.dispose();
-    super.dispose();
-  }
-
-  String? _parseField(String? notes, String key) {
-    if (notes == null) return null;
-    final m = RegExp('$key:([^|]*)').firstMatch(notes);
-    return m?.group(1)?.trim();
-  }
-
-  Future<void> _save() async {
-    final repo = ref.read(pinRepositoryProvider);
-    String? notesPayload;
-    if (widget.pin.type == 'color') {
-      final hex = _hexCtrl.text.trim().isNotEmpty
-          ? _hexCtrl.text.trim()
-          : '#808080';
-      notesPayload = 'hex:$hex|label:${_labelCtrl.text.trim()}';
-    } else {
-      notesPayload = _labelCtrl.text.trim();
-    }
-    await repo.updatePin(
-        widget.pin.id, PinsCompanion(notes: Value(notesPayload)));
-    if (mounted) Navigator.of(context).pop();
-  }
-
-  Future<void> _delete() async {
-    await ref.read(pinRepositoryProvider).deletePin(widget.pin.id);
-    if (mounted) Navigator.of(context).pop();
-  }
+  const _PinTooltipOverlay({
+    required this.pin,
+    required this.screenPos,
+    required this.onClose,
+    required this.onEdit,
+    required this.onDelete,
+    required this.scheme,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final size = MediaQuery.sizeOf(context);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    // Position tooltip above/below the pin, keeping it on-screen
+    const tooltipW = 220.0;
+    const tooltipH = 130.0;
+    double left = (screenPos.dx - tooltipW / 2).clamp(8.0, size.width - tooltipW - 8);
+    double top = screenPos.dy - tooltipH - 16;
+    if (top < 60) top = screenPos.dy + 28;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: onClose,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Text(l.pinEditTitle,
-                  style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11,
-                      letterSpacing: 1.2,
-                      color: scheme.primary)),
-              const Spacer(),
-              TextButton.icon(
-                icon: Icon(Icons.delete_outline,
-                    color: scheme.error, size: 16),
-                label: Text(l.actionDelete,
-                    style: TextStyle(color: scheme.error)),
-                onPressed: _delete,
+          Positioned(
+            left: left,
+            top: top,
+            width: tooltipW,
+            child: Material(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+              elevation: 8,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: pin.type == 'color'
+                    ? _ColorTooltipContent(pin: pin, scheme: scheme)
+                    : _NoteTooltipContent(pin: pin, scheme: scheme),
               ),
+            ),
+          ),
+          // Action row outside the card area — centred below/above tooltip
+          Positioned(
+            left: left,
+            top: top + (pin.type == 'color' ? 104 : 80),
+            width: tooltipW,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _TooltipAction(
+                  icon: Icons.edit_outlined,
+                  color: scheme.primary,
+                  onTap: onEdit,
+                ),
+                const SizedBox(width: 4),
+                _TooltipAction(
+                  icon: Icons.delete_outline,
+                  color: scheme.error,
+                  onTap: onDelete,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColorTooltipContent extends StatelessWidget {
+  final Pin pin;
+  final ColorScheme scheme;
+  const _ColorTooltipContent({required this.pin, required this.scheme});
+
+  @override
+  Widget build(BuildContext context) {
+    final hex   = _parseField(pin.notes, 'hex')   ?? '#808080';
+    final brand = _parseField(pin.notes, 'brand')  ?? '';
+    final code  = _parseField(pin.notes, 'code')   ?? '';
+    final name  = _parseField(pin.notes, 'name')   ?? '';
+    // Backward compat with old 'label:' format
+    final label = _parseField(pin.notes, 'label')  ?? '';
+
+    final displayCode  = code.isNotEmpty  ? code  : label;
+    final displayBrand = brand.isNotEmpty ? brand.toUpperCase() : '';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        HexColorChip(color: _hexColor(hex), size: 36),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (displayBrand.isNotEmpty)
+                Text(displayBrand,
+                    style: GoogleFonts.jetBrainsMono(
+                        fontSize: 9,
+                        color: scheme.primary,
+                        letterSpacing: 1)),
+              if (displayCode.isNotEmpty)
+                Text(displayCode,
+                    style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12, fontWeight: FontWeight.w600,
+                        color: scheme.onSurface),
+                    overflow: TextOverflow.ellipsis),
+              if (name.isNotEmpty)
+                Text(name,
+                    style: GoogleFonts.ibmPlexSans(
+                        fontSize: 11, color: scheme.onSurfaceVariant),
+                    overflow: TextOverflow.ellipsis),
+              Text(hex.toUpperCase(),
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10, color: scheme.onSurfaceVariant)),
             ],
           ),
-          const SizedBox(height: 16),
-          if (widget.pin.type == 'color') ...[
-            TextField(
-              controller: _hexCtrl,
-              decoration: InputDecoration(labelText: l.pinHexLabel),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-          ],
-          TextField(
-            controller: _labelCtrl,
-            decoration: InputDecoration(
-              labelText: widget.pin.type == 'color'
-                  ? l.pinLabelLabel
-                  : l.pinNoteLabel,
-            ),
-            textCapitalization: TextCapitalization.sentences,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _save,
-              child: Text(l.actionSave),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-// ── Pin list sheet ────────────────────────────────────────────────────────────
-
-class _PinListSheet extends StatelessWidget {
-  final List<Pin> pins;
-  final void Function(Pin) onEdit;
-  const _PinListSheet({required this.pins, required this.onEdit});
+class _NoteTooltipContent extends StatelessWidget {
+  final Pin pin;
+  final ColorScheme scheme;
+  const _NoteTooltipContent({required this.pin, required this.scheme});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.5,
-      maxChildSize: 0.9,
-      builder: (ctx, scroll) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(l.pinListTitle,
-                style: GoogleFonts.jetBrainsMono(
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                    color: scheme.primary)),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.build_outlined, color: scheme.tertiary, size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            pin.notes ?? '',
+            style: GoogleFonts.ibmPlexSans(
+                fontSize: 13, color: scheme.onSurface),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
-          Expanded(
-            child: ListView.builder(
-              controller: scroll,
-              itemCount: pins.length,
-              itemBuilder: (_, i) {
-                final pin = pins[i];
-                final isColor = pin.type == 'color';
-                final label = isColor
-                    ? _parseField(pin.notes, 'label') ?? ''
-                    : (pin.notes ?? '');
-                final hex = isColor
-                    ? _parseField(pin.notes, 'hex')
-                    : null;
-
-                return ListTile(
-                  leading: isColor && hex != null
-                      ? HexColorChip(
-                          color: _hexToColor(hex), size: 32)
-                      : CircleAvatar(
-                          backgroundColor: scheme.tertiary,
-                          radius: 16,
-                          child: const Icon(
-                              Icons.sticky_note_2_outlined,
-                              color: Colors.white,
-                              size: 14),
-                        ),
-                  title: Text(label.isNotEmpty ? label : '—',
-                      style: tt.bodyMedium),
-                  subtitle: Text(
-                    isColor ? l.pinTypeColor : l.pinTypeNote,
-                    style: tt.labelSmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                  trailing: Icon(Icons.edit_outlined,
-                      size: 18, color: scheme.onSurfaceVariant),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onEdit(pin);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
 
-  String? _parseField(String? notes, String key) {
-    if (notes == null) return null;
-    final m = RegExp('$key:([^|]*)').firstMatch(notes);
-    return m?.group(1)?.trim();
-  }
+class _TooltipAction extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  const _TooltipAction({required this.icon, required this.color, required this.onTap});
 
-  Color _hexToColor(String hex) {
-    try {
-      final h = hex.replaceFirst('#', '');
-      return Color(int.parse('FF$h', radix: 16));
-    } catch (_) {
-      return Colors.grey;
-    }
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: color, size: 18),
+        ),
+      ),
+    );
   }
 }
