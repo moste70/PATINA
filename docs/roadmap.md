@@ -401,3 +401,24 @@ Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; D
 1. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
 2. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
 3. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
+
+---
+
+## Fase 1G — Navale Statico in Legno
+
+**Obiettivo:** feature specializzate per i modellisti di navi in legno in scala — una nicchia con esigenze molto diverse dal modellismo plastico (nessuna vernice spray, rigging complesso, materiali lignei).
+
+> Prerequisito: Fase 1E stabile. Da pianificare dopo il feedback dei primi utenti navali.
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| 1G.1 | 🔴 Alta | **Checklist sartiame** — lista gerarchica delle manovre (fisse e correnti) con nome tecnico (sartie, paterazzi, griselle, drizze…), materiale del cavo, diametro e stato (da fare / in corso / completato); barra avanzamento per gruppo di manovre. Feature unica, assente in qualsiasi app esistente | ⬜ Da fare |
+| 1G.2 | 🟡 Media | **Inventario legni e materiali** — traccia essenza (pero, noce, tiglio, bosso, ciliegio…), sezione in mm (es. 2×4, 3×5), lunghezza residua in cm e fornitore. Strutturalmente simile all'inventario vernici, riusa pattern UI esistenti | ⬜ Da fare |
+| 1G.3 | 🟢 Bassa | **Schede componenti/ferramenta** — traccia i pezzi prefabbricati del kit (cannoni, bozzelli, biette, ancore, deadeyes) con quantità totale prevista vs installata. Utile per non perdere pezzi durante lavorazioni lunghe (mesi/anni) | ⬜ Da fare |
+
+### Note di design
+
+- **1G.1 (checklist sartiame)** è la priorità assoluta: il rigging di una nave è composto da decine/centinaia di cavi, lavorati nell'arco di mesi. Nessuno strumento digitale copre questa esigenza in modo strutturato. Struttura dati suggerita: tabella `rigging_lines` con `project_id`, `group` (es. "Manovre fisse albero di maestra"), `name`, `material`, `diameter_mm`, `status`.
+- **1G.2 (legni)** si distingue dall'inventario vernici perché l'unità è la lunghezza (cm/mm) non la quantità, e la stessa essenza può avere più sezioni diverse in stock.
+- Le tre feature sono indipendenti e possono essere rilasciate in ordine, senza dipendenze tra loro.
+- Kit brands di riferimento: Amati, Mantua/Sergal, Corel, Mamoli, Occre, Victory Models, Caldercraft.
