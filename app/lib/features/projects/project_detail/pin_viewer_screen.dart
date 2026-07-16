@@ -41,6 +41,9 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
   // Screen position of the tooltip origin
   Offset _tooltipPos = Offset.zero;
 
+  // Which pin types are currently visible ('color' and/or 'note')
+  final Set<String> _visibleTypes = {'color', 'note'};
+
   @override
   void initState() {
     super.initState();
@@ -222,7 +225,10 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
     final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final pinsAsync = ref.watch(_pinsProvider(widget.photo.id));
-    final pins = pinsAsync.valueOrNull ?? [];
+    final allPins = pinsAsync.valueOrNull ?? [];
+    final pins = allPins.where((p) => _visibleTypes.contains(p.type)).toList();
+    final hasColor = allPins.any((p) => p.type == 'color');
+    final hasNote  = allPins.any((p) => p.type == 'note');
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -264,6 +270,33 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
                 ),
               );
             }),
+
+            // ── Pin type filter (top-left, only when both types exist) ──────
+            if (hasColor && hasNote)
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: _PinFilterBar(
+                      visibleTypes: _visibleTypes,
+                      colorLabel: l.pinTypeColor,
+                      noteLabel: l.pinTypeNote,
+                      onToggle: (type) {
+                        setState(() {
+                          if (_visibleTypes.contains(type)) {
+                            if (_visibleTypes.length > 1) {
+                              _visibleTypes.remove(type);
+                            }
+                          } else {
+                            _visibleTypes.add(type);
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ),
 
             // ── Delete photo button (top-right) ─────────────────────────────
             SafeArea(
@@ -647,6 +680,103 @@ class _NoteTooltipContent extends StatelessWidget {
     );
   }
 }
+
+// ── Pin filter bar ────────────────────────────────────────────────────────────
+
+class _PinFilterBar extends StatelessWidget {
+  final Set<String> visibleTypes;
+  final String colorLabel;
+  final String noteLabel;
+  final void Function(String type) onToggle;
+
+  const _PinFilterBar({
+    required this.visibleTypes,
+    required this.colorLabel,
+    required this.noteLabel,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black45,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _FilterChip(
+              icon: Icons.palette_outlined,
+              label: colorLabel,
+              active: visibleTypes.contains('color'),
+              onTap: () => onToggle('color'),
+            ),
+            const SizedBox(width: 4),
+            _FilterChip(
+              icon: Icons.build_outlined,
+              label: noteLabel,
+              active: visibleTypes.contains('note'),
+              onTap: () => onToggle('note'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: active ? 1.0 : 0.35,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: active ? Colors.white12 : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 14),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _TooltipAction extends StatelessWidget {
   final IconData icon;
