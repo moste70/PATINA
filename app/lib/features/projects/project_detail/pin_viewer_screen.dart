@@ -42,7 +42,17 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
   Offset _tooltipPos = Offset.zero;
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild whenever zoom/pan changes so overlay pin positions update.
+    _transformCtrl.addListener(_onTransformChanged);
+  }
+
+  void _onTransformChanged() => setState(() {});
+
+  @override
   void dispose() {
+    _transformCtrl.removeListener(_onTransformChanged);
     _transformCtrl.dispose();
     super.dispose();
   }
@@ -79,10 +89,6 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
       _closeTooltip();
       return;
     }
-    // Don't add pins while zoomed in significantly
-    final scale = _transformCtrl.value.getMaxScaleOnAxis();
-    if (scale > 1.5) return;
-
     final coords = _toImageCoords(d.globalPosition);
     if (coords == null) return;
     _showContextMenu(d.globalPosition, coords);
@@ -226,36 +232,39 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
         onTapUp: (d) => _onBackgroundTapUp(d, pins),
         child: Stack(
           children: [
-            // ── Photo + pin markers ─────────────────────────────────────────
+            // ── Photo ───────────────────────────────────────────────────────
             InteractiveViewer(
               transformationController: _transformCtrl,
               minScale: 0.5,
               maxScale: 8.0,
               child: SizedBox.expand(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Image.file(
-                      File(widget.photo.path),
-                      key: _imageKey,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                    ),
-                    Positioned.fill(
-                      child: LayoutBuilder(
-                        builder: (_, cst) => Stack(
-                          children: pins.map((pin) => _PinMarker(
-                            pin: pin,
-                            containerSize: cst.biggest,
-                            onLongPress: () => _onPinLongPress(pin),
-                          )).toList(),
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Center(
+                  child: Image.file(
+                    File(widget.photo.path),
+                    key: _imageKey,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                  ),
                 ),
               ),
             ),
+
+            // ── Pin markers (overlay — outside InteractiveViewer so
+            //    GestureDetector.onLongPress doesn't compete with pan) ────────
+            ...pins.map((pin) {
+              final pos = _toScreenPos(pin.x, pin.y);
+              return Positioned(
+                left: pos.dx - 14,
+                top: pos.dy - 14,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  // Consume taps so they don't bubble to the background handler
+                  onTap: () {},
+                  onLongPress: () => _onPinLongPress(pin),
+                  child: _PinMarkerWidget(pin: pin),
+                ),
+              );
+            }),
 
             // ── Delete photo button (top-right) ─────────────────────────────
             SafeArea(
@@ -382,50 +391,28 @@ Future<String?> _showNoteInput(BuildContext context,
   return result;
 }
 
-// ── Pin marker ────────────────────────────────────────────────────────────────
+// ── Pin marker widget (positioned in the overlay Stack by the screen) ─────────
 
-class _PinMarker extends StatelessWidget {
+class _PinMarkerWidget extends StatelessWidget {
   final Pin pin;
-  final Size containerSize;
-  final VoidCallback onLongPress;
-
-  const _PinMarker({
-    required this.pin,
-    required this.containerSize,
-    required this.onLongPress,
-  });
+  const _PinMarkerWidget({required this.pin});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final left = pin.x * containerSize.width;
-    final top = pin.y * containerSize.height;
-
-    Widget marker;
     if (pin.type == 'color') {
       final hex = _parseField(pin.notes, 'hex') ?? '#808080';
-      marker = HexColorChip(color: _hexColor(hex), size: 28);
-    } else {
-      marker = Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: scheme.tertiary,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.5),
-        ),
-        child: const Icon(Icons.build_outlined, color: Colors.white, size: 14),
-      );
+      return HexColorChip(color: _hexColor(hex), size: 28);
     }
-
-    return Positioned(
-      left: left - 14,
-      top: top - 14,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onLongPress: onLongPress,
-        child: marker,
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: scheme.tertiary,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
       ),
+      child: const Icon(Icons.build_outlined, color: Colors.white, size: 14),
     );
   }
 }
