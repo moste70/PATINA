@@ -105,13 +105,13 @@
 
 | Task | Descrizione | Stato |
 |------|-------------|-------|
-| 1D.1 | Viewer foto con zoom e pan (InteractiveViewer) | ⬜ Da fare |
-| 1D.2 | Aggiunta pin colore con selezione vernice/ricetta | ⬜ Da fare |
-| 1D.3 | Aggiunta pin lavorazione con tipo e note | ⬜ Da fare |
-| 1D.4 | Visualizzazione chip esagonale sul pin | ⬜ Da fare |
-| 1D.5 | Modifica e spostamento pin esistenti | ⬜ Da fare |
+| 1D.1 | Viewer foto con zoom e pan (InteractiveViewer) | ✅ Completato |
+| 1D.2 | Aggiunta pin colore con selezione vernice/ricetta | ✅ Completato |
+| 1D.3 | Aggiunta pin lavorazione con tipo e note | ✅ Completato |
+| 1D.4 | Visualizzazione chip esagonale sul pin | ✅ Completato |
+| 1D.5 | Modifica e spostamento pin esistenti | ✅ Completato |
 | 1D.6 | Toggle visibilità e filtro per tipo | ⬜ Da fare |
-| 1D.7 | Vista lista di tutti i pin di una foto | ⬜ Da fare |
+| 1D.7 | Vista lista di tutti i pin di una foto | ✅ Completato |
 
 ---
 
@@ -376,7 +376,7 @@ Fase 0       ██████████  100%  — completata (incl. icone n
 Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa, devlog
 Fase 1B      ██████████  100%  — completa
 Fase 1C      ██████████  100%  — completa
-Fase 1D      ░░░░░░░░░░    0%  — Pin su foto
+Fase 1D      █████████░   86%  — 1D.1-1D.7 completati (UX redesign con PaintPickerSheet e tooltip overlay); manca 1D.6 (toggle visibilità)
 Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
@@ -397,6 +397,7 @@ Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; D
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟢 `1D` — Pin su foto (nuova fase)
-2. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
-3. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
+1. 🟢 `1D.6` — Toggle visibilità pin per tipo (color/note)
+2. 🟡 `1E` — Rifinitura e Release: backup ZIP, test dispositivi reali
+3. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
+4. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
