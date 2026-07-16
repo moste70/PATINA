@@ -93,7 +93,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
           if (_query.isNotEmpty) {
             filtered = recipes.where((r) {
               return r.name.toLowerCase().contains(_query) ||
-                  (r.tags?.toLowerCase().contains(_query) ?? false);
+                  (r.notes?.toLowerCase().contains(_query) ?? false);
             }).toList();
           }
 
