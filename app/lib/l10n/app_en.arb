@@ -366,5 +366,34 @@
   "colorPickerPhoto": "Pick colour from photo",
   "@colorPickerPhoto": {},
   "colorPickerConfirm": "Use this colour",
-  "@colorPickerConfirm": {}
+  "@colorPickerConfirm": {},
+
+  "hintProjectsSwipe": "Swipe left on a project to delete it",
+  "@hintProjectsSwipe": {},
+  "hintInventoryLongPress": "Long-press a colour chip to quickly change its quantity",
+  "@hintInventoryLongPress": {},
+  "hintPinViewerLongPress": "Long-press a pin to edit or delete it",
+  "@hintPinViewerLongPress": {},
+
+  "settingsHelpSection": "Help",
+  "@settingsHelpSection": {},
+  "settingsGesturesTitle": "Gestures & shortcuts",
+  "@settingsGesturesTitle": {},
+  "settingsGesturesSubtitle": "All available gestures in the app",
+  "@settingsGesturesSubtitle": {},
+
+  "gestureSwipeDelete": "Swipe left → Delete item (projects, palette, shopping list)",
+  "@gestureSwipeDelete": {},
+  "gestureLongPressQuantity": "Long-press a colour chip → Change quantity quickly",
+  "@gestureLongPressQuantity": {},
+  "gestureLongPressPin": "Long-press a pin → Edit or delete the pin",
+  "@gestureLongPressPin": {},
+  "gestureLongPressPalette": "Long-press a paint in palette → Exclude from shopping list",
+  "@gestureLongPressPalette": {},
+  "gestureTapPhotoEmpty": "Tap the empty photo area → Add the first photo",
+  "@gestureTapPhotoEmpty": {},
+  "gesturePinchPhoto": "Pinch / expand on a photo → Zoom in/out",
+  "@gesturePinchPhoto": {},
+  "gestureSwipeShoppingCheck": "Tap a paint in shopping list → Mark as purchased",
+  "@gestureSwipeShoppingCheck": {}
 }

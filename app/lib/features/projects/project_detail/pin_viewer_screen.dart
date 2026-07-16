@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../database/app_database.dart' hide CustomPaint, CustomPainter;
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/widgets/gesture_hint_bar.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
 import '../../../shared/widgets/paint_picker_sheet.dart';
 import 'pin_repository.dart';
@@ -322,6 +323,16 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
             ),
 
             // ── Hint ────────────────────────────────────────────────────────
+            Positioned(
+              bottom: 32,
+              left: 0,
+              right: 0,
+              child: GestureHintBar(
+                hintKey: 'hint_pin_viewer',
+                message: l.hintPinViewerLongPress,
+              ),
+            ),
+
             Align(
               alignment: Alignment.bottomCenter,
               child: SafeArea(

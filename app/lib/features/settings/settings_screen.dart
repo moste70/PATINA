@@ -84,6 +84,16 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _importBackup(context, l),
           ),
 
+          // ── Aiuto ────────────────────────────────────────────────────────
+          _SectionHeader(title: l.settingsHelpSection),
+
+          _SettingsTile(
+            icon: Icons.swipe_outlined,
+            title: l.settingsGesturesTitle,
+            subtitle: l.settingsGesturesSubtitle,
+            onTap: () => _showGesturesSheet(context, l),
+          ),
+
           // ── Info ─────────────────────────────────────────────────────────
           _SectionHeader(title: l.settingsInfoSection),
 
@@ -148,6 +158,49 @@ class SettingsScreen extends ConsumerWidget {
         SnackBar(content: Text(l.settingsBackupImportError)),
       );
     }
+  }
+
+  void _showGesturesSheet(BuildContext context, AppL10n l) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        final scheme = Theme.of(ctx).colorScheme;
+        final gestures = [
+          (Icons.swipe_left_outlined,      ll.gestureSwipeDelete),
+          (Icons.touch_app_outlined,       ll.gestureLongPressQuantity),
+          (Icons.touch_app_outlined,       ll.gestureLongPressPin),
+          (Icons.touch_app_outlined,       ll.gestureLongPressPalette),
+          (Icons.photo_camera_outlined,    ll.gestureTapPhotoEmpty),
+          (Icons.zoom_in_outlined,         ll.gesturePinchPhoto),
+          (Icons.swipe_right_alt_outlined, ll.gestureSwipeShoppingCheck),
+        ];
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: Text(ll.settingsGesturesTitle,
+                      style: Theme.of(ctx).textTheme.titleMedium),
+                ),
+                for (final (icon, label) in gestures)
+                  ListTile(
+                    leading: Icon(icon, color: scheme.primary, size: 22),
+                    title: Text(label,
+                        style: Theme.of(ctx).textTheme.bodyMedium),
+                    dense: true,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   String _themeModeLabel(AppL10n l, ThemeMode mode) => switch (mode) {

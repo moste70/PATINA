@@ -9,6 +9,7 @@ import '../../l10n/l10n_helpers.dart';
 import '../../shared/constants/app_constants.dart';
 import '../../shared/pro/pro_gate.dart';
 import '../../shared/pro/paywall_sheet.dart';
+import '../../shared/widgets/gesture_hint_bar.dart';
 import 'create_project/create_project_wizard.dart';
 import 'project_repository.dart';
 
@@ -81,6 +82,10 @@ class ProjectsScreen extends ConsumerWidget {
           return Column(
             children: [
               _FilterBar(current: filter),
+              GestureHintBar(
+                hintKey: 'hint_projects',
+                message: l.hintProjectsSwipe,
+              ),
               Expanded(
                 child: filtered.isEmpty
                     ? _EmptyFilter(

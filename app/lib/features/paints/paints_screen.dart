@@ -14,6 +14,7 @@ import '../../l10n/l10n_helpers.dart';
 import '../../shared/pro/pro_gate.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../shared/widgets/gesture_hint_bar.dart';
 import 'paint_equivalences.dart';
 import 'paints_repository.dart';
 
@@ -365,6 +366,10 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
             children: [
               const _SearchBar(),
               const _BrandFilterChips(),
+              GestureHintBar(
+                hintKey: 'hint_inventory',
+                message: AppL10n.of(context).hintInventoryLongPress,
+              ),
               Expanded(
                 child: TabBarView(
                   controller: _tabController,

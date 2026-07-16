@@ -129,6 +129,7 @@
 | 1E.6 | Ottimizzazione performance (immagini, DB) | ✅ Completato |
 | 1E.7 | Preparazione store listing Google Play | ⬜ Da fare |
 | 1E.8 | Release beta (Google Play Internal Testing) | ⬜ Da fare |
+| 1E.9 | Discoverability gesti: hint contestuali one-time + pagina "Gesti" in Impostazioni | ✅ Completato |
 
 ### ✅ Checklist pre-rilascio — comandi da eseguire
 
@@ -377,7 +378,7 @@ Fase 1A      ██████████  100%  — completa: wizard, scheda 
 Fase 1B      ██████████  100%  — completa
 Fase 1C      ██████████  100%  — completa
 Fase 1D      █████████░   86%  — 1D.1-1D.7 completati (UX redesign con PaintPickerSheet e tooltip overlay); manca 1D.6 (toggle visibilità)
-Fase 1E      ██░░░░░░░░   15%  — Impostazioni tema/lingua completate; mancano backup, test, store
+Fase 1E      ████████░░   80%  — backup ZIP, empty state, performance, hint gesti completati; mancano store listing e beta release
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
 Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
@@ -397,7 +398,6 @@ Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; D
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟢 `1D.6` — Toggle visibilità pin per tipo (color/note)
-2. 🟡 `1E` — Rifinitura e Release: backup ZIP, test dispositivi reali
-3. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
-4. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
+1. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
+2. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
+3. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
