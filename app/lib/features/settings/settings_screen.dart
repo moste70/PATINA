@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../../shared/utils/backup_service.dart';
 
 // Provider per la lingua selezionata (codice locale, es. 'it', 'en', 'system').
 // Usato anche in main.dart per impostare la locale di MaterialApp.
@@ -65,6 +67,23 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _showLocalePicker(context, ref, l, locale),
           ),
 
+          // ── Dati / Backup ─────────────────────────────────────────────────
+          _SectionHeader(title: l.settingsDataSection),
+
+          _SettingsTile(
+            icon: Icons.upload_outlined,
+            title: l.settingsBackupExportTitle,
+            subtitle: l.settingsBackupExportSubtitle,
+            onTap: () => _exportBackup(context, l),
+          ),
+
+          _SettingsTile(
+            icon: Icons.download_outlined,
+            title: l.settingsBackupImportTitle,
+            subtitle: l.settingsBackupImportSubtitle,
+            onTap: () => _importBackup(context, l),
+          ),
+
           // ── Info ─────────────────────────────────────────────────────────
           _SectionHeader(title: l.settingsInfoSection),
 
@@ -77,6 +96,58 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _exportBackup(BuildContext context, AppL10n l) async {
+    HapticFeedback.lightImpact();
+    try {
+      await BackupService.exportBackup();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.settingsBackupExportError)),
+      );
+    }
+  }
+
+  Future<void> _importBackup(BuildContext context, AppL10n l) async {
+    HapticFeedback.lightImpact();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.settingsBackupImportTitle),
+          content: Text(ll.settingsBackupImportWarning),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ll.actionCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ll.actionContinue),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirm != true || !context.mounted) return;
+    try {
+      final done = await BackupService.importBackup();
+      if (!done || !context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l.settingsBackupImportSuccess),
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.settingsBackupImportError)),
+      );
+    }
   }
 
   String _themeModeLabel(AppL10n l, ThemeMode mode) => switch (mode) {
