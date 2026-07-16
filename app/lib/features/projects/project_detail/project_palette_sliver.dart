@@ -9,6 +9,7 @@ import '../../../database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/utils/lab_mixer.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
+import '../../../shared/widgets/paint_suggestion_sheet.dart';
 import '../../recipes/recipe_repository.dart';
 import '../project_repository.dart';
 
@@ -97,6 +98,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final paintsAsync = ref.watch(_projectPaintsProvider(projectId));
+    final catalogAsync = ref.watch(_catalogProvider);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -162,11 +164,13 @@ class ProjectPaletteSliver extends ConsumerWidget {
                     tt: tt,
                   );
                 }
+                final catalog = catalogAsync.value ?? [];
                 return Column(
                   children: paints
                       .map((p) => _PaletteRow(
                             paint: p,
                             projectId: projectId,
+                            catalog: catalog,
                           ))
                       .toList(),
                 );
@@ -338,7 +342,12 @@ class _EmptyPalette extends StatelessWidget {
 class _PaletteRow extends ConsumerWidget {
   final ProjectPaint paint;
   final int projectId;
-  const _PaletteRow({required this.paint, required this.projectId});
+  final List<_CatalogPaint> catalog;
+  const _PaletteRow({
+    required this.paint,
+    required this.projectId,
+    required this.catalog,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -398,7 +407,41 @@ class _PaletteRow extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
+                      if (!inStock)
+                        Tooltip(
+                          message: l.suggestionButtonTooltip,
+                          child: InkWell(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              showPaintSuggestionSheet(
+                                context,
+                                brand: paint.brand,
+                                code: paint.code,
+                                name: paint.name,
+                                hex: paint.hex,
+                                catalog: catalog
+                                    .map((p) => (
+                                          brand: p.brand,
+                                          code: p.code,
+                                          name: p.name,
+                                          hex: p.hex,
+                                        ))
+                                    .toList(),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.auto_fix_high_outlined,
+                                size: 18,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 4),
                       _StockBadge(inStock: inStock, scheme: scheme),
                     ],
                   ),
