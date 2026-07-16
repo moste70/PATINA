@@ -154,11 +154,11 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
 
   void _onPinLongPress(Pin pin) {
     HapticFeedback.mediumImpact();
-    // _toScreenPos returns the dot anchor; the tooltip should appear near the chip.
+    // Tooltip appears near the chip (top-left of the callout widget).
     final dotPos = _toScreenPos(pin.x, pin.y);
     setState(() {
       _tooltipPin = pin;
-      _tooltipPos = dotPos.translate(0, -_kPinTotalHeight);
+      _tooltipPos = dotPos.translate(-_kDotCx, -_kDotCy);
     });
   }
 
@@ -252,11 +252,10 @@ class _PinViewerScreenState extends ConsumerState<PinViewerScreen> {
             //    GestureDetector.onLongPress doesn't compete with pan) ────────
             ...pins.map((pin) {
               final pos = _toScreenPos(pin.x, pin.y);
-              // Anchor = bottom-center of the marker (dot tip).
-              // Total height = chipSize(28) + stem(8) + dot(6) = 42
+              // Dot (bottom-right) anchored to exact image coordinate.
               return Positioned(
-                left: pos.dx - _kPinChipSize / 2,
-                top: pos.dy - _kPinTotalHeight,
+                left: pos.dx - _kDotCx,
+                top: pos.dy - _kDotCy,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {},
@@ -392,18 +391,29 @@ Future<String?> _showNoteInput(BuildContext context,
 }
 
 // ── Pin marker constants ───────────────────────────────────────────────────────
-
-const _kPinChipSize   = 28.0;
-const _kPinStemHeight =  8.0;
-const _kPinDotSize    =  6.0;
-// Total height chip + stem + dot: anchor is at the bottom center (dot center).
-const _kPinTotalHeight = _kPinChipSize + _kPinStemHeight + _kPinDotSize;
-
-// ── Pin marker widget (positioned in the overlay Stack by the screen) ─────────
 //
-// Shape: chip (color hex or note icon) → thin stem → small dot.
-// The DOT marks the exact image coordinate; the chip is always at fixed screen
-// size regardless of zoom level.
+// Layout (chip always top-left, dot always bottom-right):
+//
+//   [chip 28×28]╲
+//                ╲
+//                 ● dot (6px) ← exact image coord, touched by finger
+//
+// The chip is always top-left so the finger never covers it.
+
+const _kPinChip  = 28.0;   // chip side
+const _kPinExtW  = 18.0;   // horizontal extension for callout line
+const _kPinExtH  = 14.0;   // vertical extension for callout line
+const _kPinDot   =  6.0;   // dot diameter
+
+// Total widget bounding box
+const _kPinW = _kPinChip + _kPinExtW + _kPinDot;
+const _kPinH = _kPinChip + _kPinExtH + _kPinDot;
+
+// Dot centre in widget-local coordinates (bottom-right anchor)
+const _kDotCx = _kPinChip + _kPinExtW + _kPinDot / 2;
+const _kDotCy = _kPinChip + _kPinExtH + _kPinDot / 2;
+
+// ── Pin marker widget ─────────────────────────────────────────────────────────
 
 class _PinMarkerWidget extends StatelessWidget {
   final Pin pin;
@@ -416,11 +426,11 @@ class _PinMarkerWidget extends StatelessWidget {
     Widget chip;
     if (pin.type == 'color') {
       final hex = _parseField(pin.notes, 'hex') ?? '#808080';
-      chip = HexColorChip(color: _hexColor(hex), size: _kPinChipSize);
+      chip = HexColorChip(color: _hexColor(hex), size: _kPinChip);
     } else {
       chip = Container(
-        width: _kPinChipSize,
-        height: _kPinChipSize,
+        width: _kPinChip,
+        height: _kPinChip,
         decoration: BoxDecoration(
           color: scheme.tertiary,
           shape: BoxShape.circle,
@@ -430,26 +440,53 @@ class _PinMarkerWidget extends StatelessWidget {
       );
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        chip,
-        Container(
-          width: 2,
-          height: _kPinStemHeight,
-          color: Colors.white,
-        ),
-        Container(
-          width: _kPinDotSize,
-          height: _kPinDotSize,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
+    return SizedBox(
+      width: _kPinW,
+      height: _kPinH,
+      child: Stack(
+        children: [
+          // Callout line + dot
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _CalloutPainter(
+                lineFrom: const Offset(_kPinChip, _kPinChip),
+                lineTo: const Offset(_kDotCx, _kDotCy),
+                dotRadius: _kPinDot / 2,
+              ),
+            ),
           ),
-        ),
-      ],
+          // Chip always top-left
+          Positioned(left: 0, top: 0, child: chip),
+        ],
+      ),
     );
   }
+}
+
+class _CalloutPainter extends CustomPainter {
+  final Offset lineFrom;
+  final Offset lineTo;
+  final double dotRadius;
+  const _CalloutPainter({
+    required this.lineFrom,
+    required this.lineTo,
+    required this.dotRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(lineFrom, lineTo, linePaint);
+    canvas.drawCircle(lineTo, dotRadius,
+        Paint()..color = Colors.white..style = PaintingStyle.fill);
+  }
+
+  @override
+  bool shouldRepaint(_CalloutPainter old) =>
+      old.lineFrom != lineFrom || old.lineTo != lineTo;
 }
 
 // ── Tooltip overlay ───────────────────────────────────────────────────────────
