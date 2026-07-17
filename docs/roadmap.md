@@ -339,7 +339,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | 3.1 | 🔄 **Sistema abbonamento** — Firebase Auth + Google Sign-In implementati; RevenueCat da integrare; paywall UI placeholder presente; `proStatusProvider` stub (`false`) da collegare a Firestore |
 | 3.2 | **AI Vision scansione istruzioni** (sostituisce OCR MLKit) — Claude Vision identifica codici colore per marca da foto del libretto; lista pronta da aggiungere alla palette |
 | 3.3 | ✅ **Miscelazione AI avanzata** — Firebase Function `suggestMixingRecipe` deployata su `europe-west1`; usa `claude-sonnet-5`; CLAUDE_API_KEY in Secret Manager; `AiMixingSheet` + `ClaudeService` integrati nell'app |
-| 3.4 | **Riconoscimento colore da foto** — Claude Vision trova la vernice più vicina a un punto dell'immagine |
+| 3.4 | ✅ **Riconoscimento colore da foto** — viewer zoomabile + cerchio trascinabile + campionamento pixel (dart:ui) + ΔE client-side contro inventario (top 2) e catalogo (top 2); foto da camera non salvata. Entry point: icona `colorize` in AppBar Ricette e Vernici. Nessuna chiamata AI — tutto offline. |
 | 3.5 | **Istruzioni AR** — overlay esagoni colorati reali su foto libretto istruzioni B/N |
 | 3.6 | **Sincronizzazione cloud** — backup automatico e sync multi-dispositivo |
 | 3.7 | **Condivisione ricette con la community** |
@@ -507,7 +507,7 @@ Fase 1D      █████████░   86%  — 1D.1-1D.7 completati (UX 
 Fase 1E      ████████░░   80%  — backup ZIP, empty state, performance, hint gesti completati; mancano store listing e beta release
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
-Fase 3       ██░░░░░░░░   18%  — Firebase Auth + Google Sign-In implementati (3.1 parziale); Firebase Functions deployate su europe-west1 con `suggestMixingRecipe` attivo (3.3 ✅); OCR scan istruzioni con crop manuale (3.2 parziale)
+Fase 3       ███░░░░░░░   28%  — Firebase Auth + Google Sign-In (3.1 parziale); Firebase Functions `suggestMixingRecipe` (3.3 ✅); riconoscimento colore da foto offline (3.4 ✅); OCR scan istruzioni con crop manuale (3.2 parziale)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
 Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; DT.14 rimandato
 ```

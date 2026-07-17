@@ -17,6 +17,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../shared/widgets/gesture_hint_bar.dart';
 import 'paint_equivalences.dart';
 import 'paints_repository.dart';
+import 'photo_color_picker_sheet.dart';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -334,7 +335,13 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(l.paintsScreenTitle),
-        actions: const [],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.colorize_outlined),
+            tooltip: 'Rileva colore da foto',
+            onPressed: () => PhotoColorPickerSheet.show(context),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: scheme.primary,

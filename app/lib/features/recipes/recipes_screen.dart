@@ -12,6 +12,7 @@ import '../../shared/widgets/hex_color_chip.dart';
 import 'recipe_repository.dart';
 import 'create_recipe_screen.dart';
 import 'ai_mixing_sheet.dart';
+import '../paints/photo_color_picker_sheet.dart';
 
 const _kFreeRecipesLimit = 5;
 
@@ -66,7 +67,12 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
               )
             : Text(l.recipesScreenTitle),
         actions: [
-          if (!_searching)
+          if (!_searching) ...[
+            IconButton(
+              icon: const Icon(Icons.colorize_outlined),
+              tooltip: 'Rileva colore da foto',
+              onPressed: () => PhotoColorPickerSheet.show(context),
+            ),
             IconButton(
               icon: const Icon(Icons.auto_fix_high),
               tooltip: 'Miscelazione AI',
@@ -78,6 +84,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                 AiMixingSheet.show(context);
               },
             ),
+          ],
           IconButton(
             icon: Icon(_searching ? Icons.close : Icons.search),
             tooltip: _searching ? l.actionCancel : l.recipeSearchTooltip,
