@@ -336,7 +336,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 | Milestone | Descrizione |
 |-----------|-------------|
-| 3.1 | **Sistema abbonamento** — integrazione Google Play Billing + Apple IAP; `proStatusProvider` collegato allo stato reale dell'abbonamento; paywall UI definitivo |
+| 3.1 | **Sistema abbonamento** — vedi spec dettagliata sotto |
 | 3.2 | **AI Vision scansione istruzioni** (sostituisce OCR MLKit) — Claude Vision identifica codici colore per marca da foto del libretto; lista pronta da aggiungere alla palette |
 | 3.3 | **Miscelazione AI avanzata** — Claude API suggerisce ricette di miscelazione partendo da un colore target o da una foto |
 | 3.4 | **Riconoscimento colore da foto** — Claude Vision trova la vernice più vicina a un punto dell'immagine |
@@ -346,6 +346,85 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 | 3.8 | **Espansione cataloghi** tramite Catalog Tool (Vallejo Air/Panzer Aces, Citadel Layer/Shade/Contrast, AK, Ammo) |
 | 3.9 | **Estrazione fasi di montaggio da istruzioni (AI Vision)** — l'utente fotografa una o più pagine del manuale di montaggio; Claude Vision analizza le immagini ed estrae automaticamente le fasi di lavorazione (numerazione step, nome sotto-assemblaggio, materiali citati), popolando una checklist fasi nel progetto. Applicabile a qualsiasi kit: plastico (Tamiya, Revell), navale in legno (Amati, Mantua, Corel), figure. Il flusso prevede: (1) acquisizione foto pagine con crop/raddrizzamento manuale o automatico, (2) invio a Claude con prompt strutturato per estrarre step ordinati, (3) preview editabile prima dell'import nel progetto. Fattibile con `claude-opus-4-8` o `claude-sonnet-5` vision; qualità dipende dalla leggibilità delle foto. |
 | 3.10 | **Wizard acquisizione manuale — contestuale alla tipologia di kit (Pro)** — vedi spec dettagliata sotto |
+
+### Spec milestone 3.1 — Sistema abbonamento
+
+**Stack scelto: RevenueCat + Firebase**
+
+RevenueCat è preferito a Google Play Billing diretto per tre ragioni:
+- SDK Flutter unificato (`purchases_flutter`) che astrae sia Google Play che App Store — nessuna riscrittura quando si aggiunge iOS
+- Webhook nativo verso Firebase che aggiorna Firestore automaticamente a ogni rinnovo/cancellazione
+- Dashboard con metriche MRR, churn, trial — dati non disponibili dalla sola Play Console
+
+**Dipendenze Flutter da aggiungere:**
+```yaml
+purchases_flutter: ^7.x        # RevenueCat SDK
+firebase_core: ^3.x
+firebase_auth: ^5.x
+cloud_firestore: ^5.x
+cloud_functions: ^5.x
+```
+
+**Flusso completo:**
+```
+Google Play / App Store
+        │
+        ▼
+    RevenueCat  ◄──── purchases_flutter (app Flutter)
+        │
+        │  webhook automatico su ogni evento (acquisto, rinnovo, cancellazione)
+        ▼
+Firebase Function: updateProStatus
+        │
+        ▼
+    Firestore: users/{uid}/isPro: true|false
+        │
+        ▼
+proStatusProvider (Riverpod) ◄── legge da Firestore in realtime
+        │
+        ▼
+ProGate.isProUser(ref)  →  mostra/nasconde funzioni Pro nell'app
+```
+
+**Verifica doppia (sicurezza):**
+- Lato app: `ProGate` nasconde/mostra i bottoni (UX)
+- Lato Cloud Function: ogni chiamata AI verifica `isPro` su Firestore prima di chiamare Claude — il client non viene mai trusted
+
+**Implementazione lato Flutter (`pro_gate.dart` — Fase 3):**
+```dart
+// Sostituisce ProStatusNotifier attuale (stub SharedPreferences)
+final proStatusProvider = StreamProvider<bool>((ref) {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return Stream.value(false);
+  return FirebaseFirestore.instance
+      .doc('users/$uid')
+      .snapshots()
+      .map((s) => s.data()?['isPro'] == true);
+});
+```
+
+**Implementazione Cloud Function (`functions/src/updateProStatus.ts`):**
+```typescript
+// Webhook RevenueCat → aggiorna Firestore
+export const revenueCatWebhook = onRequest(async (req, res) => {
+  const event = req.body;
+  const uid = event.app_user_id;
+  const isPro = ['INITIAL_PURCHASE','RENEWAL','UNCANCELLATION']
+    .includes(event.type);
+  await db.doc(`users/${uid}`).set({ isPro }, { merge: true });
+  res.sendStatus(200);
+});
+```
+
+**Task implementativi:**
+1. Creare progetto Firebase, abilitare Auth + Firestore + Functions
+2. Configurare RevenueCat: creare prodotti su Google Play Console, collegarli a RevenueCat Entitlement `pro`
+3. Deployare `revenueCatWebhook` e registrare URL su RevenueCat dashboard
+4. Sostituire `ProStatusNotifier` (stub) con `StreamProvider` Firestore
+5. Implementare paywall UI definitivo (sostituisce `paywall_sheet.dart` placeholder)
+6. Testare con account test Google Play (License Testers)
+
+---
 
 ### Spec milestone 3.10 — Wizard acquisizione manuale (Pro)
 
