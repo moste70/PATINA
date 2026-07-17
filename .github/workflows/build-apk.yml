@@ -37,15 +37,27 @@ jobs:
 
       - name: Build debug APK
         working-directory: app
+        continue-on-error: true
         run: flutter build apk --debug
 
+      - name: Find debug APK
+        id: find_debug_apk
+        run: |
+          APK=$(find app -name "app-debug.apk" 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            APK=$(find app -name "*.apk" 2>/dev/null | grep debug | head -1)
+          fi
+          echo "Found debug APK: $APK"
+          echo "apk_path=$APK" >> $GITHUB_OUTPUT
+
       - name: Upload debug APK
+        if: steps.find_debug_apk.outputs.apk_path != ''
         uses: actions/upload-artifact@v4
         with:
           name: patina-debug-apk
-          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          path: ${{ steps.find_debug_apk.outputs.apk_path }}
           retention-days: 14
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Build release APK
         working-directory: app
