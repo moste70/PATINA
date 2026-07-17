@@ -120,7 +120,7 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
             code: i.code,
             name: i.name,
             hex: i.hex,
-            percentage: i.percentage,
+            percentage: i.percentage.toDouble(),
           )));
     }
   }

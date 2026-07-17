@@ -387,6 +387,11 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
   }
 }
 
+Color _hexToColor(String hex) {
+  final h = hex.replaceAll('#', '').padLeft(6, '0');
+  return Color(int.parse('FF$h', radix: 16));
+}
+
 // ── Result card ───────────────────────────────────────────────────────────────
 
 class _ResultCard extends StatelessWidget {
@@ -424,7 +429,7 @@ class _ResultCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    HexColorChip(hex: ing.hex, size: 28),
+                    HexColorChip(color: _hexToColor(ing.hex), size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
