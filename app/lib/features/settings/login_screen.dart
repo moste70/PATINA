@@ -30,6 +30,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _loading = true);
+    HapticFeedback.lightImpact();
+    try {
+      final cred = await ref.read(authServiceProvider).signInWithGoogle();
+      if (cred == null) return; // annullato
+      await RevenueCatService().identifyUser(cred.user!.uid);
+      ref.read(proStatusProvider.notifier).onAuthChanged(cred.user!.uid);
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Accesso con Google non riuscito. Riprova.')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -136,6 +155,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
+                  // ── Google Sign-In ─────────────────────────────────────────
+                  OutlinedButton.icon(
+                    onPressed: _loading ? null : _signInWithGoogle,
+                    icon: const _GoogleLogo(),
+                    label: const Text('Continua con Google'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('oppure',
+                            style: tt.bodySmall?.copyWith(
+                                color: scheme.onSurface.withOpacity(0.5))),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
                   // ── Email ──────────────────────────────────────────────────
                   TextFormField(
                     controller: _emailCtrl,
@@ -224,4 +267,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
+}
+
+class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(size: const Size(20, 20), painter: _GoogleLogoPainter());
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.width / 2;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // G shape semplificata con i 4 colori Google
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(Rect.fromCircle(center: Offset(c, c), radius: c),
+        -1.57, 3.14, false, paint..style = PaintingStyle.stroke
+          ..strokeWidth = size.width * 0.22
+          ..color = const Color(0xFF4285F4));
+
+    paint
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF4285F4);
+    canvas.drawRect(
+        Rect.fromLTWH(c, c - size.height * 0.14, c, size.height * 0.28),
+        paint);
+
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(Rect.fromCircle(center: Offset(c, c), radius: c),
+        -1.57, -1.57, false,
+        paint..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22);
+
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(Rect.fromCircle(center: Offset(c, c), radius: c),
+        0, 1.57, false,
+        paint..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22);
+
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(Rect.fromCircle(center: Offset(c, c), radius: c),
+        1.57, 1.57, false,
+        paint..style = PaintingStyle.stroke..strokeWidth = size.width * 0.22);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -39,7 +39,7 @@ void main() async {
 }
 
 // True when firebase_options.dart has been replaced with real project values.
-const _firebaseConfigured = false; // ← impostare a true dopo flutterfire configure
+const _firebaseConfigured = true;
 
 class PatinaApp extends ConsumerWidget {
   const PatinaApp({super.key});

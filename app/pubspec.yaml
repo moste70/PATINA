@@ -61,6 +61,7 @@ dependencies:
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.4.3
   cloud_functions: ^5.1.3
+  google_sign_in: ^6.2.1
 
   # ── RevenueCat — abbonamenti in-app ──────────────────────────────────────────
   # Richiede API key RevenueCat (app.revenuecat.com → App settings → API keys)

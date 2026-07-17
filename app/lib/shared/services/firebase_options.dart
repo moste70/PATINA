@@ -1,18 +1,5 @@
-// CONFIGURAZIONE FIREBASE — DA COMPLETARE
-//
-// Passi per generare questo file:
-// 1. Vai su https://console.firebase.google.com
-// 2. Crea un nuovo progetto (es. "patina-app")
-// 3. Aggiungi un'app Android:
-//    - Package name: com.patina.app  (verifica in android/app/build.gradle → applicationId)
-//    - Scarica google-services.json → copialo in app/android/app/google-services.json
-// 4. Installa FlutterFire CLI:
-//    dart pub global activate flutterfire_cli
-// 5. Dalla cartella /app esegui:
-//    flutterfire configure --project=<nome-progetto-firebase>
-//    → genera automaticamente questo file con i valori corretti
-//
-// NON committare google-services.json se contiene dati sensibili (aggiungerlo a .gitignore).
+// Generato manualmente dai valori di google-services.json (patina-app-173cc).
+// Per rigenerare: dart pub global activate flutterfire_cli && flutterfire configure
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
@@ -23,16 +10,17 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       default:
-        throw UnsupportedError('Piattaforma non configurata per Firebase.');
+        throw UnsupportedError(
+          'DefaultFirebaseOptions non è configurato per questa piattaforma.',
+        );
     }
   }
 
-  // ⚠️  Sostituire con i valori reali generati da `flutterfire configure`
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey:            'DA_CONFIGURARE',
-    appId:             'DA_CONFIGURARE',
-    messagingSenderId: 'DA_CONFIGURARE',
-    projectId:         'DA_CONFIGURARE',
-    storageBucket:     'DA_CONFIGURARE',
+    apiKey:            'AIzaSyBi9wq8jooa9FB8UIw3Ta39bVJ5Y1tUNBg',
+    appId:             '1:434846246006:android:91218fa3d016f324712b57',
+    messagingSenderId: '434846246006',
+    projectId:         'patina-app-173cc',
+    storageBucket:     'patina-app-173cc.firebasestorage.app',
   );
 }
