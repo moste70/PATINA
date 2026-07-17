@@ -53,8 +53,7 @@ class ColorHint {
 
 class ClaudeService {
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(
-    // ⚠️  Sostituire con la region Firebase scelta (es. 'europe-west1')
-    region: 'us-central1',
+    region: 'europe-west1',
   );
 
   // Analizza pagine di un manuale di montaggio tramite Claude Vision
@@ -70,6 +69,28 @@ class ClaudeService {
       'category': projectCategory,
     });
     return ManualAnalysisResult.fromJson(result.data);
+  }
+
+  // Analizza un'immagine di foglio istruzioni con Claude Vision.
+  // Restituisce Map<code_uppercase, brand> dei codici trovati.
+  // [imageBase64]: JPEG compresso in base64 (idealmente ≤ 1.2 MB)
+  Future<Map<String, String>> scanManualColors({
+    required String imageBase64,
+  }) async {
+    final callable = _functions.httpsCallable(
+      'scanManualColors',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 45)),
+    );
+    final result = await callable.call<Map<String, dynamic>>({
+      'imageBase64': imageBase64,
+    });
+    final raw = result.data['result'] as String;
+    final json = jsonDecode(raw) as Map<String, dynamic>;
+    final codes = json['codes'] as List<dynamic>? ?? [];
+    return {
+      for (final c in codes)
+        (c['code'] as String).toUpperCase(): c['brand'] as String,
+    };
   }
 
   // Suggerisce ricette di miscelazione per un colore target.

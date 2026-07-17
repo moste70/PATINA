@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/services/claude_service.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
 
 // ── Public result type ────────────────────────────────────────────────────────
@@ -89,6 +91,7 @@ Map<String, String> _extractCodesWithBrand(String text) {
 
 sealed class ScanState {}
 class ScanStateOcr extends ScanState {}
+class ScanStateAi extends ScanState {}   // Pro: Claude Vision in corso
 class ScanStateCatalog extends ScanState {
   final String catalogName;
   final int current;
@@ -214,17 +217,100 @@ Stream<ScanState> _runScan(String imagePath) async* {
   }
 }
 
+// ── AI scan (Pro) ─────────────────────────────────────────────────────────────
+
+// Ridimensiona l'immagine a maxDim sul lato lungo e la restituisce come JPEG base64.
+Future<String> _compressToBase64(String imagePath, {int maxDim = 1200}) async {
+  final bytes = await File(imagePath).readAsBytes();
+  final codec = await ui.instantiateImageCodec(
+    bytes,
+    targetWidth: maxDim,
+    targetHeight: maxDim,
+  );
+  final frame = await codec.getNextFrame();
+  final img = frame.image;
+  final byteData = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
+  if (byteData == null) throw Exception('Compressione immagine fallita');
+
+  // Re-encode as PNG (dart:ui doesn't support JPEG encoding directly)
+  final pngData = await img.toByteData(format: ui.ImageByteFormat.png);
+  return base64Encode(pngData!.buffer.asUint8List());
+}
+
+Stream<ScanState> _runAiScan(String imagePath, ClaudeService svc) async* {
+  yield ScanStateAi();
+
+  final b64 = await _compressToBase64(imagePath);
+  final codeMap = await svc.scanManualColors(imageBase64: b64);
+
+  // Catalog lookup (same logic as MLKit path)
+  final matched = <ScanPaintResult>[];
+  final seen = <String>{};
+
+  for (var i = 0; i < _catalogAssets.length; i++) {
+    final (asset, label) = _catalogAssets[i];
+    yield ScanStateCatalog(
+      catalogName: label,
+      current: i + 1,
+      total: _catalogAssets.length,
+      found: List.unmodifiable(matched),
+    );
+
+    try {
+      final raw = await rootBundle.loadString(asset);
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final brand = data['brand'] as String;
+      for (final p in data['paints'] as List<dynamic>) {
+        final code = (p['code'] as String).toUpperCase();
+        final key = '${brand.toUpperCase()}|$code';
+        if (codeMap.containsKey(code) && !seen.contains(key)) {
+          matched.add(ScanPaintResult(
+            brand: brand,
+            code: p['code'] as String,
+            name: p['name'] as String,
+            hex: p['hex'] as String,
+          ));
+          seen.add(key);
+          codeMap.remove(code);
+        }
+      }
+    } catch (_) {}
+
+    yield ScanStateCatalog(
+      catalogName: label,
+      current: i + 1,
+      total: _catalogAssets.length,
+      found: List.unmodifiable(matched),
+    );
+  }
+
+  // Codici trovati dall'AI ma non nel catalogo
+  for (final entry in codeMap.entries) {
+    matched.add(ScanPaintResult(
+      brand: entry.value,
+      code: entry.key,
+      name: 'Non in catalogo',
+      hex: '#808080',
+      unknownInCatalog: true,
+    ));
+  }
+
+  yield ScanStateDone(matched);
+}
+
 // ── Public entry point ────────────────────────────────────────────────────────
 
 Future<void> showScanSheet(
   BuildContext context, {
   required Future<void> Function(List<ScanPaintResult>) onComplete,
+  bool isPro = false,
+  ClaudeService? claudeService,
 }) async {
   final proceed = await showModalBottomSheet<bool>(
     context: context,
     useRootNavigator: true,
     isScrollControlled: true,
-    builder: (ctx) => const _TipsSheet(),
+    builder: (ctx) => _TipsSheet(isPro: isPro),
   );
   if (proceed != true || !context.mounted) return;
 
@@ -252,6 +338,8 @@ Future<void> showScanSheet(
     builder: (ctx) => _ScanSheet(
       imagePath: croppedPath,
       onComplete: onComplete,
+      isPro: isPro,
+      claudeService: claudeService,
     ),
   );
 }
@@ -259,7 +347,8 @@ Future<void> showScanSheet(
 // ── Tips sheet ────────────────────────────────────────────────────────────────
 
 class _TipsSheet extends StatelessWidget {
-  const _TipsSheet();
+  final bool isPro;
+  const _TipsSheet({this.isPro = false});
 
   @override
   Widget build(BuildContext context) {
@@ -284,10 +373,29 @@ class _TipsSheet extends StatelessWidget {
               ),
             ),
           ),
-          Text(l.scanTipsTitle, style: tt.titleMedium),
+          Row(
+            children: [
+              Text(l.scanTipsTitle, style: tt.titleMedium),
+              if (isPro) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text('AI PRO',
+                      style: tt.labelSmall?.copyWith(
+                          color: scheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8)),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 4),
           Text(
-            l.scanTipsSubtitle,
+            isPro ? l.scanTipsSubtitleAi : l.scanTipsSubtitle,
             style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
@@ -379,7 +487,14 @@ class _Tip extends StatelessWidget {
 class _ScanSheet extends StatefulWidget {
   final String imagePath;
   final Future<void> Function(List<ScanPaintResult>) onComplete;
-  const _ScanSheet({required this.imagePath, required this.onComplete});
+  final bool isPro;
+  final ClaudeService? claudeService;
+  const _ScanSheet({
+    required this.imagePath,
+    required this.onComplete,
+    this.isPro = false,
+    this.claudeService,
+  });
 
   @override
   State<_ScanSheet> createState() => _ScanSheetState();
@@ -393,10 +508,14 @@ class _ScanSheetState extends State<_ScanSheet> {
   @override
   void initState() {
     super.initState();
-    _sub = _runScan(widget.imagePath).listen((state) {
+    final stream = (widget.isPro && widget.claudeService != null)
+        ? _runAiScan(widget.imagePath, widget.claudeService!)
+        : _runScan(widget.imagePath);
+    _sub = stream.listen((state) {
       if (!mounted) return;
       setState(() => _state = state);
       if (state is ScanStateDone) _finalize(state.results);
+      if (state is ScanStateError) {} // rimane visibile
     });
   }
 
@@ -449,6 +568,14 @@ class _ScanSheetState extends State<_ScanSheet> {
   Widget _buildHeader(ColorScheme scheme, TextTheme tt) {
     final l = AppL10n.of(context);
     return switch (_state) {
+      ScanStateAi() => Row(children: [
+          SizedBox(
+            width: 18, height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Text(l.scanStateAi, style: tt.titleSmall),
+        ]),
       ScanStateOcr() => Row(children: [
           SizedBox(
             width: 18, height: 18,
@@ -521,7 +648,7 @@ class _ScanSheetState extends State<_ScanSheet> {
     if (found.isEmpty) {
       return Center(
         child: Text(
-          _state is ScanStateOcr ? l.scanReading : l.scanNoMatch,
+          (_state is ScanStateOcr || _state is ScanStateAi) ? l.scanReading : l.scanNoMatch,
           style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),

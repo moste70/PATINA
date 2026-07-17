@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'scan_instructions_sheet.dart';
 import '../../../database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/pro/pro_gate.dart';
+import '../../../shared/services/claude_service.dart';
 import '../../../shared/utils/lab_mixer.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
 import '../../../shared/widgets/paint_suggestion_sheet.dart';
@@ -185,8 +187,11 @@ class ProjectPaletteSliver extends ConsumerWidget {
   Future<void> _scan(BuildContext context, WidgetRef ref) async {
     final l = AppL10n.of(context);
     final repo = ref.read(projectRepositoryProvider);
+    final isPro = ProGate.isProUser(ref);
     await showScanSheet(
       context,
+      isPro: isPro,
+      claudeService: isPro ? ref.read(claudeServiceProvider) : null,
       onComplete: (results) async {
         for (final r in results) {
           await repo.addProjectPaint(
