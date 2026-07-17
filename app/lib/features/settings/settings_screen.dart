@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../../shared/pro/pro_gate.dart';
 import '../../shared/utils/backup_service.dart';
 
 // Provider per la lingua selezionata (codice locale, es. 'it', 'en', 'system').
@@ -93,6 +95,12 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: l.settingsGesturesSubtitle,
             onTap: () => _showGesturesSheet(context, l),
           ),
+
+          // ── Developer (solo debug build) ──────────────────────────────────
+          if (kDebugMode) ...[
+            _SectionHeader(title: 'Developer'),
+            _ProOverrideTile(),
+          ],
 
           // ── Info ─────────────────────────────────────────────────────────
           _SectionHeader(title: l.settingsInfoSection),
@@ -357,6 +365,48 @@ class _SettingsTile extends StatelessWidget {
           ? Icon(Icons.chevron_right, color: scheme.onSurface.withOpacity(0.3))
           : null,
       onTap: onTap,
+    );
+  }
+}
+
+class _ProOverrideTile extends ConsumerWidget {
+  const _ProOverrideTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPro = ref.watch(proStatusProvider);
+    final scheme = Theme.of(context).colorScheme;
+    return SwitchListTile(
+      secondary: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isPro
+              ? scheme.primaryContainer
+              : scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.workspace_premium_outlined,
+          size: 20,
+          color: isPro ? scheme.primary : scheme.onSurfaceVariant,
+        ),
+      ),
+      title: const Text('Simula abbonamento Pro'),
+      subtitle: Text(
+        isPro ? 'Pro attivo — tutte le funzioni sbloccate' : 'Free — funzioni Pro bloccate',
+        style: TextStyle(
+          fontSize: 13,
+          color: isPro
+              ? scheme.primary
+              : scheme.onSurface.withOpacity(0.6),
+        ),
+      ),
+      value: isPro,
+      onChanged: (v) {
+        HapticFeedback.lightImpact();
+        ref.read(proStatusProvider.notifier).setDevOverride(v);
+      },
     );
   }
 }

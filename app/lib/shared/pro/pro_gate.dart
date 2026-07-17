@@ -1,9 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// Stub: restituisce sempre false finché Google Play Billing / Apple IAP
-// non vengono integrati in Fase 3 (milestone 3.1).
-// Sostituire con il provider reale che legge lo stato dell'abbonamento.
-final proStatusProvider = Provider<bool>((_) => false);
+const _kDevProKey = 'dev_pro_override';
+
+// Provider reale dello stato Pro.
+// In Fase 3 (milestone 3.1) sostituire con il provider Google Play Billing / Apple IAP.
+// Fino ad allora: false di default, sovrascrivibile tramite toggle sviluppatore
+// nelle Impostazioni (visibile solo in debug build).
+final proStatusProvider =
+    StateNotifierProvider<ProStatusNotifier, bool>((_) => ProStatusNotifier());
+
+class ProStatusNotifier extends StateNotifier<bool> {
+  ProStatusNotifier() : super(false) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_kDevProKey) ?? false;
+  }
+
+  Future<void> setDevOverride(bool value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kDevProKey, value);
+  }
+}
 
 abstract final class ProGate {
   /// Restituisce true se l'utente ha un abbonamento Pro attivo.
