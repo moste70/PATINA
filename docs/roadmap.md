@@ -338,7 +338,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 |-----------|-------------|
 | 3.1 | **Sistema abbonamento** — vedi spec dettagliata sotto |
 | 3.2 | **AI Vision scansione istruzioni** (sostituisce OCR MLKit) — Claude Vision identifica codici colore per marca da foto del libretto; lista pronta da aggiungere alla palette |
-| 3.3 | **Miscelazione AI avanzata** — Claude API suggerisce ricette di miscelazione partendo da un colore target o da una foto |
+| 3.3 | ✅ **Miscelazione AI avanzata** — Claude API suggerisce ricette di miscelazione partendo da un colore target o da una foto |
 | 3.4 | **Riconoscimento colore da foto** — Claude Vision trova la vernice più vicina a un punto dell'immagine |
 | 3.5 | **Istruzioni AR** — overlay esagoni colorati reali su foto libretto istruzioni B/N |
 | 3.6 | **Sincronizzazione cloud** — backup automatico e sync multi-dispositivo |
