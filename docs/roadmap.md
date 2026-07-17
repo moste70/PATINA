@@ -526,9 +526,9 @@ Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; D
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
-2. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
-3. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
+1. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
+2. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
+3. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
 
 ---
 
