@@ -4,7 +4,7 @@
     <!-- Sfondo identico al Flutter splash (#1C1A16) per transizione impercettibile -->
     <style name="LaunchTheme" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#1C1A16</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_mark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="windowSplashScreenIconBackgroundColor">#1C1A16</item>
         <item name="postSplashScreenTheme">@style/NormalTheme</item>
     </style>
