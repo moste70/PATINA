@@ -72,7 +72,8 @@ class ClaudeService {
     return ManualAnalysisResult.fromJson(result.data);
   }
 
-  // Suggerisce ricette di miscelazione per un colore target
+  // Suggerisce ricette di miscelazione per un colore target.
+  // Restituisce JSON string con { ingredients: [...], notes: "..." }
   Future<String> suggestMixingRecipe({
     required String targetHex,
     required List<String> availableBrands,
@@ -82,6 +83,7 @@ class ClaudeService {
       'targetHex': targetHex,
       'availableBrands': availableBrands,
     });
+    // La Function restituisce il JSON come stringa per massima compatibilità
     return result.data['recipe'] as String;
   }
 }

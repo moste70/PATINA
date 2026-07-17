@@ -11,6 +11,7 @@ import '../../shared/utils/lab_mixer.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 import 'recipe_repository.dart';
 import 'create_recipe_screen.dart';
+import 'ai_mixing_sheet.dart';
 
 const _kFreeRecipesLimit = 5;
 
@@ -65,6 +66,18 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
               )
             : Text(l.recipesScreenTitle),
         actions: [
+          if (!_searching)
+            IconButton(
+              icon: const Icon(Icons.auto_fix_high),
+              tooltip: 'Miscelazione AI',
+              onPressed: () {
+                if (!ProGate.isProUser(ref)) {
+                  PaywallSheet.show(context, feature: 'Miscelazione AI');
+                  return;
+                }
+                AiMixingSheet.show(context);
+              },
+            ),
           IconButton(
             icon: Icon(_searching ? Icons.close : Icons.search),
             tooltip: _searching ? l.actionCancel : l.recipeSearchTooltip,

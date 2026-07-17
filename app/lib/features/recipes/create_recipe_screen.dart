@@ -12,6 +12,7 @@ import '../../shared/constants/app_constants.dart';
 import '../../shared/utils/lab_mixer.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 import 'recipe_repository.dart';
+import 'ai_mixing_sheet.dart' show MixingSuggestion;
 
 // ── Catalog helpers (shared with palette) ─────────────────────────────────────
 
@@ -81,7 +82,8 @@ class _IngredientDraft {
 
 class CreateRecipeScreen extends ConsumerStatefulWidget {
   final Recipe? recipe;
-  const CreateRecipeScreen({super.key, this.recipe});
+  final MixingSuggestion? prefillFromMixing;
+  const CreateRecipeScreen({super.key, this.recipe, this.prefillFromMixing});
 
   @override
   ConsumerState<CreateRecipeScreen> createState() => _CreateRecipeScreenState();
@@ -105,10 +107,21 @@ class _CreateRecipeScreenState extends ConsumerState<CreateRecipeScreen> {
     if (r != null) {
       _nameCtrl.text = r.name;
       _finish = r.finish;
-
       _notesCtrl.text = r.notes ?? '';
-      // Load existing ingredients
       _loadExistingIngredients(r.id);
+    }
+    // Prefill da suggerimento AI
+    final mix = widget.prefillFromMixing;
+    if (mix != null) {
+      _nameCtrl.text = 'Miscela ${mix.targetHex}';
+      _notesCtrl.text = mix.notes;
+      _ingredients.addAll(mix.ingredients.map((i) => _IngredientDraft(
+            brand: i.brand,
+            code: i.code,
+            name: i.name,
+            hex: i.hex,
+            percentage: i.percentage,
+          )));
     }
   }
 
