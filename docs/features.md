@@ -27,15 +27,16 @@ Campi:
 | Campo | Tipo | Obbligatorio | Note |
 |-------|------|:---:|-------|
 | Nome modello | TextField | ✅ | es. "Tiger I Ausf. E" — max 80 caratteri |
-| Marca kit | TextField | ❌ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
-| Scala | TextField | ❌ | es. "1/35", "1/72" — testo libero con suggerimenti chip: 1/35 · 1/48 · 1/72 · 1/100 · 1/144 · Altra |
-| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Diorama · Altro |
+| Marca kit | TextField | ✅ | es. "Tamiya", "Revell", "Hasegawa" — testo libero |
+| Scala | TextField | ✅ | Formato `1/N` obbligatorio (es. "1/35"). Chip suggerimento: 1/12 · 1/24 · 1/35 · 1/48 · 1/72 · 1/100 · 1/144 |
+| Categoria | Chip selector | ✅ | Selezione singola: Carro Armato · Aereo · Figura · Nave · Auto · Moto · Diorama · Altro |
 
 Comportamento:
 - Il campo **Nome** riceve il focus automaticamente all'apertura (tastiera aperta)
-- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo
+- I **chip scala** sono scorrevoli orizzontalmente, toccandone uno compila il campo testo
 - La **categoria** mostra icone + etichette, selezione con tap, chip selezionato in `primary`
-- Bottone **Avanti** attivo solo se Nome e Categoria sono compilati
+- La label **Categoria** diventa rossa se si preme Avanti senza selezionarne una
+- Bottone **Avanti** è sempre toccabile; al tap mostra gli errori sui campi non compilati o non validi
 
 ---
 
@@ -93,7 +94,10 @@ Projects(
 ```
 
 ##### Validazioni
-- Nome vuoto o solo spazi → bottone Avanti disabilitato + bordo campo rosso al tap
+- **Nome** vuoto o solo spazi → errore mostrato al tap su Avanti
+- **Marca** vuota → errore "La marca è obbligatoria" mostrato al tap su Avanti
+- **Scala** vuota o formato non valido (non corrisponde a `1/\d+`) → errore mostrato al tap su Avanti
+- **Categoria** non selezionata → label "Categoria" diventa rossa al tap su Avanti
 - Nome > 80 caratteri → contatore caratteri visibile, input bloccato a 80
 - Foto > 10MB → ridimensionamento automatico trasparente prima del salvataggio
   (riduzione progressiva di risoluzione e qualità JPEG fino a ≤ 10MB).
@@ -223,21 +227,24 @@ Il FAB `+` è sempre visibile anche sull'empty state.
 #### 1.1 Archivio Progetti (`/projects`)
 Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 
-**Contenuto di ogni card progetto:**
-- Foto di copertina (o placeholder con icona categoria)
-- Nome del modello
-- Categoria + scala (es. "Carro Armato · 1/35")
-- Chip stato colorato (`Da iniziare` grigio · `In corso` arancio · `Completato` verde)
-- Data ultima modifica (es. "3 giorni fa")
+> **Limite Free:** max **2 progetti attivi** (stati `Da iniziare` o `In corso`). I progetti `Completato` non contano ai fini del limite. Superato il limite, il FAB mostra il paywall per l'upgrade a Standard.
 
-**Funzionalità:**
+**Contenuto di ogni card progetto:**
+- Miniatura 80×80 della foto di copertina (placeholder con icona se assente)
+- Nome del modello (grassetto)
+- Categoria + scala (es. "Carro Armato · 1/35")
+- Badge stato colorato: `Da iniziare` grigio · `In corso` arancio `#C87A20` · `Completato` verde `#2F8F57`
+
+**Funzionalità implementate:**
 - FAB `+` per aprire il wizard creazione
-- Modifica di tutti i campi dalla scheda progetto
-- Archiviazione progetti completati (rimangono consultabili)
-- Eliminazione con dialog di conferma
-- Ricerca per nome, categoria o stato
-- Ordinamento per: ultima modifica, data inizio, nome, stato
+- Filter bar orizzontale in cima: chip *Tutti / Da iniziare / In corso / Completato* — filtra la lista in tempo reale; stato vuoto dedicato se nessun progetto corrisponde
+- Eliminazione con dialog di conferma (dal menu `⋮` nella scheda progetto)
+
+**Funzionalità future:**
+- Ricerca per nome
+- Ordinamento per ultima modifica, data inizio, nome, stato
 - Toggle vista griglia (2 colonne) / lista
+- Archiviazione progetti completati
 
 #### 1.2 Scheda Principale Progetto (`/projects/:id`)
 
@@ -251,66 +258,90 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 ##### Sezione 1 — Header (SliverAppBar)
 
 **Espanso** (foto visibile, altezza ~260dp):
-- Foto di copertina a schermo pieno con gradiente scuro in basso
-- In overlay sul gradiente: chip stato colorato (in alto a sinistra) + menu `⋮` (in alto a destra)
-- In basso sull'overlay: nome progetto (DM Serif Display, 24sp), marca + scala in grigio
+- Foto di copertina a schermo pieno con gradiente scuro in basso (stops: 0.35 → 1.0)
+- In overlay sul gradiente (riga sopra il titolo): chip stato colorato + brand · scala (bianco70)
+- In basso: nome progetto (bianco pieno)
+- Menu `⋮` in alto a destra
 
 **Collassato** (solo AppBar, altezza standard):
-- Back arrow + nome progetto (Inter 600, troncato) + menu `⋮`
+- Back arrow + nome progetto (troncato) + menu `⋮`
 - La foto scompare, sfondo `surface`
 
 **Chip stato — colori:**
 | Stato | Colore sfondo | Testo |
 |-------|--------------|-------|
-| Da iniziare | `outline` (grigio) | `onSurface` |
+| Da iniziare | `outline` (grigio) | bianco |
 | In corso | `#C87A20` (arancio) | bianco |
-| Completato | `primary` (#7CB87C) | nero |
+| Completato | `primary` (`#D99B3E` ottone) | nero |
 
 **Menu `⋮` azioni:**
-- Modifica progetto → apre wizard in modalità edit (campi pre-compilati)
-- Archivia / Riattiva
+- Cambia stato → bottom sheet con le tre opzioni
+- Cambia foto copertina → bottom sheet Fotocamera / Galleria
 - Elimina → dialog conferma "Elimina progetto? L'azione è irreversibile."
 
 ---
 
 ##### Sezione 2 — Galleria Foto
 
+> **Limite Free:** max **5 foto** per progetto. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard.
+
 Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
-Ultima cella è il bottone `+` con icona fotocamera.
+Prima cella è il bottone `+` con icona `add_photo_alternate`.
 
 **Tap su miniatura:**
 - Apre viewer foto a schermo intero (InteractiveViewer, zoom/pan)
-- Se la foto ha pin → mostra overlay pin
-- Swipe orizzontale per navigare tra le foto del progetto
+- AppBar scura con pulsante cestino in alto a destra
+- Il cestino mostra dialog di conferma → alla conferma torna alla galleria ed elimina
 
 **Tap su `+`:**
 - Bottom sheet: Fotocamera · Galleria · Annulla
 - Foto salvata nella cartella privata dell'app (non nella galleria pubblica)
 
-**Long press su miniatura:**
-- Modalità selezione multipla → azioni: elimina
+**Funzionalità future:**
+- Se la foto ha pin → mostra overlay pin
+- Swipe orizzontale per navigare tra le foto nel viewer
 
 ---
 
-##### Sezione 4 — Vernici Usate
+##### Sezione 2b — Colori del Kit (Palette)
 
-Lista compatta delle vernici dell'inventario collegate a questo progetto
-(tramite i pin di tipo `color` sulla foto).
+Lista delle vernici selezionate per questo progetto, indipendente dai pin.
+Intestazione sezione: label **"COLORI DEL KIT"** + tre pulsanti icona a destra (area tap 40×40dp, ripple, haptic feedback):
+
+| Icona | Azione |
+|-------|--------|
+| `shopping_cart_outlined` | Apre `/shopping` (lista della spesa) |
+| `camera_alt_outlined` | Avvia scansione OCR foglio istruzioni |
+| `add` | Apre bottom sheet ricerca manuale |
 
 **Struttura riga:**
 ```
-[chip hex esagonale] Vallejo 70.950 · Black           [→ pin]
+[●  chip colore]  XF-85  Rubber Black        [ In magazzino ✓ ]
+[●  chip colore]  XF-63  German Grey         [ Da acquistare  ]
 ```
-- Chip esagonale con colore reale
-- Marca + codice + nome
-- Contatore pin che usano questa vernice (`→ 3 pin`)
-- Tap: apre scheda vernice nell'inventario
+- Cerchio con colore HEX reale (da catalogo)
+- Codice vernice in JetBrains Mono + nome
+- Badge **"In magazzino"** (verde `#2F8F57`) se presente nell'inventario personale
+- Badge **"Da acquistare"** (neutro) se non nell'inventario
+- **Swipe da destra** sulla riga → sfondo rosso con icona cestino → elimina dalla palette
 
-**Empty state:** "Nessuna vernice collegata — aggiungi pin colore alle foto"
+**Bottom sheet "Aggiungi vernice":**
+- Campo di ricerca full-text su tutti i 13 cataloghi JSON in bundle
+- Ricerca per codice (es. `XF-85`), nome (es. `rubber`) o marca (es. `tamiya`)
+- Ogni risultato: chip colore + codice + nome + marca
+- Tap su risultato → aggiunge alla palette (duplicati ignorati)
+
+**Empty state:** due tile — "Caricamento automatico" (OCR, icona `camera_alt`) e "Cerca nel catalogo" (icona `search`)
+
+**Nota:** la palette del kit è indipendente dall'inventario — puoi aggiungere qualsiasi vernice dal catalogo senza possederla fisicamente. Il badge indica solo lo stato magazzino attuale.
 
 ---
 
-##### Sezione 5 — Note Progetto
+##### Sezione 3 — Galleria Foto
+
+_(invariata — vedi Sezione 2 sopra)_
+
+##### Sezione 4 — Note Progetto
 
 Campo testo espandibile. In visualizzazione mostra max 4 righe con bottone "Mostra tutto".
 Tap attiva editing inline (diventa TextField multiline con autofocus).
@@ -320,12 +351,12 @@ Placeholder: "Aggiungi note, riferimenti, obiettivi del progetto…"
 
 ---
 
-##### Sezione 6 — Info Progetto
+##### Sezione 5 — Date (footer discreto)
 
-Row compatta con metadati:
+Riga di testo piccolo al 35% di opacità in fondo alla pagina, senza intestazione separata:
 
 ```
-Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
+Creato il 01 giu 2026  ·  Modificato 3 giorni fa
 ```
 
 ---
@@ -336,7 +367,7 @@ Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
 |--------|--------------|
 | Pull to refresh | Ricarica dati dal DB (per futura sync cloud) |
 | Back navigation | Torna all'archivio (`/projects`) |
-| Empty state foto | Illustrazione + testo "Aggiungi la prima foto del modello" + bottone |
+| Empty state foto | ✅ Implementato — banner cliccabile con icona + testo "Aggiungi la prima foto" al posto del pulsante `+` quando la galleria è vuota |
 
 ---
 
@@ -345,6 +376,8 @@ Creato il 01 giu 2026  ·  Ultima modifica 3 giorni fa
 
 #### 2.1 Inventario Personale (`/paints`)
 Raccoglie tutte le vernici che l'utente possiede fisicamente.
+
+> **Limite Free:** max **20 vernici** nell'inventario personale. Il catalogo offline rimane sempre consultabile senza limiti. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard.
 
 **Dati di ogni vernice:**
 - Marca (Vallejo / Citadel / Tamiya — Fase 1)
@@ -394,23 +427,37 @@ perché referenziano `brand+code` e non l'ID interno del catalogo.
 #### 2.3 Gestione Ricette (`/recipes`)
 Miscele personalizzate salvate con proporzioni esatte.
 
+> **Limite Free:** max **5 ricette** salvate. Raggiunto il limite, la creazione di una nuova ricetta mostra il paywall per l'upgrade a Standard.
+
 **Dati di ogni ricetta:**
 - Nome (es. "Grigio Panzer invecchiato")
-- Foto del risultato
 - Lista ingredienti: vernice + percentuale
-- Tecnica: `Pennello` · `Aerografo` · `Spugnatura`
-- Diluizione consigliata
-- Superficie: plastica, metallo, resina
+- Colore risultante: calcolato automaticamente per miscelazione CIELAB dagli ingredienti (nessuna foto necessaria)
+- Finitura: `Opaco` · `Satinato` · `Lucido` (opzionale)
+- Numero di mani (opzionale)
+- Diluizione consigliata (testo libero)
+- Superficie: plastica, metallo, resina (testo libero)
 - Note e tag liberi
 - Collegamento ai progetti in cui è stata usata
+
+> **Nota:** il campo `Tecnica` (pennello/aerografo/spugna) è stato rimosso dall'interfaccia nella Fase 1C; se necessario può essere annotato nelle Note. Il campo rimane nello schema DB (`technique`) per retrocompatibilità ma non è più esposto.
 
 **Funzionalità:**
 - Creazione con selezione vernici da inventario o catalogo
 - Proporzioni via slider o valore numerico
-- Foto dalla camera o galleria
+- Colore miscelato CIELAB visualizzato in tempo reale (chip esagonale)
 - Ricerca per nome o tag
-- Duplica ricetta come base per varianti
+- Duplica ricetta — non previsto
 - Scala automatica delle quantità
+
+**Collegamento Ricette ↔ Progetti:**
+
+Le ricette vengono collegate ai progetti tramite la palette del kit. Nel bottom sheet "Aggiungi al kit" (accessibile dalla sezione *Colori del Kit* di ogni progetto) è presente un tab **"Ricette personali"** che elenca tutte le ricette salvate. Selezionando una o più ricette e confermando, vengono aggiunte alla palette del progetto come voci speciali (brand `'ricetta'`, code = ID ricetta).
+
+- Nella scheda progetto, le ricette appaiono nella palette con uno stile distinto (bordo primary, label "Ricetta personale"); il tap naviga alla scheda ricetta.
+- Nella scheda ricetta, la sezione **"PROGETTI CHE USANO QUESTA RICETTA"** mostra tutti i progetti che hanno aggiunto quella ricetta alla propria palette; il tap naviga al progetto.
+- La relazione è bidirezionale e in tempo reale (Drift stream).
+- Implementazione: colonna `brand='ricetta'` + `code=recipeId` nella tabella `project_paints` — nessuna tabella di join separata.
 
 #### 2.4 Assistenza alla Miscelazione
 
@@ -464,12 +511,58 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Schermata | Percorso | Stato |
 |-----------|----------|-------|
 | Onboarding | `/onboarding` | ✅ Implementato — 4 schermate (Benvenuto, Funzionalità, Permessi, Pronto) |
-| Archivio Progetti | `/projects` | ✅ Implementato — lista, empty state, FAB, navigazione alla scheda |
-| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto) |
-| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile, galleria (placeholder), note, info |
-| Vernici / Inventario | `/paints` | ⬜ Placeholder |
-| Ricette | `/recipes` | ⬜ Placeholder |
-| Impostazioni | `/settings` | ⬜ Placeholder |
+| Archivio Progetti | `/projects` | ✅ Implementato — card con foto+badge stato, filter bar per stato, FAB, empty state |
+| Wizard Nuovo Progetto | `/projects/new` (modale) | ✅ Implementato — 3 step (Kit, Stato, Foto); brand+scala obbligatori, validazione on-press |
+| Scheda Progetto | `/projects/:id` | ✅ Implementato — header collassabile con brand/scala in overlay, palette, galleria, note |
+| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe-to-delete, pulsanti header con haptic |
+| Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature (ResizeImage 240px in memoria), tap → viewer fullscreen con zoom, elimina dall'AppBar; empty state cliccabile quando vuota |
+| Pin su foto | (viewer foto fullscreen) | ✅ Implementato — tap apre context menu Colore/Nota; pin colore via `PaintPickerSheet` (catalogo con brand/linea/ricerca); pin nota con testo libero; marcatore callout (chip esagonale sempre in alto a sinistra + linea diagonale + dot sul pixel esatto, fisso indipendentemente dallo zoom); long-press apre tooltip overlay con swatch + dettagli + azioni modifica/elimina; filter bar in alto a sinistra (visibile solo se presenti entrambi i tipi) per mostrare/nascondere colori e/o note (1D.6) |
+| Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app; sezione Dati con export/import ZIP; sezione Aiuto con pagina "Gesti e scorciatoie" (lista gesture con icona+descrizione); sezione Developer (solo debug build) con toggle "Simula abbonamento Pro" |
+| Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (quelle nella palette kit non presenti in inventario) con swipe per escludere/ripristinare singola vernice (schema v7) + voci manuali (DB), swipe-to-delete; FAB per aggiunta manuale |
+| Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — crop manuale, preprocessing scala di grigi, MLKit OCR, riconosce codici, aggiunge a palette |
+| Vernici / Inventario | `/paints` | ✅ Implementato — inventario con griglia esagonale, catalogo offline, aggiunta/rimozione, quantità dropdown, stats Free; filtro "Altri" per brand non standard |
+| Catalogo vernici | (tab in /paints) | ✅ Implementato — sfoglia per marca e linea, ricerca codice/nome, aggiunta all'inventario; FAB `+` per aggiungere vernice personalizzata |
+| Vernici personalizzate | (FAB nel tab Catalogo) | ✅ Implementato — inserimento brand (chip predefiniti o testo libero; brand non standard → chip "Altri"), codice, nome, HEX; colore selezionabile da ruota HSV o campionamento pixel da foto; CRUD completo; tabella `custom_paints` (schema v2) |
+| Ricette | `/recipes` | ✅ Implementato — lista con chip colore CIELAB, creazione/modifica, ingredienti con slider %, auto-calcolo 2 ingredienti, finitura, numero di mani, diluizione, superficie, tag, ricerca per nome/tag, collegamento ai progetti |
+| Devlog progetto | (sezione in scheda progetto) | ✅ Implementato — timeline verticale con voci testo + foto opzionale, data/ora auto, swipe-to-delete; tabella `project_logs` (schema v8) |
+| Colori del kit | (sezione in scheda progetto) | ✅ Implementato — palette con chip marca unificato (Catalogo + Ricette personali), scan OCR, shopping list automatica, swipe-to-delete, pulsanti header con haptic |
+
+---
+
+---
+
+### 1.3 Impostazioni (`/settings`)
+
+Schermata accessibile dal tab Impostazioni nella bottom nav.
+
+#### Sezione Aspetto
+
+| Voce | Tipo | Comportamento |
+|------|------|--------------|
+| Tema | Tile con valore corrente | Bottom sheet: Scuro · Chiaro · Sistema (default) |
+
+Il tema viene persistito in `SharedPreferences` (chiave `theme_mode`) e applicato immediatamente a `MaterialApp` tramite `ThemeModeNotifier` (Riverpod).
+
+#### Sezione Lingua
+
+| Voce | Tipo | Comportamento |
+|------|------|--------------|
+| Lingua dell'app | Tile con valore corrente | Bottom sheet: Italiano · English · Sistema (default) |
+
+La lingua viene persistita in `SharedPreferences` (chiave `app_locale`) e applicata tramite `LocaleNotifier`. La `Locale` viene passata a `MaterialApp.locale` — il cambio è live senza riavvio. I testi dell'app usano `AppL10n.of(context)` (flutter_localizations + file `.arb`).
+
+#### Sezione Info
+
+| Voce | Valore |
+|------|--------|
+| Versione | `1.0.0-beta.1` (hardcoded, aggiornato a ogni release) |
+
+#### Sezione Dati (1E.1 + 1E.2)
+
+| Voce | Comportamento |
+|------|--------------|
+| Esporta backup | Crea ZIP (patina_db + foto) in temp e apre share sheet nativo |
+| Importa backup | File picker `.zip` → dialog conferma → estrazione in isolate → sostituzione DB + foto → snackbar riavvio |
 
 ---
 
@@ -480,14 +573,13 @@ di poter essere inserite nella roadmap.
 
 | Area | Note |
 |------|------|
-| **Profilo / Impostazioni** | `/settings` placeholder — contenuto da definire: tema dark/light toggle, lingua, backup/restore, info app, versione |
-| **Backup e ripristino** | Export ZIP (DB + foto) e import ZIP. Le foto sono nella memoria interna privata dell'app — senza backup vengono perse alla disinstallazione. Configurare anche le regole backup Android (`backup_rules.xml`) per il backup automatico Google One. |
-| **Paywall** | Modello monetizzazione Fase 2: crediti, subscription o one-time — da decidere prima dell'implementazione AI |
-| **Editor Ricetta** | UX creazione/modifica ricetta: selezione vernici, slider proporzioni, preview colore risultante |
-| **Creazione Pin Lavorazione** | Flusso inserimento pin tecnica: selezione tipo lavorazione, prodotto usato, collegamento a fase |
-| **Visualizzatore Foto con Pin** | Viewer full-screen: zoom/pan via InteractiveViewer, overlay pin su canvas, controlli visibilità |
+| **Backup e ripristino** | ✅ Implementato (1E.1+1E.2) — vedi sezione Impostazioni › Dati. Da valutare: `backup_rules.xml` per backup automatico Google One. |
+| **Paywall** | Stack deciso: **RevenueCat + Firebase** (milestone 3.1). RevenueCat astrae Google Play Billing e App Store in un'unica API Flutter (`purchases_flutter`); webhook aggiorna `users/{uid}/isPro` su Firestore; `proStatusProvider` legge da Firestore in realtime. Placeholder `paywall_sheet.dart` già presente nel codice. |
+| **Editor Ricetta** | ✅ Implementato (1C.2) — selezione vernici da inventario/catalogo, slider %, colore CIELAB in tempo reale, finitura, numero di mani |
+| **Creazione Pin Lavorazione** | ✅ Implementato (1D.3) — context menu Colore/Nota al tap sulla foto; pin nota con testo libero |
+| **Visualizzatore Foto con Pin** | ✅ Implementato (1D) — zoom/pan, overlay callout marker fuori dall'InteractiveViewer, filter bar per tipo |
 | **Light Mode** | Palette light definita in `PatinaColors` (Design System Ottone) — da verificare su tutti i componenti |
-| **Autenticazione** | Necessaria per Fase 3 — provider OAuth, flusso login/registrazione, gestione token |
+| **Autenticazione** | Necessaria per Fase 3 — Firebase Auth (email/Google). Richiesta da RevenueCat per associare abbonamento a utente e da Cloud Functions per autorizzare chiamate Claude API. |
 | **Stati di Sistema** | Pattern uniforme da definire: loading spinner, empty state con CTA, errori di rete, permessi negati |
 | **Notifiche** | Promemoria lavorazione, aggiornamenti catalogo — da decidere se e quando implementare |
 | **Catalogo Vernici** | Vista sfoglia separata dall'inventario: raggruppamento per marca/linea, chip colore, aggiunta rapida |
@@ -710,3 +802,49 @@ Ogni codice riconosciuto riceve:
 - Backup automatico con account utente
 - Accesso da più dispositivi
 - Condivisione ricette con la community
+
+---
+
+## Fase 3 — AI Pro (pianificata)
+
+> Tutte le funzionalità richiedono abbonamento **Pro** (gate `ProGate.isProUser(ref)`).
+> Backend: **Firebase Functions** come proxy sicuro verso Claude API — la chiave API non lascia mai il server.
+> Verifica doppia: lato app (UX) + lato Function (sicurezza server-side).
+
+### Stack tecnico Fase 3
+
+| Componente | Tecnologia | Ruolo |
+|------------|-----------|-------|
+| Abbonamento | RevenueCat + Google Play / App Store | Gestione acquisti, rinnovi, cancellazioni |
+| Identità utente | Firebase Auth | Associa abbonamento all'utente |
+| Stato Pro | Firestore `users/{uid}/isPro` | Aggiornato da webhook RevenueCat, letto in realtime dall'app |
+| Proxy AI | Firebase Cloud Functions (Node.js) | Riceve richieste dall'app, verifica Pro, chiama Claude API |
+| Modello AI | `claude-sonnet-5` / `claude-opus-4-8` | Vision + text; scelto per chiamata in base al task |
+| Dev override | `SharedPreferences` flag `dev_pro_override` | Toggle nelle Impostazioni (solo debug build) per testare senza billing reale |
+
+### Funzionalità AI pianificate
+
+| Milestone | Feature | Descrizione |
+|-----------|---------|-------------|
+| 3.1 | Sistema abbonamento | RevenueCat + Firebase Auth + Firestore + paywall UI definitivo |
+| 3.2 | Scan istruzioni AI Vision | Claude Vision sostituisce MLKit OCR — riconosce codici colore con contesto visivo |
+| 3.3 | Miscelazione AI avanzata | Suggerisce ricette partendo da colore target o foto |
+| 3.4 | Riconoscimento colore da foto | Trova la vernice più vicina a un punto dell'immagine |
+| 3.5 | Istruzioni AR | Overlay esagoni colorati su foto libretto B/N |
+| 3.6 | Sincronizzazione cloud | Backup automatico e sync multi-dispositivo |
+| 3.7 | Community ricette | Condivisione ricette tra utenti |
+| 3.8 | Espansione cataloghi | Vallejo Air, Citadel Layer/Shade/Contrast, AK, Ammo tramite Catalog Tool |
+| 3.9 | Estrazione fasi da istruzioni | Claude Vision analizza foto del manuale ed estrae fasi di costruzione ordinate → checklist nel progetto |
+| 3.10 | Wizard acquisizione manuale | Wizard 3-step adattivo alla categoria del kit (plastico, navale, figure, diorama) — prompt AI specializzato per tipo |
+
+---
+
+## Fase 1G — Navale Statico in Legno (pianificata)
+
+> Feature specializzate per modellisti di navi in legno in scala — esigenze molto diverse dal modellismo plastico.
+
+| Feature | Priorità | Descrizione |
+|---------|----------|-------------|
+| **Checklist sartiame** (1G.1) | 🔴 Alta | Lista gerarchica manovre fisse/correnti con nome tecnico (sartie, paterazzi, griselle…), materiale cavo, diametro, stato (da fare/in corso/completato), barra avanzamento per gruppo. Tabella `rigging_lines`: `project_id`, `group`, `name`, `material`, `diameter_mm`, `status` |
+| **Inventario legni** (1G.2) | 🟡 Media | Traccia essenza (pero, noce, tiglio, bosso…), sezione in mm (es. 2×4), lunghezza residua in cm, fornitore. Unità di misura: lunghezza — diverso dall'inventario vernici |
+| **Schede ferramenta** (1G.3) | 🟢 Bassa | Pezzi prefabbricati del kit (cannoni, bozzelli, biette, ancore, deadeyes) con quantità prevista vs installata |

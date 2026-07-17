@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n_helpers.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../wizard_state.dart';
 
@@ -16,16 +18,23 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
   late final TextEditingController _brandCtrl;
   late final TextEditingController _scaleCtrl;
   bool _nameTouched = false;
+  bool _brandTouched = false;
+  bool _scaleTouched = false;
+  bool _categoryTouched = false;
 
-  static const _scaleChips = ['1/35', '1/48', '1/72', '1/100', '1/144'];
+  static const _scaleChips = ['1/12', '1/24', '1/35', '1/48', '1/72', '1/100', '1/144'];
   static const _categoryIcons = {
     'tank': Icons.military_tech_outlined,
     'aircraft': Icons.flight_outlined,
     'figure': Icons.person_outline,
     'ship': Icons.directions_boat_outlined,
+    'car': Icons.directions_car_outlined,
+    'motorcycle': Icons.two_wheeler_outlined,
     'diorama': Icons.landscape_outlined,
     'other': Icons.category_outlined,
   };
+
+  static final _scaleRegex = RegExp(r'^1\/\d+$');
 
   @override
   void initState() {
@@ -46,17 +55,25 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final state = ref.watch(createProjectProvider);
     final notifier = ref.read(createProjectProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     final nameError = _nameTouched && state.name.trim().isEmpty;
+    final brandError = _brandTouched && (state.brand == null || state.brand!.trim().isEmpty);
+    final scaleValue = state.scale ?? '';
+    final scaleError = _scaleTouched && scaleValue.trim().isEmpty
+        ? l.errorScaleRequired
+        : _scaleTouched && scaleValue.trim().isNotEmpty && !_scaleRegex.hasMatch(scaleValue.trim())
+            ? l.errorScaleFormat
+            : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
       children: [
-        Text('Il Kit', style: tt.displaySmall),
+        Text(l.projectStepKit, style: tt.displaySmall),
         const SizedBox(height: 24),
 
         // Nome
@@ -66,9 +83,9 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
           maxLength: 80,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
-            labelText: 'Nome modello *',
-            hintText: 'es. Tiger I Ausf. E',
-            errorText: nameError ? 'Il nome è obbligatorio' : null,
+            labelText: l.projectNameLabelRequired,
+            hintText: l.projectNameHint,
+            errorText: nameError ? l.errorNameRequired : null,
             counterText: '${_nameCtrl.text.length}/80',
           ),
           onChanged: (v) {
@@ -82,22 +99,30 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         TextField(
           controller: _brandCtrl,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Marca kit',
-            hintText: 'es. Tamiya, Revell, Hasegawa',
+          decoration: InputDecoration(
+            labelText: l.projectBrandLabelRequired,
+            hintText: l.projectBrandHint,
+            errorText: brandError ? l.errorBrandRequired : null,
           ),
-          onChanged: notifier.setBrand,
+          onChanged: (v) {
+            setState(() => _brandTouched = true);
+            notifier.setBrand(v);
+          },
         ),
         const SizedBox(height: 16),
 
         // Scala
         TextField(
           controller: _scaleCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Scala',
-            hintText: 'es. 1/35',
+          decoration: InputDecoration(
+            labelText: l.projectScaleLabelRequired,
+            hintText: l.projectScaleHint,
+            errorText: scaleError,
           ),
-          onChanged: notifier.setScale,
+          onChanged: (v) {
+            setState(() => _scaleTouched = true);
+            notifier.setScale(v);
+          },
         ),
         const SizedBox(height: 8),
         SingleChildScrollView(
@@ -120,7 +145,26 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         const SizedBox(height: 24),
 
         // Categoria
-        Text('Categoria *', style: tt.titleSmall),
+        Builder(builder: (ctx) {
+          final categoryError = _categoryTouched && state.category == null;
+          final labelColor = categoryError ? Theme.of(ctx).colorScheme.error : null;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.projectCategoryLabelRequired,
+                style: tt.titleSmall?.copyWith(color: labelColor),
+              ),
+              if (categoryError) ...[
+                const SizedBox(height: 4),
+                Text(
+                  l.errorCategoryRequired,
+                  style: tt.bodySmall?.copyWith(color: Theme.of(ctx).colorScheme.error),
+                ),
+              ],
+            ],
+          );
+        }),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
@@ -134,8 +178,11 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
                 size: 16,
                 color: selected ? scheme.primary : scheme.onSurface,
               ),
-              label: Text(AppConstants.categoryLabels[cat] ?? cat),
-              onSelected: (_) => notifier.setCategory(cat),
+              label: Text(l.categoryLabel(cat)),
+              onSelected: (_) {
+                setState(() => _categoryTouched = true);
+                notifier.setCategory(cat);
+              },
               selectedColor: scheme.primary.withOpacity(0.18),
               checkmarkColor: scheme.primary,
               side: BorderSide(
@@ -147,13 +194,16 @@ class _Step1KitState extends ConsumerState<Step1Kit> {
         const SizedBox(height: 32),
 
         FilledButton(
-          onPressed: state.step1Valid
-              ? () {
-                  setState(() => _nameTouched = true);
-                  if (state.step1Valid) widget.onNext();
-                }
-              : () => setState(() => _nameTouched = true),
-          child: const Text('Avanti'),
+          onPressed: () {
+            setState(() {
+              _nameTouched = true;
+              _brandTouched = true;
+              _scaleTouched = true;
+              _categoryTouched = true;
+            });
+            if (state.step1Valid) widget.onNext();
+          },
+          child: Text(l.actionNext),
         ),
       ],
     );

@@ -2,12 +2,13 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"   // Firebase — richiede google-services.json
 }
 
 android {
     namespace "com.patina.app"
     compileSdk 35
-    ndkVersion flutter.ndkVersion
+    ndkVersion "27.0.12077973"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -23,16 +24,23 @@ android {
         minSdk 21
         targetSdk flutter.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0-beta.1"
     }
 
     buildTypes {
         release {
             signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
         }
     }
 }
 
 flutter {
     source "../.."
+}
+
+dependencies {
+    // Native splash screen API 31+ (Theme.SplashScreen)
+    implementation "androidx.core:core-splashscreen:1.0.1"
 }

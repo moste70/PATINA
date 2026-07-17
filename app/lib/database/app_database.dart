@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'tables/projects.dart';
 import 'tables/paints.dart';
@@ -13,17 +11,60 @@ part 'app_database.g.dart';
 @DriftDatabase(tables: [
   Projects,
   ProjectPhotos,
+  ProjectLogs,
   CatalogPaints,
+  CustomPaints,
   InventoryPaints,
+  ProjectPaints,
   Recipes,
   RecipeIngredients,
   Pins,
+  ShoppingItems,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 10;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.createTable(customPaints);
+      if (from < 3) await m.createTable(projectPaints);
+      if (from < 4) await m.createTable(shoppingItems);
+      if (from < 5) {
+        await m.addColumn(recipeIngredients, recipeIngredients.brand);
+        await m.addColumn(recipeIngredients, recipeIngredients.code);
+        await m.addColumn(recipeIngredients, recipeIngredients.paintName);
+        await m.addColumn(recipeIngredients, recipeIngredients.hex);
+      }
+      if (from < 6) {
+        await m.addColumn(recipes, recipes.finish);
+        await m.addColumn(recipes, recipes.coats);
+      }
+      if (from < 7) {
+        await m.addColumn(projectPaints, projectPaints.excludeFromShopping);
+      }
+      if (from < 8) {
+        await m.createTable(projectLogs);
+      }
+      if (from < 9) {
+        await m.addColumn(inventoryPaints, inventoryPaints.createdAt);
+      }
+      if (from < 10) {
+        await m.createIndex(Index('pins_photo_idx',
+            'CREATE INDEX pins_photo_idx ON pins(photo_id)'));
+        await m.createIndex(Index('project_photos_project_idx',
+            'CREATE INDEX project_photos_project_idx ON project_photos(project_id)'));
+        await m.createIndex(Index('project_logs_project_idx',
+            'CREATE INDEX project_logs_project_idx ON project_logs(project_id)'));
+        await m.createIndex(Index('project_paints_project_idx',
+            'CREATE INDEX project_paints_project_idx ON project_paints(project_id)'));
+      }
+    },
+  );
 
   Future<void> initializeDemoProject() async {
     final existing = await (select(projects)..limit(1)).get();
@@ -69,39 +110,9 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  Future<void> initializeCatalogs() async {
-    final count = await (select(catalogPaints)..limit(1)).get();
-    if (count.isNotEmpty) return;
-
-    final catalogFiles = [
-      'assets/catalogs/vallejo_model_color.json',
-      'assets/catalogs/citadel_base.json',
-      'assets/catalogs/tamiya_xf.json',
-      'assets/catalogs/gunze_aqueous.json',
-      'assets/catalogs/gunze_mr_metal.json',
-    ];
-
-    await batch((b) async {
-      for (final path in catalogFiles) {
-        try {
-          final raw = await rootBundle.loadString(path);
-          final data = json.decode(raw) as Map<String, dynamic>;
-          final brand = data['brand'] as String;
-          final line = data['line'] as String;
-          final paints = data['paints'] as List<dynamic>;
-          for (final paint in paints) {
-            b.insert(catalogPaints, CatalogPaintsCompanion(
-              brand: Value(brand),
-              line: Value(line),
-              code: Value(paint['code'] as String),
-              name: Value(paint['name'] as String),
-              hex: Value(paint['hex'] as String),
-            ));
-          }
-        } catch (_) {}
-      }
-    });
-  }
+  // I cataloghi sono letti direttamente dagli asset JSON (rootBundle) on-demand.
+  // Non vengono precaricati nel DB: ogni aggiornamento arriva con una nuova release app.
+  // Vedere: app/assets/catalogs/ — 11 file JSON, versione 2024.1
 }
 
 final databaseProvider = Provider<AppDatabase>(

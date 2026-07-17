@@ -5,7 +5,9 @@ class Recipes extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get photoPath => text().nullable()();
-  TextColumn get technique => text().nullable()();
+  TextColumn get technique => text().nullable()(); // legacy, non più usato in UI
+  TextColumn get finish => text().nullable()();    // opaco|satinato|lucido
+  IntColumn get coats => integer().nullable()();   // numero di mani
   TextColumn get dilution => text().nullable()();
   TextColumn get surface => text().nullable()();
   TextColumn get notes => text().nullable()();
@@ -20,4 +22,9 @@ class RecipeIngredients extends Table {
   IntColumn get paintId => integer().nullable().references(InventoryPaints, #id)();
   IntColumn get catalogId => integer().nullable().references(CatalogPaints, #id)();
   RealColumn get percentage => real()();
+  // v5: denormalized for CIELAB blending — same pattern as project_paints
+  TextColumn get brand => text().nullable()();
+  TextColumn get code => text().nullable()();
+  TextColumn get paintName => text().nullable()();
+  TextColumn get hex => text().nullable()();
 }

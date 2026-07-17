@@ -39,20 +39,27 @@ class _PatinaMarkPainter extends CustomPainter {
   final Color? mono;
   _PatinaMarkPainter(this.mono);
 
-  // I 6 esagoni dell'anello, in spazio 120×120 (come l'SVG originale).
+  // 7 esagoni flat-top, spazio 120×120, R=20.
+  // 6 esagoni esterni si toccano per un lato fra loro;
+  // il 7° (centrale) condivide un lato con ognuno dei 6.
+  // Centri esterni a distanza R√3 ≈ 34.64 dal centro (60,60).
   static const List<List<Offset>> _polys = [
-    [Offset(40, 25.36), Offset(50, 8.04), Offset(70, 8.04), Offset(80, 25.36), Offset(70, 42.68), Offset(50, 42.68)],
-    [Offset(70, 42.68), Offset(80, 25.36), Offset(100, 25.36), Offset(110, 42.68), Offset(100, 60), Offset(80, 60)],
-    [Offset(70, 77.32), Offset(80, 60), Offset(100, 60), Offset(110, 77.32), Offset(100, 94.64), Offset(80, 94.64)],
-    [Offset(40, 94.64), Offset(50, 77.32), Offset(70, 77.32), Offset(80, 94.64), Offset(70, 111.96), Offset(50, 111.96)],
-    [Offset(10, 77.32), Offset(20, 60), Offset(40, 60), Offset(50, 77.32), Offset(40, 94.64), Offset(20, 94.64)],
-    [Offset(10, 42.68), Offset(20, 25.36), Offset(40, 25.36), Offset(50, 42.68), Offset(40, 60), Offset(20, 60)],
+    // Anello esterno — orario partendo dall'alto
+    [Offset(40, 25.36), Offset(50,  8.04), Offset(70,  8.04), Offset(80, 25.36), Offset(70, 42.68), Offset(50, 42.68)], // alto
+    [Offset(70, 42.68), Offset(80, 25.36), Offset(100, 25.36), Offset(110, 42.68), Offset(100, 60), Offset(80, 60)],    // alto-destra
+    [Offset(70, 77.32), Offset(80, 60),    Offset(100, 60),    Offset(110, 77.32), Offset(100, 94.64), Offset(80, 94.64)], // basso-destra
+    [Offset(40, 94.64), Offset(50, 77.32), Offset(70, 77.32),  Offset(80, 94.64), Offset(70, 111.96), Offset(50, 111.96)], // basso
+    [Offset(10, 77.32), Offset(20, 60),    Offset(40, 60),     Offset(50, 77.32), Offset(40, 94.64),  Offset(20, 94.64)],  // basso-sinistra
+    [Offset(10, 42.68), Offset(20, 25.36), Offset(40, 25.36),  Offset(50, 42.68), Offset(40, 60),     Offset(20, 60)],    // alto-sinistra
+    // Centrale — condivide un lato con ognuno dei 6 esterni
+    [Offset(40, 60),    Offset(50, 42.68), Offset(70, 42.68),  Offset(80, 60),    Offset(70, 77.32),  Offset(50, 77.32)],
   ];
 
-  // Saturazione crescente = "la patina".
+  // Saturazione crescente sull'anello = "la patina"; centro = Ottone pieno.
   static const List<Color> _colors = [
     Color(0xFFEC9C26), Color(0xFFEF8E08), Color(0xFFE7A848),
     Color(0xFFDEC295), Color(0xFFD8CFBE), Color(0xFFE4B56E),
+    Color(0xFFD99B3E), // centrale — accent Ottone
   ];
 
   @override

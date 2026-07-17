@@ -5,8 +5,14 @@ import 'package:drift/drift.dart' show Value;
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n_helpers.dart';
 import '../../../shared/constants/app_constants.dart';
 import '../project_repository.dart';
+import '../create_project/create_project_wizard.dart';
+import 'project_palette_sliver.dart';
+import 'project_devlog_sliver.dart';
+import 'pin_viewer_screen.dart';
 
 // Provider per il singolo progetto
 final projectByIdProvider = StreamProvider.autoDispose.family<Project, int>(
@@ -19,6 +25,7 @@ class ProjectDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final projectAsync = ref.watch(projectByIdProvider(projectId));
 
     return projectAsync.when(
@@ -27,7 +34,7 @@ class ProjectDetailScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text('Errore: $e')),
+        body: Center(child: Text(l.errorGeneric(e.toString()))),
       ),
       data: (project) => _ProjectDetailContent(project: project),
     );
@@ -94,35 +101,39 @@ class _ProjectDetailContentState
   }
 
   Future<void> _updateCoverPhoto() async {
+    final l = AppL10n.of(context);
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Fotocamera'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galleria'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Annulla'),
-              onTap: () => Navigator.pop(ctx),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(ll.photoSourceCamera),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(ll.photoSourceGallery),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: Text(ll.actionCancel),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      },
     );
     if (source == null || !mounted) return;
     try {
       final file =
-          await ImagePicker().pickImage(source: source, imageQuality: 85);
+          await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
       if (file != null) {
         await ref.read(projectRepositoryProvider).updateProject(
           widget.project.id,
@@ -135,22 +146,45 @@ class _ProjectDetailContentState
     } catch (_) {}
   }
 
+  Future<void> _removeCoverPhoto() async {
+    await ref.read(projectRepositoryProvider).updateProject(
+      widget.project.id,
+      ProjectsCompanion(
+        coverPhoto: const Value(null),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  void _editProject() {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CreateProjectWizard(project: widget.project),
+      ),
+    );
+  }
+
   Future<void> _deleteProject() async {
+    final l = AppL10n.of(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Elimina progetto?'),
-        content: const Text("L'azione è irreversibile."),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annulla')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Elimina',
-                  style: TextStyle(color: Colors.red))),
-        ],
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.projectDeleteTitle),
+          content: Text(ll.projectDeleteBody),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(ll.actionCancel)),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(ll.actionDelete,
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error))),
+          ],
+        );
+      },
     );
     if (confirm == true && mounted) {
       await ref
@@ -161,37 +195,41 @@ class _ProjectDetailContentState
   }
 
   void _showStatusSheet() {
+    final l = AppL10n.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Cambia stato',
-                style: Theme.of(ctx).textTheme.titleMedium),
-            const SizedBox(height: 16),
-            ...AppConstants.projectStatuses.map((s) => ListTile(
-                  title:
-                      Text(AppConstants.projectStatusLabels[s] ?? s),
-                  trailing: widget.project.status == s
-                      ? Icon(Icons.check,
-                          color: Theme.of(ctx).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    _updateStatus(s);
-                    Navigator.pop(ctx);
-                  },
-                )),
-          ],
-        ),
-      ),
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(ll.statusChangeTitle,
+                  style: Theme.of(ctx).textTheme.titleMedium),
+              const SizedBox(height: 16),
+              ...AppConstants.projectStatuses.map((s) => ListTile(
+                    title: Text(ll.projectStatusLabel(s)),
+                    trailing: widget.project.status == s
+                        ? Icon(Icons.check,
+                            color: Theme.of(ctx).colorScheme.primary)
+                        : null,
+                    onTap: () {
+                      _updateStatus(s);
+                      Navigator.pop(ctx);
+                    },
+                  )),
+            ],
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final p = widget.project;
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -212,28 +250,40 @@ class _ProjectDetailContentState
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
+                  if (v == 'edit') _editProject();
                   if (v == 'status') _showStatusSheet();
                   if (v == 'cover') _updateCoverPhoto();
+                  if (v == 'remove_cover') _removeCoverPhoto();
                   if (v == 'delete') _deleteProject();
                 },
-                itemBuilder: (_) => const [
+                itemBuilder: (_) => [
                   PopupMenuItem(
-                      value: 'status', child: Text('Cambia stato')),
+                      value: 'edit', child: Text(l.projectMenuEdit)),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                      value: 'status', child: Text(l.statusChangeTitle)),
                   PopupMenuItem(
                       value: 'cover',
-                      child: Text('Cambia foto copertina')),
-                  PopupMenuDivider(),
+                      child: Text(l.coverPhotoChange)),
+                  if (p.coverPhoto != null)
+                    PopupMenuItem(
+                        value: 'remove_cover',
+                        child: Text(l.coverPhotoRemove)),
+                  const PopupMenuDivider(),
                   PopupMenuItem(
                       value: 'delete',
-                      child:
-                          Text('Elimina', style: TextStyle(color: Colors.red))),
+                      child: Builder(
+                        builder: (ctx) => Text(
+                          AppL10n.of(ctx).actionDelete,
+                          style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                        ),
+                      )),
                 ],
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
-              titlePadding:
-                  const EdgeInsets.fromLTRB(16, 0, 56, 52),
+              titlePadding: const EdgeInsets.fromLTRB(16, 0, 56, 16),
               title: Text(
                 p.name,
                 style: tt.titleMedium?.copyWith(
@@ -254,9 +304,10 @@ class _ProjectDetailContentState
                   // Cover photo o placeholder
                   p.coverPhoto != null
                       ? Image.file(File(p.coverPhoto!),
-                          fit: BoxFit.cover)
+                          fit: BoxFit.cover,
+                          cacheWidth: 800)
                       : Container(
-                          color: scheme.surfaceVariant,
+                          color: scheme.surfaceContainerHigh,
                           child: Icon(Icons.view_module_outlined,
                               size: 64,
                               color: scheme.onSurface.withOpacity(0.2)),
@@ -267,62 +318,57 @@ class _ProjectDetailContentState
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: [0.4, 1.0],
+                        stops: [0.35, 1.0],
                         colors: [Colors.transparent, Colors.black87],
                       ),
                     ),
                   ),
-                  // Chip stato in alto a sinistra
+                  // Overlay info: status chip + brand/scala sopra il titolo
                   Positioned(
-                    top: 56,
+                    bottom: 44,
                     left: 16,
-                    child: _StatusChip(status: p.status),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Barra avanzamento + brand/scala ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (p.brand != null || p.scale != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        [p.brand, p.scale]
-                            .whereType<String>()
-                            .join(' · '),
-                        style: tt.bodySmall,
-                      ),
+                    right: 16,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _StatusChip(
+                          status: p.status,
+                          onTap: _showStatusSheet,
+                        ),
+                        if (p.brand != null || p.scale != null) ...[
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              [p.brand, p.scale]
+                                  .whereType<String>()
+                                  .join(' · '),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                shadows: [
+                                  Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 6)
+                                ],
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
           ),
 
           // ── Galleria Foto ──
-          _SectionHeader(title: 'Galleria'),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 88,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  // Bottone aggiungi
-                  _PhotoAddButton(onTap: () {}),
-                ],
-              ),
-            ),
-          ),
+          _SectionHeader(title: l.sectionGallery),
+          _GallerySliver(projectId: widget.project.id),
 
           // ── Note Progetto ──
-          _SectionHeader(title: 'Note'),
+          _SectionHeader(title: l.sectionNotes),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -335,9 +381,8 @@ class _ProjectDetailContentState
                           minLines: 3,
                           maxLength: 500,
                           autofocus: true,
-                          decoration: const InputDecoration(
-                            hintText:
-                                'Aggiungi note, riferimenti, obiettivi del progetto…',
+                          decoration: InputDecoration(
+                            hintText: l.projectNotesHint,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -347,12 +392,12 @@ class _ProjectDetailContentState
                             TextButton(
                               onPressed: () =>
                                   setState(() => _editingNotes = false),
-                              child: const Text('Annulla'),
+                              child: Text(l.actionCancel),
                             ),
                             const SizedBox(width: 8),
                             FilledButton(
                               onPressed: _saveNotes,
-                              child: const Text('Salva'),
+                              child: Text(l.actionSave),
                             ),
                           ],
                         ),
@@ -365,13 +410,13 @@ class _ProjectDetailContentState
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: scheme.surfaceVariant,
+                          color: scheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           p.notes?.isNotEmpty == true
                               ? p.notes!
-                              : 'Aggiungi note, riferimenti, obiettivi del progetto…',
+                              : l.projectNotesHint,
                           style: tt.bodyMedium?.copyWith(
                             color: p.notes?.isNotEmpty == true
                                 ? null
@@ -385,14 +430,20 @@ class _ProjectDetailContentState
             ),
           ),
 
-          // ── Info Progetto ──
-          _SectionHeader(title: 'Info'),
+          // ── Palette del kit ──
+          ProjectPaletteSliver(projectId: widget.project.id),
+
+          // ── Devlog ──
+          ProjectDevlogSliver(projectId: widget.project.id),
+
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
               child: Text(
-                'Creato il ${_formatDate(p.createdAt)}  ·  Ultima modifica ${_timeAgo(p.updatedAt)}',
-                style: tt.bodySmall,
+                'Creato il ${_formatDate(p.createdAt)}  ·  Modificato ${_timeAgo(p.updatedAt)}',
+                style: tt.bodySmall?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.35),
+                ),
               ),
             ),
           ),
@@ -438,42 +489,57 @@ class _ProjectDetailContentState
 
 class _StatusChip extends StatelessWidget {
   final String status;
-  const _StatusChip({required this.status});
+  final VoidCallback? onTap;
+  const _StatusChip({required this.status, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final (label, bg, fg) = switch (status) {
+    final l = AppL10n.of(context);
+    final (bg, fg) = switch (status) {
       'in_progress' => (
-          'In corso',
           const Color(0xFFC87A20),
           Colors.white
         ),
       'completed' => (
-          'Completato',
           Theme.of(context).colorScheme.primary,
           Colors.black87
         ),
+      'paused' => (
+          Colors.blueGrey,
+          Colors.white
+        ),
       _ => (
-          'Da iniziare',
           Colors.transparent,
           Colors.white
         ),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: status == 'todo'
-            ? Border.all(color: Colors.white54)
-            : null,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          border: status == 'todo'
+              ? Border.all(color: Colors.white54)
+              : Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l.projectStatusLabel(status),
+                style: TextStyle(
+                    color: fg,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.expand_more, color: fg, size: 14),
+            ],
+          ],
+        ),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: fg,
-              fontSize: 12,
-              fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -499,6 +565,179 @@ class _SectionHeader extends StatelessWidget {
             Expanded(
                 child: Divider(color: scheme.outline, thickness: 1)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+final _projectPhotosProvider =
+    StreamProvider.autoDispose.family<List<ProjectPhoto>, int>(
+  (ref, projectId) =>
+      ref.watch(projectRepositoryProvider).watchProjectPhotos(projectId),
+);
+
+class _GallerySliver extends ConsumerWidget {
+  final int projectId;
+  const _GallerySliver({required this.projectId});
+
+  Future<void> _addPhoto(BuildContext context, WidgetRef ref) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(ll.photoSourceCamera),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(ll.photoSourceGallery),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: Text(ll.actionCancel),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null) return;
+    try {
+      final file = await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1920, maxHeight: 1920);
+      if (file != null) {
+        await ref.read(projectRepositoryProvider).addProjectPhoto(projectId, file.path);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _deletePhoto(BuildContext context, WidgetRef ref, int photoId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final ll = AppL10n.of(ctx);
+        return AlertDialog(
+          title: Text(ll.photoDeleteTitle),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ll.actionCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ll.actionDelete,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirm == true) {
+      await ref.read(projectRepositoryProvider).deleteProjectPhoto(photoId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photosAsync = ref.watch(_projectPhotosProvider(projectId));
+    final photos = photosAsync.valueOrNull ?? [];
+
+    final l = AppL10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (photos.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: InkWell(
+            onTap: () => _addPhoto(context, ref),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 88,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: scheme.outline.withOpacity(0.4),
+                  width: 1.5,
+                  // ignore: deprecated_member_use
+                  strokeAlign: BorderSide.strokeAlignInside,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_photo_alternate_outlined,
+                      size: 28, color: scheme.onSurfaceVariant.withOpacity(0.5)),
+                  const SizedBox(width: 10),
+                  Text(
+                    l.photoGalleryEmptyHint,
+                    style: tt.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant.withOpacity(0.6)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 88,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            _PhotoAddButton(onTap: () => _addPhoto(context, ref)),
+            ...photos.map((photo) => _PhotoThumbnail(
+              photo: photo,
+              onDelete: () => _deletePhoto(context, ref, photo.id),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoThumbnail extends StatelessWidget {
+  final ProjectPhoto photo;
+  final VoidCallback onDelete;
+  const _PhotoThumbnail({required this.photo, required this.onDelete});
+
+  void _openFullscreen(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PinViewerScreen(photo: photo, onDelete: onDelete),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openFullscreen(context),
+      child: Container(
+        width: 80,
+        height: 80,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            image: ResizeImage(
+              FileImage(File(photo.path)),
+              width: 240, // 80 dp × 3× density
+            ),
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );

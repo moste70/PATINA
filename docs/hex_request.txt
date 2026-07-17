@@ -1,0 +1,928 @@
+Ho bisogno dei valori HEX per le seguenti vernici da modellismo.
+Per ogni colore ho codice e nome — restituisci SOLO un array JSON con questa struttura:
+
+[
+  { "code": "X-3", "name": "Royal Blue", "hex": "#1A2B3C" },
+  ...
+]
+
+Nessun testo aggiuntivo, solo il JSON. Per colori metallici/clear/chrome
+usa l'equivalente visivo più realistico come approssimazione.
+
+
+--- TAMIYA / x_gloss (28 colori) ---
+X-1 | Black
+X-3 | Royal Blue
+X-4 | Blue
+X-5 | Green
+X-6 | Orange
+X-7 | Red
+X-8 | Lemon Yellow
+X-9 | Brown
+X-10 | Gun Metal
+X-11 | Chrome Silver
+X-12 | Gold Leaf
+X-13 | Metallic Blue
+X-14 | Sky Blue
+X-15 | Light Green
+X-16 | Light Purple
+X-17 | Pink
+X-18 | Semi Gloss Black
+X-19 | Smoke
+X-23 | Clear Blue
+X-24 | Clear Yellow
+X-25 | Clear Green
+X-26 | Clear Orange
+X-27 | Clear Red
+X-28 | Park Green
+X-31 | Titanium Gold
+X-32 | Titanium Silver
+X-33 | Bronze
+X-34 | Metallic Brown
+
+--- VALLEJO / model_air (97 colori) ---
+71.001 | White
+71.002 | Black
+71.003 | Yellow
+71.004 | Red
+71.005 | Blue
+71.006 | Aluminium
+71.007 | Silver
+71.008 | Gold
+71.009 | Bronze
+71.010 | Copper
+71.011 | Pale Blue
+71.012 | Intermediate Blue
+71.013 | Pale Grey Blue
+71.014 | Olive Drab
+71.015 | Grass Green
+71.016 | Camouflage Black Green
+71.017 | Dark Green
+71.018 | Khaki
+71.019 | Yellow Olive
+71.020 | Hemp
+71.021 | Pale Sand
+71.022 | Dark Earth
+71.023 | Camouflage Grey
+71.024 | Stone Grey
+71.025 | Insignia White
+71.026 | Neutral Grey
+71.027 | Middle Stone
+71.028 | Dark Sea Grey
+71.029 | Dark Grey
+71.030 | Gunship Grey
+71.031 | Pale Blue Grey
+71.032 | Light Ghost Grey
+71.033 | Night Blue
+71.034 | Protective Green
+71.035 | Camouflage Green
+71.036 | Brown
+71.037 | Tan
+71.038 | Rust
+71.039 | Orange
+71.040 | Bright Violet
+71.041 | US Blue Grey
+71.042 | US Field Drab
+71.043 | Dark Rubber
+71.044 | Interior Brown
+71.045 | Burnt Umber
+71.046 | Light Grey
+71.047 | Duck Egg Green
+71.048 | Pale Green
+71.049 | Light Green
+71.050 | Dark Green RLM 71
+71.051 | Green RLM 62
+71.052 | Light Blue RLM 65
+71.053 | Grey Blue RLM 78
+71.054 | Sand Yellow RLM 79
+71.055 | Light Blue Grey RLM 76
+71.056 | Dark Green RLM 80
+71.057 | Dark Olive RLM 81
+71.058 | Light Olive RLM 82
+71.059 | Black Green RLM 70
+71.060 | Cam. Olive Green RLM 83
+71.061 | Brown Violet RLM 81
+71.062 | Dunkelgelb
+71.063 | Italian Red Brown
+71.064 | Russian Uniform WWII
+71.065 | Light Green FS 34227
+71.066 | Olive Grey FS 34098
+71.067 | Dark Grey FS 36099
+71.068 | Dark Slate Grey FS 36118
+71.069 | Aggressor Grey FS 36251
+71.070 | Ghost Grey FS 36320
+71.071 | Compass Ghost Grey FS 36375
+71.072 | Azure Blue FS 35231
+71.073 | Radome Tan FS 33613
+71.074 | US Dark Green FS 34079
+71.075 | Medium Grey FS 35237
+71.076 | Dark Grey FS 36081
+71.077 | Chrome
+71.078 | Steel
+71.079 | Gun Metal
+71.080 | Fluorescent Red
+71.081 | Fluorescent Yellow
+71.082 | Fluorescent Green
+71.083 | Fluorescent Orange
+71.084 | Light Grey Blue FS 35414
+71.085 | Sky Grey FS 36463
+71.086 | Light Grey FS 36495
+71.087 | US Ocean Grey FS 36173
+71.088 | Khaki Grey FS 34201
+71.089 | Cam. Pale Green FS 34227
+71.090 | Forest Green FS 34079
+71.091 | Iraqi Sand FS 30279
+71.092 | Light Brown FS 30219
+71.093 | Dark Brown FS 30051
+71.094 | Burnt Red
+71.095 | Gold Yellow
+71.096 | Violet
+71.097 | Moss Green
+
+--- HUMBROL / enamel (195 colori) ---
+1 | Matt Primer
+2 | Emerald Green
+3 | Brunswick Green
+5 | Dark Admiralty Grey
+7 | Light Buff
+9 | Tan
+10 | Service Brown
+11 | Silver
+12 | Copper
+14 | French Blue
+15 | Midnight Blue
+16 | Gold
+18 | Orange
+19 | Bright Red
+20 | Crimson
+21 | Gloss Black
+22 | Gloss White
+23 | Duck Egg Blue
+24 | Trainer Yellow
+25 | Blue
+26 | Khaki
+27 | Sea Grey
+28 | Camouflage Grey
+29 | Dark Earth
+30 | Dark Green
+31 | Slate Grey
+32 | Dark Grey
+33 | Black
+34 | Flat White
+35 | Clear
+38 | Lime
+40 | Pale Grey
+41 | Ivory
+47 | Sea Blue
+48 | Mediterranean Blue
+49 | Matt Varnish
+50 | Green Mist
+51 | Sunset Red
+52 | Baltic Blue
+53 | Gunmetal
+54 | Brass
+55 | Bronze
+56 | Aluminium
+60 | Matt Scarlet
+61 | Matt Flesh
+62 | Leather
+63 | Sand
+64 | Light Grey
+65 | Aircraft Blue
+66 | Matt Olive Drab
+67 | Matt Tank Grey
+68 | Purple
+69 | Yellow
+70 | Brick Red
+71 | Oak
+72 | Khaki Drill
+73 | Wine
+74 | Linen
+75 | Matt Bronze Green
+76 | Uniform Green
+77 | Matt Navy Blue
+78 | Cockpit Green
+79 | Blue Grey
+80 | Grass Green
+81 | Pale Yellow
+82 | Orange Lining
+83 | Ochre
+84 | Matt Mid Stone
+85 | Coal Black
+86 | Light Olive
+87 | Steel Grey
+88 | Deck Green
+89 | Middle Blue
+90 | Beige Green
+91 | Matt Black Green
+92 | Matt Iron Grey
+93 | Desert Yellow
+94 | Brown Yellow
+95 | Concrete
+96 | RAF Blue
+97 | Eggshell
+98 | Chocolate
+99 | Lemon Yellow
+100 | Red Brown
+101 | Mid Green
+102 | Army Green
+103 | Cream
+104 | Matt Oxford Blue
+105 | Marine Green
+106 | Ocean Grey
+107 | WW1 Purple
+108 | WW1 Green
+109 | WW1 Blue
+110 | Matt Natural Wood
+111 | Matt Uniform Grey
+112 | Tarmac
+113 | Matt Rust
+114 | Russian Green
+115 | Russian Blue
+116 | Matt US Dark Green
+117 | US Light Green
+118 | US Tan
+119 | Israeli Light Earth
+120 | Israeli Light Green
+121 | Israeli Pale Stone
+122 | Israeli Light Blue
+123 | Dark Sea Grey
+124 | Petrol Blue
+125 | Satin US Dark Grey
+126 | Satin US Medium Grey
+127 | US Ghost Grey
+128 | US Compass Grey
+129 | US Gull Grey
+130 | Satin White
+131 | Satin Green
+132 | Satin Red
+133 | Satin Brown
+134 | Satin Blue
+135 | Satin Varnish
+140 | Dk Gull Grey
+141 | Light Sea Grey
+142 | Field Drab
+144 | Intermediate Blue
+145 | Medium Grey
+146 | Aircraft Grey
+147 | Matt Light Grey
+148 | Radome Tan
+149 | Dark Green
+150 | Forest Green
+151 | Interior Green
+153 | Insignia Red
+154 | Insignia Yellow
+155 | Olive Drab
+156 | Satin Dark Grey
+157 | Azure Blue
+158 | Interior Green
+159 | Khaki Drab
+160 | German Cam Red Brown
+161 | US Marine Corps Green
+162 | Surface Grey
+163 | Dark Green
+164 | Dark Sea Grey
+165 | Medium Sea Grey
+166 | RAF Light Aircraft Grey
+167 | RAF Barley Grey
+168 | RAF Hemp
+170 | Brown Bess
+171 | Antique Bronze
+172 | Green
+173 | Track Colour
+174 | Signal Red
+175 | Hellgrau RLM 76
+176 | Neutral Grey
+177 | Hull Red
+178 | British Scarlet
+179 | French Artillery Green
+180 | Red Leather
+181 | Sea Blue
+182 | Black Grey
+183 | Grey
+184 | Freight Stock Grey
+186 | Brown
+187 | Sand
+188 | Chrome Yellow
+189 | Insignia Blue
+190 | Blue Angels Blue
+191 | Chrome Silver
+192 | Blaze Matt
+193 | Blaze Gloss
+194 | Saturn Yellow Gloss
+195 | Dark Green
+196 | Light Grey
+197 | Lufthansa Yellow
+198 | Lufthansa Blue
+200 | Pink
+201 | Metallic Black
+202 | Fluorescent Aurora Pink
+203 | Fluorescent Signal Green
+204 | Fluorescent Matt Saturn Yellow
+205 | Fluorescent Matt Fire Orange
+206 | Base White
+207 | Aurora Pink
+208 | Signal Green
+209 | Fire Orange
+220 | Ferrari Red
+221 | Garter Blue
+250 | Desert Pink
+27001 | Metalcote Matt Aluminium
+27002 | Metalcote Polished Aluminium
+27003 | Metalcote Polished Steel
+27004 | Metalcote Gunmetal
+8191 | Metalcote Satin Bronze
+91321 | Clear Red
+91322 | Clear Orange
+91325 | Clear Green
+
+--- GUNZE / aqueous_hobby_color (150 colori) ---
+H3 | Red
+H4 | Yellow
+H5 | Blue
+H6 | Green
+H7 | Brown
+H8 | Silver
+H9 | Gold
+H10 | Copper
+H11 | Flat White
+H12 | Flat Black
+H13 | Flat Red
+H14 | Orange
+H15 | Bright Blue
+H16 | Yellow Green
+H17 | Cocoa Brown
+H18 | Steel
+H19 | Pink
+H20 | Flat Clear
+H21 | Off White
+H22 | Gray
+H23 | Shine Red
+H24 | Orange Yellow
+H25 | Sky Blue
+H26 | Bright Green
+H27 | Tan
+H28 | Metal Black
+H29 | Salmon Pink
+H30 | Clear
+H31 | White Green
+H32 | Field Gray (1)
+H33 | Russet
+H34 | Cream Yellow
+H35 | Cobalt Blue
+H36 | Dark Green
+H37 | Wood Brown
+H38 | Steel Red
+H39 | Purple
+H40 | Flat Base
+H41 | Pale Green
+H42 | Blue Gray
+H43 | Wine Red
+H44 | Flesh
+H45 | Light Blue
+H46 | Emerald Green
+H47 | Red Brown
+H48 | Field Gray (2)
+H49 | Violet
+H50 | Lime Green
+H51 | Light Gull Gray
+H52 | Olive Drab (1)
+H53 | Neutral Gray
+H54 | Navy Blue
+H55 | Midnight Blue
+H56 | Intermediate Blue
+H57 | Aircraft Gray
+H58 | Interior Green
+H59 | UN Green
+H60 | UA Green
+H61 | UN Gray
+H62 | UA Gray
+H63 | Metallic Blue Green
+H64 | Rust Dark Green
+H65 | Flat Black Green
+H66 | Rusinsky Brown
+H67 | RLM65 Light Blue
+H68 | RLM74 Dark Gray
+H69 | RLM75 Gray
+H70 | RLM02 Gray
+H71 | Middle Stone
+H72 | Dark Earth
+H73 | Dark Green
+H74 | Sky
+H75 | Dark Sea Gray
+H76 | Burnt Iron
+H77 | Tire Black
+H78 | Olive Drab (2)
+H79 | Snow/White Dis
+H80 | Khaki Green
+H81 | Khaki
+H82 | Dark Gray (1)
+H83 | Dark Gray (2)
+H84 | Mahogany
+H85 | Sail Color
+H86 | Red Madder
+H87 | Metallic Red
+H88 | Metallic Blue
+H89 | Metallic Green
+H90 | Clear Red
+H91 | Clear Yellow
+H92 | Clear Orange
+H93 | Clear Blue
+H94 | Clear Green
+H95 | Smoke Gray
+H96 | Smoke Blue
+H301 | Gray FS36081
+H302 | Green FS34092
+H303 | Green FS34102
+H304 | Olive Green FS34087
+H305 | Gray FS36118
+H306 | Gray FS35270
+H307 | Gray FS36320
+H308 | Gray FS36375
+H309 | Green FS34079
+H310 | Brown FS30219
+H311 | Gray FS36622
+H312 | Green FS34227
+H313 | Yellow FS33531
+H314 | Blue FS35622
+H315 | Gray FS16440
+H316 | White FS17875
+H317 | Gray FS36231
+H318 | Radome
+H319 | Light Green
+H320 | Dark Green
+H321 | Hell Brown
+H322 | Indian Yellow
+H323 | Light Blue
+H324 | Light Gray
+H325 | Gray FS26440
+H326 | Blue FS15044
+H327 | White FS17778
+H328 | Blue FS15050
+H329 | Yellow FS13638
+H330 | Dark Green/Brown
+H331 | Dark Sea Gray A
+H332 | Light Gray A
+H333 | Dark Slate Gray A
+H334 | Dark Dull Red A
+H335 | Extra Dark Sea Gray A
+H336 | Pale Gray A
+H337 | Hemp A
+H338 | Engine Gray A
+H339 | Field Green A
+H340 | Sky Type S A
+H401 | Dark Gray (T)
+H402 | Green Brown (T)
+H403 | Dark Yellow (T)
+H404 | Khaki Brown (T)
+H405 | Olive Green (T)
+H406 | Chocolate Brown (T)
+H413 | RLM04 Yellow
+H414 | RLM23 Red
+H415 | Flat Black Gray
+H417 | RLM65 Hell Blau
+H418 | RLM78 Hell Blau
+H421 | RLM80 Olive Green
+H422 | RLM81 Brown Violet
+H423 | RLM82 Light Green
+H424 | RLM83 Dark Green
+H425 | RLM84 Dark Green
+
+--- GUNZE / mr_color (256 colori) ---
+1 | White
+2 | Black
+3 | Red
+4 | Yellow
+5 | Blue
+6 | Green
+7 | Brown
+8 | Silver
+9 | Gold
+10 | Copper
+11 | Navy Blue
+12 | Flat Black
+13 | Neutral Grey
+14 | Navy Blue
+15 | Aircraft Grey
+16 | Black Iron
+17 | RLM 65 Light Blue
+18 | RLM 71 Dark Green
+19 | Flat Black
+20 | Light Grey
+21 | Middle Stone
+22 | Dark Earth
+23 | Dark Green
+25 | Dark Sea Grey FS36118
+27 | Flat Black
+28 | Steel
+29 | Purple
+30 | Dark Blue
+31 | Russet
+32 | Dark Iron
+33 | Black Green
+34 | Sky Blue
+35 | Cobalt Blue
+36 | RLM 66 Dark Grey
+37 | Wood Brown
+38 | Khaki
+39 | Dark Yellow
+40 | German Grey
+41 | Red Brown
+42 | Mahogany
+43 | Wood
+44 | Tan
+45 | Sail Color
+46 | Clear Orange
+47 | Clear Red
+48 | Clear Blue
+49 | Clear Green
+50 | Clear Yellow
+51 | Flat Base
+52 | Flat White
+53 | Gun Metal
+54 | Khaki Green
+55 | Khaki Yellow
+56 | Burnt Iron
+57 | Metallic Blue
+58 | Orange Yellow
+59 | Orange Red
+60 | RLM 02 Grey
+61 | RLM 79 Sand Yellow
+62 | RLM 78 Sky Blue
+63 | RLM 76 Light Blue
+64 | RLM 75 Grey Violet
+65 | RLM 70 Black Green
+66 | RLM 66 Black Grey
+67 | RLM 65 Light Blue
+68 | RLM 23 Red
+69 | Gloss Black
+70 | Flat Brown
+71 | Flat Earth
+72 | Intermediate Blue
+73 | Sail Color
+74 | Sky
+75 | IJN Grey Green
+76 | Tire Black
+77 | Tire Dark Grey
+78 | Cockpit Color (Nakajima)
+79 | Shine Red
+80 | Khaki Drab
+81 | Soil Brown
+82 | Russet
+83 | Dark Brown
+84 | Warm Grey
+85 | Sea Grey
+86 | Amber
+87 | Navy
+88 | Dark Olive Drab
+89 | Dark Green
+90 | Lime Yellow
+91 | Indigo
+92 | Metallic Red
+93 | Metallic Blue
+94 | Metallic Orange
+95 | Metallic Green
+96 | Metallic Brown
+97 | Metallic Black
+100 | Maroon
+101 | Light Navy Blue
+102 | Char Blue
+103 | Olive Green
+104 | Wine Red
+105 | Dark Reddish Brown
+106 | Grass Green
+107 | Character Yellow
+108 | Character Red
+109 | Character Blue
+110 | Character Green
+111 | Character Flesh
+112 | Character Hair
+113 | Neutral Grey FS 36270
+114 | Olive Drab FS 34087
+115 | IJA Grey Green
+116 | JGSDF Dark Green
+117 | JGSDF Sand
+118 | JGSDF Brown
+119 | JMSDF Battleship Grey
+120 | JMSDF Haze Grey
+121 | JASDF Blue Impulse White
+122 | JASDF Blue Impulse Blue
+123 | JASDF T-4 Gray
+124 | JASDF Gray Green
+125 | JASDF Dark Green
+126 | JASDF Light Gray
+127 | Grey FS 36375
+128 | Grey FS 36320
+129 | Gray FS 36251
+130 | Dark Green FS 34079
+131 | Dark Green FS 34052
+132 | Dark Green FS 34058
+133 | Dark Green FS 34092
+134 | IJN Dark Green
+135 | IJN Propeller Color
+136 | RLM 81 Brown Violet
+137 | RLM 82 Light Green
+138 | RLM 83 Dark Green
+139 | RLM 04 Yellow
+140 | RLM 24 Dark Blue
+141 | RLM 25 Light Green
+142 | RLM 26 Brown
+143 | RLM 27 Yellow
+144 | RLM 61 Dark Brown
+145 | RLM 62 Green
+146 | RLM 63 Light Grey
+147 | RLM 64 Light Blue
+148 | RLM 72 Green
+149 | RLM 73 Green
+150 | RLM 74 Grey Green
+151 | RLM 77 Light Grey
+152 | RLM 78 Sky Blue
+153 | RLM 79 Sand Yellow
+154 | RLM 80 Olive Green
+155 | RLM 81 Burnt Umber
+156 | RLM 82 Water Blue
+157 | RLM 84 Pale Blue
+158 | RLM 02 RLM Grey
+159 | IJNAF Aotake
+160 | IJNAF Interior Green
+161 | IJNAF Sky
+162 | Soviet Green
+163 | Soviet Blue
+164 | Soviet Brown
+165 | RAL 7021 Panzer Grey
+166 | RAL 8012 Red Brown
+167 | RAL 7028 Dark Yellow
+168 | RAL 6003 Olive Green
+169 | RAL 6009 Dunkel Grun
+170 | IJN Meiji Teikoku Grey
+171 | IJN Meiji Teikoku Dark Grey
+172 | FS 33531 Light Blue
+173 | FS 35352 Aircraft Blue
+174 | FS 30400 Light Brown
+175 | FS 34151 Mid-Green
+176 | FS 30219 Brown
+177 | FS 30118 Dark Brown
+178 | FS 33448 Olive Drab
+179 | FS 34102 Olive Drab
+180 | FS 34258 Dark Green
+181 | FS 36622 Grey
+182 | FS 36375 Light Ghost Grey
+183 | FS 36270 Neutral Grey
+184 | FS 36307 Light Gull Grey
+185 | FS 35237 Medium Grey
+186 | FS 36173 Dark Grey
+187 | FS 36118 Dark Gull Grey
+188 | FS 36099 Dark Ghost Grey
+189 | FS 35164 Intermediate Blue
+190 | FS 36231 Light Blue Grey
+191 | FS 36251 Aggressor Grey
+192 | FS 36320 Ghost Grey
+193 | FS 35414 Azure Blue
+194 | FS 33613 Radome Tan
+195 | FS 34031 Dark Green
+196 | FS 34064 Olive Drab
+197 | FS 34079 Forest Green
+198 | FS 34201 Khaki
+199 | FS 33440 Light Olive
+200 | FS 36628 Insignia White
+201 | FS 17038 Gloss Black
+202 | Super Silver
+203 | Mecha Color White
+204 | Mecha Color Yellow
+205 | Mecha Color Red
+206 | Mecha Color Blue
+207 | Mecha Color Green
+208 | Mecha Color Flesh
+209 | Mecha Color Dark Flesh
+210 | Mecha Color Burnt Iron
+213 | Super Iron
+214 | Super Gold
+215 | Super Copper
+216 | Super Chrome
+217 | Super Gun Metal
+218 | Super Fine Silver
+219 | Super Metallic Blue
+220 | Super Metallic Red
+221 | Super Metallic Green
+222 | Super Metallic Purple
+301 | White FS 17875
+302 | Light Gull Grey FS 36440
+303 | Aircraft Grey FS 36118
+304 | Insignia White FS 17875
+305 | Intermediate Blue FS 35164
+306 | Sea Blue FS 35042
+307 | Dark Sea Blue FS 35042
+308 | Flat White FS 17875
+309 | Dark Ghost Grey FS 36320
+310 | Neutral Grey FS 36270
+311 | Olive Drab FS 34087
+312 | IJN Grey Green
+313 | IJN Dark Green
+314 | IJN Light Grey
+315 | IJN Dark Grey
+316 | US Army Air Force Olive Drab
+317 | Olive Drab
+318 | Khaki Drab
+319 | RAF Sky
+320 | RAF Dark Green
+321 | RAF Ocean Grey
+322 | RAF Dark Earth
+323 | RAF Middle Stone
+324 | RAF Light Mediterranean Blue
+325 | Flat Yellow
+326 | Flat Red
+327 | Flat Blue
+328 | Flat Green
+329 | Flat Brown
+330 | Flat Orange
+331 | Flat Dark Yellow
+332 | Dark Green FS 34092
+333 | Khaki Green
+334 | Sand
+335 | Tan
+336 | Cockpit Interior
+337 | Cockpit Green (Kawasaki)
+338 | Dark Brown
+339 | Clear
+340 | Tire Black
+
+--- GUNZE / mr_metal_color (9 colori) ---
+211 | Chrome Silver
+212 | Iron
+213 | Stainless
+214 | Dark Iron
+215 | Copper
+216 | Bronze
+217 | Gold
+218 | Aluminium
+219 | Brass
+
+--- LIFECOLOR / lc_basic_gloss (27 colori) ---
+LC51 | Gloss Black
+LC52 | Gloss White
+LC53 | Gloss Yellow
+LC54 | Gloss Red
+LC55 | Gloss Blue
+LC56 | Gloss Green
+LC57 | Gloss Orange
+LC58 | Gloss Violet
+LC59 | Gloss Brown
+LC60 | Gloss Dark Yellow
+LC61 | Gloss Ivory
+LC62 | Gloss Flesh
+LC63 | Gloss Light Blue
+LC64 | Gloss Sky Blue
+LC65 | Gloss Sea Blue
+LC66 | Gloss Dark Green
+LC67 | Gloss Light Green
+LC68 | Gloss Olive Green
+LC69 | Gloss Khaki
+LC70 | Gloss Tan
+LC71 | Gloss Dark Brown
+LC72 | Gloss Red Brown
+LC73 | Gloss Grey
+LC74 | Gloss Dark Grey
+LC75 | Gloss Silver
+LC76 | Gloss Gold
+LC77 | Gloss Copper
+
+--- LIFECOLOR / ua_camouflage (139 colori) ---
+UA001 | Worn Effect
+UA002 | Matt Black
+UA003 | Matt White
+UA004 | Medium Grey
+UA005 | Dark Yellow
+UA006 | NATO Green
+UA007 | NATO Black
+UA008 | NATO Brown
+UA009 | Sand
+UA010 | Iraq Sand
+UA011 | Tank Brown
+UA012 | Olive Drab
+UA013 | Russian Green 4BO
+UA014 | Panzer Dunkelgrau
+UA015 | Rotbraun RAL 8012
+UA016 | Dunkelgelb RAL 7028
+UA017 | Olivgrun RAL 6003
+UA018 | Dunkelgrun RAL 6009
+UA019 | Dark Sand
+UA020 | US Olive Drab FS 34087
+UA021 | US Field Drab FS 30118
+UA022 | US Tan FS 33703
+UA023 | US Khaki FS 34201
+UA024 | British Khaki
+UA025 | British Desert Tan
+UA026 | British Light Stone
+UA027 | British Dark Bronze Green
+UA028 | Israeli Sand Grey
+UA029 | Israeli Grey
+UA030 | Japanese Khaki
+UA031 | Japanese Army Green
+UA032 | Japanese Naval Grey
+UA033 | Faded Olive Drab
+UA034 | Worn Olive Drab
+UA035 | Burnt Umber
+UA036 | Earth
+UA037 | Dark Mud
+UA038 | Light Mud
+UA039 | Dust
+UA040 | Light Dust
+UA041 | Bright Sand
+UA042 | Warm Sand
+UA043 | Dark Brown
+UA044 | Chocolate Brown
+UA045 | Tan Earth
+UA046 | Light Orange Brown
+UA047 | Orange Brown
+UA048 | Red Brown
+UA049 | Rust
+UA050 | Chipping
+UA051 | Dark Red
+UA052 | Aged White
+UA053 | Ivory
+UA054 | Pale Sand
+UA055 | Iraqi Sand
+UA056 | Panzer Aces Skin
+UA057 | Dark Skin
+UA058 | Medium Flesh
+UA059 | Light Flesh
+UA060 | Highlight Flesh
+UA061 | Dark Leather
+UA062 | Medium Leather
+UA063 | Light Leather
+UA064 | US Modern Field Green
+UA065 | US Modern Desert Sand
+UA066 | US Modern Desert Brown
+UA067 | US MARPAT Desert Sand
+UA068 | US MARPAT Desert Tan
+UA069 | US MARPAT Desert Brown
+UA070 | US MARPAT Woodland Green
+UA071 | US MARPAT Woodland Brown
+UA072 | US MARPAT Woodland Black
+UA073 | British MTP Sand
+UA074 | British MTP Brown
+UA075 | British MTP Dark Brown
+UA076 | British MTP Green
+UA077 | British MTP Dark Green
+UA078 | German Fleck Sand
+UA079 | German Fleck Green
+UA080 | German Fleck Brown
+UA081 | German Fleck Dark Green
+UA082 | Russian Flora Sand
+UA083 | Russian Flora Green
+UA084 | Russian Flora Dark Green
+UA085 | Russian Flora Brown
+UA086 | Italian Vegetato Sand
+UA087 | Italian Vegetato Green
+UA088 | Italian Vegetato Dark Green
+UA089 | Italian Vegetato Brown
+UA090 | Faded Brown
+UA091 | Worn Leather
+UA092 | Tired Metal
+UA093 | Damp Earth
+UA094 | Wet Earth
+UA095 | Dry Mud
+UA096 | Light Dry Mud
+UA097 | Deep Water
+UA098 | Medium Water
+UA099 | Light Water
+UA100 | Forest Green
+UA101 | Medium Forest
+UA102 | Light Forest
+UA103 | Wood Brown
+UA104 | Bark
+UA105 | Dry Grass
+UA106 | Straw
+UA107 | Yellow Green
+UA108 | Light Yellow Green
+UA109 | Stone Grey
+UA110 | Light Stone
+UA111 | Concrete
+UA112 | Asphalt
+UA113 | Dark Asphalt
+UA114 | Steel
+UA115 | Dark Steel
+UA116 | Gun Metal
+UA117 | Bronze
+UA118 | Brass
+UA119 | Copper
+UA120 | Gold
+UA121 | Light Gold
+UA122 | Chrome
+UA123 | Exhaust
+UA124 | Light Exhaust
+UA125 | Burnt Exhaust
+UA126 | Camouflage Green
+UA127 | Camouflage Brown
+UA128 | Camouflage Sand
+UA129 | Camouflage Black
+UA130 | Shadow
+UA131 | Highlight
+UF01 | Flat Base
+UF02 | Flat Dark Yellow
+UF03 | Flat White
+UF04 | Flat Black
+UF05 | Flat Olive Green
+UF06 | Flat US Olive Drab
+UF07 | Flat Brown
+UF08 | Flat Sand

@@ -19,4 +19,22 @@ class ProjectPhotos extends Table {
   TextColumn get path => text()();
   TextColumn get caption => text().nullable()();
   IntColumn get takenAt => integer().nullable()();
+
+  @override
+  Set<Index> get indices => {
+    Index('project_photos_project_idx', [projectId]),
+  };
+}
+
+class ProjectLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get projectId => integer().references(Projects, #id)();
+  TextColumn get body => text()();
+  TextColumn get photoPath => text().nullable()();
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Index> get indices => {
+    Index('project_logs_project_idx', [projectId]),
+  };
 }

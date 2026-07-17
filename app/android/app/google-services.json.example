@@ -1,0 +1,31 @@
+{
+  "_ISTRUZIONI": [
+    "1. Vai su https://console.firebase.google.com",
+    "2. Crea un progetto (es. 'patina-app')",
+    "3. Aggiungi app Android con package name: com.patina.app",
+    "4. Scarica google-services.json e sostituisci questo file (senza .example)",
+    "5. NON committare google-services.json — è già in .gitignore"
+  ],
+  "project_info": {
+    "project_number": "DA_CONFIGURARE",
+    "project_id": "DA_CONFIGURARE",
+    "storage_bucket": "DA_CONFIGURARE"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "DA_CONFIGURARE",
+        "android_client_info": {
+          "package_name": "com.patina.app"
+        }
+      },
+      "api_key": [{ "current_key": "DA_CONFIGURARE" }],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

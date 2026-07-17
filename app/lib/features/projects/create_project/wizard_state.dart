@@ -26,7 +26,14 @@ class CreateProjectState {
     this.isSaving = false,
   });
 
-  bool get step1Valid => name.trim().isNotEmpty && category != null;
+  static final _scaleRegex = RegExp(r'^1\/\d+$');
+
+  bool get step1Valid =>
+      name.trim().isNotEmpty &&
+      category != null &&
+      brand != null && brand!.trim().isNotEmpty &&
+      scale != null && _scaleRegex.hasMatch(scale!.trim());
+
   bool get hasData => name.isNotEmpty || category != null || brand != null;
 
   CreateProjectState copyWith({
@@ -63,6 +70,18 @@ class CreateProjectNotifier extends StateNotifier<CreateProjectState> {
 
   CreateProjectNotifier(this._repo) : super(const CreateProjectState());
 
+  void initFromProject(Project p) {
+    state = CreateProjectState(
+      name: p.name,
+      brand: p.brand,
+      scale: p.scale,
+      category: p.category,
+      status: p.status,
+      notes: p.notes,
+      coverPhotoPath: p.coverPhoto,
+    );
+  }
+
   void setName(String v) => state = state.copyWith(name: v);
   void setBrand(String v) =>
       state = state.copyWith(brand: v.trim().isEmpty ? null : v.trim());
@@ -94,6 +113,24 @@ class CreateProjectNotifier extends StateNotifier<CreateProjectState> {
     ));
     state = state.copyWith(isSaving: false);
     return id;
+  }
+
+  Future<void> update(int projectId) async {
+    state = state.copyWith(isSaving: true);
+    await _repo.updateProject(
+      projectId,
+      ProjectsCompanion(
+        name: Value(state.name.trim()),
+        brand: Value(state.brand),
+        scale: Value(state.scale),
+        category: Value(state.category),
+        coverPhoto: Value(state.coverPhotoPath),
+        status: Value(state.status),
+        notes: Value(state.notes),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+    state = state.copyWith(isSaving: false);
   }
 }
 

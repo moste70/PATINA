@@ -1,18 +1,32 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
 import 'database/app_database.dart';
 import 'features/onboarding/onboarding_screen.dart';
+// AppL10n è generato da `flutter gen-l10n` (lib/l10n/app_it.arb + app_en.arb).
+// Uso: AppL10n.of(context).actionSave
+import 'package:patina/l10n/app_localizations.dart';
+import 'features/settings/settings_screen.dart' show localePrefProvider;
+import 'shared/services/firebase_options.dart';
+import 'shared/services/revenuecat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final db = AppDatabase();
-  await db.initializeCatalogs();
-  final onboardingDone = await isOnboardingCompleted();
-  if (!onboardingDone) {
-    await db.initializeDemoProject();
+
+  // Firebase + RevenueCat — skip in debug if placeholder keys not yet configured
+  if (!kDebugMode || _firebaseConfigured) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await RevenueCatService.init();
   }
+
+  final db = AppDatabase();
+  final onboardingDone = await isOnboardingCompleted();
   runApp(
     ProviderScope(
       overrides: [
@@ -24,6 +38,9 @@ void main() async {
   );
 }
 
+// True when firebase_options.dart has been replaced with real project values.
+const _firebaseConfigured = true;
+
 class PatinaApp extends ConsumerWidget {
   const PatinaApp({super.key});
 
@@ -31,6 +48,12 @@ class PatinaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final localePref = ref.watch(localePrefProvider);
+    final locale = switch (localePref) {
+      'it' => const Locale('it'),
+      'en' => const Locale('en'),
+      _ => null, // null = sistema operativo
+    };
     return MaterialApp.router(
       title: 'Patina',
       debugShowCheckedModeBanner: false,
@@ -38,6 +61,14 @@ class PatinaApp extends ConsumerWidget {
       darkTheme: PatinaTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
+      locale: locale,
+      localizationsDelegates: const [
+        AppL10n.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppL10n.supportedLocales,
     );
   }
 }
