@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,9 +11,20 @@ import 'features/onboarding/onboarding_screen.dart';
 // Uso: AppL10n.of(context).actionSave
 import 'package:patina/l10n/app_localizations.dart';
 import 'features/settings/settings_screen.dart' show localePrefProvider;
+import 'shared/services/firebase_options.dart';
+import 'shared/services/revenuecat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase + RevenueCat — skip in debug if placeholder keys not yet configured
+  if (!kDebugMode || _firebaseConfigured) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await RevenueCatService.init();
+  }
+
   final db = AppDatabase();
   final onboardingDone = await isOnboardingCompleted();
   runApp(
@@ -24,6 +37,9 @@ void main() async {
     ),
   );
 }
+
+// True when firebase_options.dart has been replaced with real project values.
+const _firebaseConfigured = false; // ← impostare a true dopo flutterfire configure
 
 class PatinaApp extends ConsumerWidget {
   const PatinaApp({super.key});

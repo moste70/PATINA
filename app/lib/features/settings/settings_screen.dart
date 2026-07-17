@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/pro/pro_gate.dart';
+import '../../shared/services/auth_service.dart';
+import '../../shared/services/revenuecat_service.dart';
 import '../../shared/utils/backup_service.dart';
+import 'login_screen.dart';
 
 // Provider per la lingua selezionata (codice locale, es. 'it', 'en', 'system').
 // Usato anche in main.dart per impostare la locale di MaterialApp.
@@ -85,6 +89,10 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: l.settingsBackupImportSubtitle,
             onTap: () => _importBackup(context, l),
           ),
+
+          // ── Account ──────────────────────────────────────────────────────
+          _SectionHeader(title: 'Account'),
+          const _AccountTile(),
 
           // ── Aiuto ────────────────────────────────────────────────────────
           _SectionHeader(title: l.settingsHelpSection),
@@ -366,6 +374,94 @@ class _SettingsTile extends StatelessWidget {
           : null,
       onTap: onTap,
     );
+  }
+}
+
+class _AccountTile extends ConsumerWidget {
+  const _AccountTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(authUserProvider);
+    final scheme = Theme.of(context).colorScheme;
+
+    return userAsync.when(
+      loading: () => const ListTile(
+        leading: SizedBox(width: 36, height: 36),
+        title: Text('Account'),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (User? user) {
+        if (user == null) {
+          return ListTile(
+            leading: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.person_outline, size: 20, color: scheme.primary),
+            ),
+            title: const Text('Accedi o crea account'),
+            subtitle: Text(
+              'Necessario per attivare Patina Pro',
+              style: TextStyle(fontSize: 13, color: scheme.onSurface.withOpacity(0.6)),
+            ),
+            trailing: Icon(Icons.chevron_right, color: scheme.onSurface.withOpacity(0.3)),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            ),
+          );
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.person, size: 20, color: scheme.primary),
+              ),
+              title: Text(user.email ?? 'Account'),
+              subtitle: Text(
+                'Connesso',
+                style: TextStyle(fontSize: 13, color: scheme.primary),
+              ),
+            ),
+            ListTile(
+              leading: const SizedBox(width: 36),
+              title: const Text('Esci dall\'account'),
+              textColor: scheme.error,
+              onTap: () => _signOut(context, ref),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Esci dall\'account'),
+        content: const Text('Verrai disconnesso. L\'abbonamento Pro sarà disattivato su questo dispositivo.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Esci')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await ref.read(authServiceProvider).signOut();
+    await RevenueCatService().logOut();
+    ref.read(proStatusProvider.notifier).onAuthChanged(null);
   }
 }
 
