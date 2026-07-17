@@ -50,10 +50,6 @@ class ProjectPaints extends Table {
         {projectId, brand, code},
       ];
 
-  @override
-  Set<Index> get indices => {
-    Index('project_paints_project_idx', [projectId]),
-  };
 }
 
 // Voci manuali nella lista della spesa (pennelli, diluenti, materiali, ecc.).

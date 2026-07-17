@@ -20,10 +20,6 @@ class ProjectPhotos extends Table {
   TextColumn get caption => text().nullable()();
   IntColumn get takenAt => integer().nullable()();
 
-  @override
-  Set<Index> get indices => {
-    Index('project_photos_project_idx', [projectId]),
-  };
 }
 
 class ProjectLogs extends Table {
@@ -32,9 +28,4 @@ class ProjectLogs extends Table {
   TextColumn get body => text()();
   TextColumn get photoPath => text().nullable()();
   IntColumn get createdAt => integer()();
-
-  @override
-  Set<Index> get indices => {
-    Index('project_logs_project_idx', [projectId]),
-  };
 }

@@ -19,9 +19,4 @@ class Pins extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [];
-
-  @override
-  Set<Index> get indices => {
-    Index('pins_photo_idx', [photoId]),
-  };
 }
