@@ -18,10 +18,21 @@ import 'package:file_picker/file_picker.dart';
 //   - photos/*   → copied to the app documents dir, preserving basenames
 
 class BackupService {
-  // Drift stores the DB here on Android/iOS.
+  // drift_flutter usa getApplicationDocumentsDirectory() su tutte le piattaforme.
+  // Su Android il path reale è <documents>/patina_db — verifica anche <support>/patina_db
+  // come fallback nel caso in cui la versione del package cambi comportamento.
   static Future<File> _dbFile() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return File(p.join(dir.path, 'patina_db'));
+    final docsDir = await getApplicationDocumentsDirectory();
+    final docsFile = File(p.join(docsDir.path, 'patina_db'));
+    if (docsFile.existsSync()) return docsFile;
+
+    if (Platform.isAndroid) {
+      final supportDir = await getApplicationSupportDirectory();
+      final supportFile = File(p.join(supportDir.path, 'patina_db'));
+      if (supportFile.existsSync()) return supportFile;
+    }
+
+    throw Exception('Database not found. Checked: ${docsDir.path}');
   }
 
   // ── Export ──────────────────────────────────────────────────────────────────

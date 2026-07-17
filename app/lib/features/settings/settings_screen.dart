@@ -128,7 +128,8 @@ class SettingsScreen extends ConsumerWidget {
     HapticFeedback.lightImpact();
     try {
       await BackupService.exportBackup();
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('BackupService.exportBackup error: $e\n$st');
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.settingsBackupExportError)),
