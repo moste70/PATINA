@@ -132,7 +132,10 @@ class SettingsScreen extends ConsumerWidget {
       debugPrint('BackupService.exportBackup error: $e\n$st');
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.settingsBackupExportError)),
+        SnackBar(
+          content: Text(kDebugMode ? 'Backup error: $e' : l.settingsBackupExportError),
+          duration: const Duration(seconds: 10),
+        ),
       );
     }
   }
