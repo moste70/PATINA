@@ -517,7 +517,7 @@ Documenta la tecnica applicata in un punto specifico del modello.
 | Colori del kit | (sezione in scheda progetto) | ✅ Implementato — ricerca cataloghi, badge magazzino, swipe-to-delete, pulsanti header con haptic |
 | Galleria foto | (sezione in scheda progetto) | ✅ Implementato — camera + galleria, miniature (ResizeImage 240px in memoria), tap → viewer fullscreen con zoom, elimina dall'AppBar; empty state cliccabile quando vuota |
 | Pin su foto | (viewer foto fullscreen) | ✅ Implementato — tap apre context menu Colore/Nota; pin colore via `PaintPickerSheet` (catalogo con brand/linea/ricerca); pin nota con testo libero; marcatore callout (chip esagonale sempre in alto a sinistra + linea diagonale + dot sul pixel esatto, fisso indipendentemente dallo zoom); long-press apre tooltip overlay con swatch + dettagli + azioni modifica/elimina; filter bar in alto a sinistra (visibile solo se presenti entrambi i tipi) per mostrare/nascondere colori e/o note (1D.6) |
-| Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app; sezione Dati con export/import ZIP; sezione Aiuto con pagina "Gesti e scorciatoie" (lista gesture con icona+descrizione); sezione Developer (solo debug build) con toggle "Simula abbonamento Pro" |
+| Impostazioni | `/settings` | ✅ Implementato — tema dark/light/sistema, lingua IT/EN/sistema, versione app; sezione Dati con export/import ZIP (debug: errore reale in snackbar 10s); sezione Aiuto con pagina "Gesti e scorciatoie"; sezione Account con Google Sign-In (Firebase Auth); sezione Developer (solo debug build) con toggle "Simula abbonamento Pro" |
 | Lista della spesa | `/shopping` | ✅ Implementato — sezione automatica vernici mancanti (quelle nella palette kit non presenti in inventario) con swipe per escludere/ripristinare singola vernice (schema v7) + voci manuali (DB), swipe-to-delete; FAB per aggiunta manuale |
 | Scan istruzioni (OCR) | (sheet da palette kit) | ✅ Implementato (beta) — crop manuale, preprocessing scala di grigi, MLKit OCR, riconosce codici, aggiunge a palette |
 | Vernici / Inventario | `/paints` | ✅ Implementato — inventario con griglia esagonale, catalogo offline, aggiunta/rimozione, quantità dropdown, stats Free; filtro "Altri" per brand non standard |
@@ -561,7 +561,7 @@ La lingua viene persistita in `SharedPreferences` (chiave `app_locale`) e applic
 
 | Voce | Comportamento |
 |------|--------------|
-| Esporta backup | Crea ZIP (patina_db + foto) in temp e apre share sheet nativo |
+| Esporta backup | Crea ZIP (patina_db + foto) in temp e apre share sheet nativo. Ricerca DB prima in `getApplicationDocumentsDirectory()`, poi in `getApplicationSupportDirectory()` (Android fallback). In debug build mostra il messaggio di errore reale nella snackbar (10s). |
 | Importa backup | File picker `.zip` → dialog conferma → estrazione in isolate → sostituzione DB + foto → snackbar riavvio |
 
 ---
@@ -579,7 +579,7 @@ di poter essere inserite nella roadmap.
 | **Creazione Pin Lavorazione** | ✅ Implementato (1D.3) — context menu Colore/Nota al tap sulla foto; pin nota con testo libero |
 | **Visualizzatore Foto con Pin** | ✅ Implementato (1D) — zoom/pan, overlay callout marker fuori dall'InteractiveViewer, filter bar per tipo |
 | **Light Mode** | Palette light definita in `PatinaColors` (Design System Ottone) — da verificare su tutti i componenti |
-| **Autenticazione** | Necessaria per Fase 3 — Firebase Auth (email/Google). Richiesta da RevenueCat per associare abbonamento a utente e da Cloud Functions per autorizzare chiamate Claude API. |
+| **Autenticazione** | ✅ Firebase Auth implementato con Google Sign-In (`firebase_auth` + `google_sign_in`). Login con Google disponibile nella schermata Impostazioni. Richiesto da RevenueCat per associare abbonamento e da Cloud Functions per autorizzare chiamate Claude API. SHA-1 del debug keystore da aggiungere a Firebase Console per testare Sign-In su dispositivo reale. |
 | **Stati di Sistema** | Pattern uniforme da definire: loading spinner, empty state con CTA, errori di rete, permessi negati |
 | **Notifiche** | Promemoria lavorazione, aggiornamenti catalogo — da decidere se e quando implementare |
 | **Catalogo Vernici** | Vista sfoglia separata dall'inventario: raggruppamento per marca/linea, chip colore, aggiunta rapida |
@@ -818,7 +818,7 @@ Ogni codice riconosciuto riceve:
 | Abbonamento | RevenueCat + Google Play / App Store | Gestione acquisti, rinnovi, cancellazioni |
 | Identità utente | Firebase Auth | Associa abbonamento all'utente |
 | Stato Pro | Firestore `users/{uid}/isPro` | Aggiornato da webhook RevenueCat, letto in realtime dall'app |
-| Proxy AI | Firebase Cloud Functions (Node.js) | Riceve richieste dall'app, verifica Pro, chiama Claude API |
+| Proxy AI | Firebase Cloud Functions (Node.js) — deployate su `europe-west1` via GitHub Actions (`deploy-functions.yml`) con service account `FIREBASE_SERVICE_ACCOUNT`; `CLAUDE_API_KEY` in Secret Manager | Riceve richieste dall'app, verifica autenticazione Firebase, chiama Claude API |
 | Modello AI | `claude-sonnet-5` / `claude-opus-4-8` | Vision + text; scelto per chiamata in base al task |
 | Dev override | `SharedPreferences` flag `dev_pro_override` | Toggle nelle Impostazioni (solo debug build) per testare senza billing reale |
 

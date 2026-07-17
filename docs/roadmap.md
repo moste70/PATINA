@@ -14,9 +14,9 @@
 | 0.6 | Cataloghi vernici — 13 file JSON bundled in `assets/catalogs/`, letti on-demand da `rootBundle`. ~1.220 colori totali (versione 2024.1). Inclusi Tamiya LP (lacquer, 76) e Tamiya TS (spray, 100) aggiunti dopo il lancio iniziale. | ✅ Completato |
 | 0.7 | Design system: palette dark/light (`PatinaColors`), tipografia, tema Flutter | ✅ Completato |
 | 0.8 | Navigazione con Go Router — ShellRoute, 4 tab, placeholder screens | ✅ Completato |
-| 0.9 | CI/CD GitHub Actions — build APK debug e release | ✅ Completato |
+| 0.9 | CI/CD GitHub Actions — build APK debug e release; deploy Firebase Functions via service account (nessun login interattivo) | ✅ Completato |
 | 0.10 | `AppConstants` — categorie, stati, fasi predefinite, marche, quantità | ✅ Completato |
-| 0.11 | Icona launcher Android (cluster esagoni) + fix NormalTheme AndroidManifest | ✅ Completato |
+| 0.11 | Icona launcher Android (cluster esagoni) + fix NormalTheme AndroidManifest + fix splash screen Android 12+ (ic_launcher_foreground multi-colore al posto di ic_splash_mark monocromatico) | ✅ Completato |
 | 0.12 | Font: JetBrains Mono (display/titoli/label) + IBM Plex Sans (corpo) via `PatinaFonts` | ✅ Completato |
 | 0.13 | Icone custom bottom navigation bar — `CustomPainter` per Progetti (griglia), Vernici (tavolozza), Ricette (matraccio), Impostazioni (ingranaggio 60°) | ✅ Completato |
 
@@ -336,9 +336,9 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 | Milestone | Descrizione |
 |-----------|-------------|
-| 3.1 | **Sistema abbonamento** — vedi spec dettagliata sotto |
+| 3.1 | 🔄 **Sistema abbonamento** — Firebase Auth + Google Sign-In implementati; RevenueCat da integrare; paywall UI placeholder presente; `proStatusProvider` stub (`false`) da collegare a Firestore |
 | 3.2 | **AI Vision scansione istruzioni** (sostituisce OCR MLKit) — Claude Vision identifica codici colore per marca da foto del libretto; lista pronta da aggiungere alla palette |
-| 3.3 | ✅ **Miscelazione AI avanzata** — Claude API suggerisce ricette di miscelazione partendo da un colore target o da una foto |
+| 3.3 | ✅ **Miscelazione AI avanzata** — Firebase Function `suggestMixingRecipe` deployata su `europe-west1`; usa `claude-sonnet-5`; CLAUDE_API_KEY in Secret Manager; `AiMixingSheet` + `ClaudeService` integrati nell'app |
 | 3.4 | **Riconoscimento colore da foto** — Claude Vision trova la vernice più vicina a un punto dell'immagine |
 | 3.5 | **Istruzioni AR** — overlay esagoni colorati reali su foto libretto istruzioni B/N |
 | 3.6 | **Sincronizzazione cloud** — backup automatico e sync multi-dispositivo |
@@ -507,12 +507,12 @@ Fase 1D      █████████░   86%  — 1D.1-1D.7 completati (UX 
 Fase 1E      ████████░░   80%  — backup ZIP, empty state, performance, hint gesti completati; mancano store listing e beta release
 Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
 Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
-Fase 3       █░░░░░░░░░    8%  — OCR scan istruzioni con crop manuale e preprocessing scala di grigi (best-effort)
+Fase 3       ██░░░░░░░░   18%  — Firebase Auth + Google Sign-In implementati (3.1 parziale); Firebase Functions deployate su europe-west1 con `suggestMixingRecipe` attivo (3.3 ✅); OCR scan istruzioni con crop manuale (3.2 parziale)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
 Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; DT.14 rimandato
 ```
 
-### Schema DB attuale: v8
+### Schema DB attuale: v10
 - v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
 - v2 → aggiunta `custom_paints`
 - v3 → aggiunta `project_paints` (palette del kit)
@@ -521,6 +521,8 @@ Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; D
 - v6 → aggiunta colonne `finish`, `coats` a `recipes`
 - v7 → aggiunta colonna `exclude_from_shopping` a `project_paints`
 - v8 → aggiunta tabella `project_logs` (devlog progetto)
+- v9 → aggiunta colonna `created_at` a `inventory_paints`
+- v10 → indici su `pins(photo_id)`, `project_photos(project_id)`, `project_logs(project_id)`, `project_paints(project_id)`
 
 ### Prossimi step immediati (ordine esecuzione)
 
