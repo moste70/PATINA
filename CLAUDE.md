@@ -23,6 +23,34 @@ cd app && flutter build apk --release
 > Se non esiste o è obsoleto, qualsiasi modifica al database non funzionerà finché
 > non si riesegue `build_runner build`.
 
+## Flusso di lavoro per sessione/branch — nessuna compilazione automatica
+
+> **REGOLA ASSOLUTA — la build APK non parte mai in automatico**
+> `flutter build apk` (debug o release) richiede sempre un'autorizzazione esplicita
+> dell'utente, data dopo aver letto il report del punto 2. Non lanciarla di propria
+> iniziativa — nemmeno come "verifica finale" del task. `flutter analyze` e
+> `flutter test` restano invece liberi da eseguire in qualunque momento: non sono
+> compilazione APK e servono proprio a preparare il report del punto 1-2.
+
+Per ogni task avviato in una sessione/branch, in quest'ordine:
+
+1. **Analisi di coerenza** — verificare che il codice scritto sia coerente con la
+   vision del progetto (`docs/vision.md`) e con la documentazione esistente
+   (`docs/features.md`, `docs/roadmap.md`, questo file), oltre a passare
+   `flutter analyze`/`flutter test`.
+2. **Report all'utente** — riassumere cosa è stato realizzato (file toccati,
+   comportamento nuovo o cambiato, eventuali limiti/rischi noti) e attendere una
+   risposta esplicita, prima di proseguire.
+3. **Autorizzazione alla build** — procedere con `flutter build apk` solo dopo che
+   l'utente conferma che quanto realizzato corrisponde a quanto richiesto.
+4. **Merge su `main`** — solo dopo che la build è stata testata (dall'utente o da CI).
+5. **Aggiornamento documentazione** — a build autorizzata e testata, aggiornare
+   `docs/roadmap.md` e `docs/features.md` con quanto realizzato (vedi "Regola:
+   aggiornamento documentazione" più sotto), nello stesso giro di lavoro del merge.
+
+Questo flusso (1→5) va ripetuto identico per **ogni nuova sessione o branch**, non
+solo per la prima richiesta.
+
 ## Struttura del progetto
 
 ```
