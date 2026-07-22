@@ -614,5 +614,13 @@
   "recipesUnlimitedFeatureName": "Unlimited recipes",
   "@recipesUnlimitedFeatureName": {},
   "tooltipClose": "Close",
-  "@tooltipClose": {}
+  "@tooltipClose": {},
+  "recipesColorInputHexMode": "HEX",
+  "@recipesColorInputHexMode": {},
+  "recipesColorInputPhotoMode": "Photo",
+  "@recipesColorInputPhotoMode": {},
+  "recipesSimilarLabel": "Most similar recipes",
+  "@recipesSimilarLabel": {},
+  "recipesColorNoMatch": "No sufficiently similar recipe found",
+  "@recipesColorNoMatch": {}
 }

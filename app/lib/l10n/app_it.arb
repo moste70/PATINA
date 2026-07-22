@@ -1023,5 +1023,13 @@
   "recipesUnlimitedFeatureName": "Ricette illimitate",
   "@recipesUnlimitedFeatureName": {},
   "tooltipClose": "Chiudi",
-  "@tooltipClose": {}
+  "@tooltipClose": {},
+  "recipesColorInputHexMode": "HEX",
+  "@recipesColorInputHexMode": {},
+  "recipesColorInputPhotoMode": "Foto",
+  "@recipesColorInputPhotoMode": {},
+  "recipesSimilarLabel": "Ricette più simili",
+  "@recipesSimilarLabel": {},
+  "recipesColorNoMatch": "Nessuna ricetta abbastanza simile trovata",
+  "@recipesColorNoMatch": {}
 }
