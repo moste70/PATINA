@@ -172,10 +172,13 @@ class SettingsScreen extends ConsumerWidget {
           duration: const Duration(seconds: 6),
         ),
       );
-    } catch (_) {
+    } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.settingsBackupImportError)),
+        SnackBar(
+          content: Text(kDebugMode ? 'Import error: $e' : l.settingsBackupImportError),
+          duration: const Duration(seconds: 10),
+        ),
       );
     }
   }

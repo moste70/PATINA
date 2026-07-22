@@ -110,10 +110,37 @@ class BackupService {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['zip'],
+      withData: false,
+      withReadStream: false,
     );
-    if (result == null || result.files.single.path == null) return false;
+    if (result == null) return false;
 
-    final zipPath = result.files.single.path!;
+    final pickedFile = result.files.single;
+
+    // Su Android il path può essere null se il file è un content:// URI.
+    // In quel caso copiamo i bytes in un file temporaneo.
+    String zipPath;
+    if (pickedFile.path != null) {
+      zipPath = pickedFile.path!;
+    } else if (pickedFile.bytes != null) {
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(p.join(tempDir.path, 'patina_import_tmp.zip'));
+      await tempFile.writeAsBytes(pickedFile.bytes!);
+      zipPath = tempFile.path;
+    } else {
+      // Riprova con bytes abilitati
+      final result2 = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+        withData: true,
+      );
+      if (result2 == null || result2.files.single.bytes == null) return false;
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(p.join(tempDir.path, 'patina_import_tmp.zip'));
+      await tempFile.writeAsBytes(result2.files.single.bytes!);
+      zipPath = tempFile.path;
+    }
+
     await compute(_extractAndReplace, zipPath);
     return true;
   }
