@@ -6,7 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../database/app_database.dart';
+import '../../l10n/app_localizations.dart';
 import '../../shared/utils/lab_mixer.dart';
+import '../../shared/widgets/gesture_hint_bar.dart';
 import '../../shared/widgets/hex_color_chip.dart';
 import 'paints_repository.dart';
 
@@ -128,9 +130,23 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
 
   // Layout size of the image widget inside the viewer
   final _imageKey = GlobalKey();
+  // Scene box (background + InteractiveViewer + circle overlay) — used to
+  // convert the image's global position into a Positioned-friendly local one.
+  final _sceneKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild whenever zoom/pan changes so the (overlay) circle position
+    // updates — same approach as PinViewerScreen.
+    _transformCtrl.addListener(_onTransformChanged);
+  }
+
+  void _onTransformChanged() => setState(() {});
 
   @override
   void dispose() {
+    _transformCtrl.removeListener(_onTransformChanged);
     _transformCtrl.dispose();
     super.dispose();
   }
@@ -161,6 +177,13 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       _catalogMatches = [];
       _error = null;
       _transformCtrl.value = Matrix4.identity();
+    });
+    // The circle overlay needs the Image's RenderBox to be laid out before it
+    // can position itself (see _toScenePos) — force one more frame once that
+    // first layout has happened, so the circle shows up immediately instead
+    // of only appearing after the user's first tap.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
     });
   }
 
@@ -203,11 +226,21 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     HapticFeedback.lightImpact();
     try {
       final color = await _samplePixel();
-      if (color == null) throw Exception('Impossibile leggere il pixel');
+      if (color == null) {
+        setState(() {
+          _error = AppL10n.of(context).photoPickerSampleError;
+          _sampling = false;
+        });
+        return;
+      }
       setState(() { _sampled = color; _sampling = false; });
       await _findMatches(color);
-    } catch (e) {
-      setState(() { _error = e.toString(); _sampling = false; });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = AppL10n.of(context).photoPickerSampleError;
+        _sampling = false;
+      });
     }
   }
 
@@ -291,56 +324,54 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     });
   }
 
-  // ── Drag handling ──────────────────────────────────────────────────────────
+  // ── Actions on a match ──────────────────────────────────────────────────────
 
-  // Convert a screen tap/drag position inside the Stack to normalised image coords.
-  Offset _toNormalisedImageCoords(Offset local, Size stackSize) {
-    // The image is fit inside the stack with BoxFit.contain
-    final imgAspect = _imgW / _imgH;
-    final stackAspect = stackSize.width / stackSize.height;
-    double imgLeft, imgTop, imgWidth, imgHeight;
-    if (imgAspect > stackAspect) {
-      imgWidth = stackSize.width;
-      imgHeight = stackSize.width / imgAspect;
-      imgLeft = 0;
-      imgTop = (stackSize.height - imgHeight) / 2;
-    } else {
-      imgHeight = stackSize.height;
-      imgWidth = stackSize.height * imgAspect;
-      imgTop = 0;
-      imgLeft = (stackSize.width - imgWidth) / 2;
-    }
-
-    // Invert the viewer transform
-    final m = _transformCtrl.value.clone();
-    m.invert();
-    final transformed = MatrixUtils.transformPoint(m, local);
-
-    final nx = ((transformed.dx - imgLeft) / imgWidth).clamp(0.0, 1.0);
-    final ny = ((transformed.dy - imgTop) / imgHeight).clamp(0.0, 1.0);
-    return Offset(nx, ny);
+  Future<void> _addToInventory(_ColorMatch match) async {
+    HapticFeedback.lightImpact();
+    await ref
+        .read(paintsRepositoryProvider)
+        .addInventoryPaint(brand: match.brand, code: match.code);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(AppL10n.of(context).paintAddedToInventory(match.code)),
+    ));
+    // Re-run matching so the paint moves from "catalog" to "inventory".
+    if (_sampled != null) await _findMatches(_sampled!);
   }
 
-  // Convert normalised image coords → screen position inside the current Stack.
-  Offset _toScreenCoords(Offset norm, Size stackSize) {
-    final imgAspect = _imgW / _imgH;
-    final stackAspect = stackSize.width / stackSize.height;
-    double imgLeft, imgTop, imgWidth, imgHeight;
-    if (imgAspect > stackAspect) {
-      imgWidth = stackSize.width;
-      imgHeight = stackSize.width / imgAspect;
-      imgLeft = 0;
-      imgTop = (stackSize.height - imgHeight) / 2;
-    } else {
-      imgHeight = stackSize.height;
-      imgWidth = stackSize.height * imgAspect;
-      imgTop = 0;
-      imgLeft = (stackSize.width - imgWidth) / 2;
-    }
+  // ── Tap handling ───────────────────────────────────────────────────────────
+  //
+  // Same technique as PinViewerScreen: the Image's own RenderBox (found via
+  // _imageKey) already reflects BoxFit.contain letterboxing *and* the current
+  // InteractiveViewer pan/zoom transform, because we never give it an
+  // explicit width+height — it self-sizes to the visible picture inside the
+  // bounded constraints from its parent. globalToLocal/localToGlobal on that
+  // box then do all the transform math for us, so tap-to-sample never needs
+  // to fight InteractiveViewer's own pan/zoom gesture recognizer for the
+  // pointer (they're siblings, not nested).
 
-    final imgX = imgLeft + norm.dx * imgWidth;
-    final imgY = imgTop + norm.dy * imgHeight;
-    return MatrixUtils.transformPoint(_transformCtrl.value, Offset(imgX, imgY));
+  // Global screen position → normalised [0,1]×[0,1] image coords.
+  Offset? _toImageCoords(Offset globalPos) {
+    final box = _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    final local = box.globalToLocal(globalPos);
+    final w = box.size.width;
+    final h = box.size.height;
+    if (w == 0 || h == 0) return null;
+    return Offset(
+      (local.dx / w).clamp(0.0, 1.0),
+      (local.dy / h).clamp(0.0, 1.0),
+    );
+  }
+
+  // Normalised image coords → position inside the scene Stack (for Positioned).
+  Offset? _toScenePos(Offset norm) {
+    final imgBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    final sceneBox = _sceneKey.currentContext?.findRenderObject() as RenderBox?;
+    if (imgBox == null || sceneBox == null || !imgBox.hasSize) return null;
+    final global = imgBox.localToGlobal(
+        Offset(norm.dx * imgBox.size.width, norm.dy * imgBox.size.height));
+    return sceneBox.globalToLocal(global);
   }
 
   // ── UI ────────────────────────────────────────────────────────────────────
@@ -349,6 +380,14 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    // Keep these autoDispose stream providers alive and loaded for the whole
+    // life of the sheet — _findMatches only `ref.read`s them, so without a
+    // `watch` here they may still be AsyncLoading (or already disposed) the
+    // first time the user taps "Rileva colore", silently yielding an empty
+    // inventory-matches list.
+    ref.watch(rawInventoryProvider);
+    ref.watch(_customIndexProvider);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.93,
@@ -375,7 +414,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
               children: [
                 Icon(Icons.colorize, color: scheme.primary, size: 22),
                 const SizedBox(width: 10),
-                Text('Rileva colore da foto',
+                Text(AppL10n.of(context).colorPickerPhoto,
                     style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               ],
             ),
@@ -391,6 +430,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   }
 
   Widget _buildSourcePicker(BuildContext context, ColorScheme scheme, TextTheme tt) {
+    final l = AppL10n.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -400,10 +440,10 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
             Icon(Icons.add_a_photo_outlined,
                 size: 64, color: scheme.onSurface.withOpacity(0.3)),
             const SizedBox(height: 20),
-            Text('Scegli una foto', style: tt.titleMedium),
+            Text(l.photoPickerChooseTitle, style: tt.titleMedium),
             const SizedBox(height: 8),
             Text(
-              'Posiziona il cerchio sul colore da rilevare.\nLe foto scattate non vengono salvate.',
+              l.photoPickerChooseHint,
               textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(color: scheme.onSurface.withOpacity(0.55)),
             ),
@@ -413,13 +453,13 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
               children: [
                 _SourceButton(
                   icon: Icons.camera_alt_outlined,
-                  label: 'Fotocamera',
+                  label: l.photoSourceCamera,
                   onTap: () => _pickPhoto(ImageSource.camera),
                 ),
                 const SizedBox(width: 16),
                 _SourceButton(
                   icon: Icons.photo_library_outlined,
-                  label: 'Galleria',
+                  label: l.photoSourceGallery,
                   onTap: () => _pickPhoto(ImageSource.gallery),
                 ),
               ],
@@ -436,58 +476,67 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     TextTheme tt,
     ScrollController scrollCtrl,
   ) {
+    final l = AppL10n.of(context);
     return ListView(
       controller: scrollCtrl,
       padding: EdgeInsets.zero,
       children: [
         // ── Photo viewer ──────────────────────────────────────────────────────
+        // Same architecture as PinViewerScreen: the tap handler and the
+        // circle overlay are *siblings* of InteractiveViewer (not nested
+        // inside its child), so pan/zoom is fully owned by
+        // InteractiveViewer's own gesture recognizer and never competes with
+        // tap-to-sample for the same pointer.
         SizedBox(
           height: 340,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final stackSize = Size(constraints.maxWidth, 340);
-              return GestureDetector(
-                onPanUpdate: (d) {
-                  final norm = _toNormalisedImageCoords(d.localPosition, stackSize);
-                  setState(() { _circle = norm; });
-                },
-                onTapUp: (d) {
-                  final norm = _toNormalisedImageCoords(d.localPosition, stackSize);
-                  setState(() { _circle = norm; });
-                },
-                child: Stack(
-                  children: [
-                    // Background
-                    Container(color: Colors.black),
-                    // Photo
-                    InteractiveViewer(
-                      transformationController: _transformCtrl,
-                      minScale: 0.5,
-                      maxScale: 6,
-                      onInteractionUpdate: (_) => setState(() {}),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapUp: (d) {
+              final norm = _toImageCoords(d.globalPosition);
+              if (norm == null) return;
+              setState(() { _circle = norm; });
+            },
+            child: Stack(
+              key: _sceneKey,
+              children: [
+                // Background
+                Container(color: Colors.black),
+                // Photo, pannable/zoomable
+                InteractiveViewer(
+                  transformationController: _transformCtrl,
+                  minScale: 0.5,
+                  maxScale: 6,
+                  child: SizedBox.expand(
+                    child: Center(
                       child: Image(
                         key: _imageKey,
                         image: _imageProvider!,
                         fit: BoxFit.contain,
-                        width: constraints.maxWidth,
-                        height: 340,
                       ),
                     ),
-                    // Circle indicator
-                    _buildCircleOverlay(stackSize, scheme),
-                    // Change photo button
-                    Positioned(
-                      top: 8, right: 8,
-                      child: _IconChip(
-                        icon: Icons.photo_library_outlined,
-                        label: 'Cambia',
-                        onTap: () => _pickPhoto(ImageSource.gallery),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
+                // Circle indicator — overlay, outside InteractiveViewer
+                _buildCircleOverlay(scheme),
+                // Change photo button
+                Positioned(
+                  top: 8, right: 8,
+                  child: _IconChip(
+                    icon: Icons.photo_library_outlined,
+                    label: l.photoPickerChangePhoto,
+                    onTap: () => _pickPhoto(ImageSource.gallery),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: GestureHintBar(
+            hintKey: 'hint_photo_color_picker_zoom',
+            message: l.photoPickerZoomHint,
           ),
         ),
 
@@ -520,11 +569,11 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
                     Text(
                       _sampled != null
                           ? '#${(_sampled!.value & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6, '0')}'
-                          : 'Tocca o trascina il cerchio',
+                          : l.photoPickerTapToSample,
                       style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      'poi premi "Rileva colore"',
+                      l.photoPickerThenDetect,
                       style: tt.bodySmall?.copyWith(
                           color: scheme.onSurface.withOpacity(0.55)),
                     ),
@@ -547,10 +596,10 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.colorize),
             label: Text(_sampling
-                ? 'Campionamento…'
+                ? l.photoPickerSampling
                 : _matching
-                    ? 'Ricerca corrispondenze…'
-                    : 'Rileva colore'),
+                    ? l.photoPickerSearching
+                    : l.photoPickerDetectButton),
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
           ),
         ),
@@ -580,23 +629,29 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
           if (_inventoryMatches.isNotEmpty) ...[
             _SectionLabel(
               icon: Icons.inventory_2_outlined,
-              label: 'Dal tuo inventario',
+              label: l.photoPickerFromInventory,
               scheme: scheme,
               tt: tt,
             ),
             const SizedBox(height: 8),
-            ..._inventoryMatches.map((m) => _MatchTile(match: m, scheme: scheme, tt: tt)),
+            ..._inventoryMatches
+                .map((m) => _MatchTile(match: m, scheme: scheme, tt: tt)),
           ],
           if (_catalogMatches.isNotEmpty) ...[
             const SizedBox(height: 12),
             _SectionLabel(
               icon: Icons.menu_book_outlined,
-              label: 'Dal catalogo',
+              label: l.photoPickerFromCatalog,
               scheme: scheme,
               tt: tt,
             ),
             const SizedBox(height: 8),
-            ..._catalogMatches.map((m) => _MatchTile(match: m, scheme: scheme, tt: tt)),
+            ..._catalogMatches.map((m) => _MatchTile(
+                  match: m,
+                  scheme: scheme,
+                  tt: tt,
+                  onAdd: () => _addToInventory(m),
+                )),
           ],
         ],
 
@@ -619,8 +674,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Nessuna corrispondenza trovata entro ΔE 18.\n'
-                      'Prova a spostare il cerchio su un\'area più uniforme.',
+                      l.photoPickerNoMatches,
                       style: tt.bodySmall,
                     ),
                   ),
@@ -635,8 +689,9 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     );
   }
 
-  Widget _buildCircleOverlay(Size stackSize, ColorScheme scheme) {
-    final screen = _toScreenCoords(_circle, stackSize);
+  Widget _buildCircleOverlay(ColorScheme scheme) {
+    final screen = _toScenePos(_circle);
+    if (screen == null) return const SizedBox.shrink();
     const r = 28.0;
     final sampled = _sampled;
 
@@ -767,10 +822,14 @@ class _MatchTile extends StatelessWidget {
   final _ColorMatch match;
   final ColorScheme scheme;
   final TextTheme tt;
+  // Present only for catalog matches — adds the paint to the inventory.
+  // Inventory matches (already owned) have no action, just a status icon.
+  final VoidCallback? onAdd;
   const _MatchTile({
     required this.match,
     required this.scheme,
     required this.tt,
+    this.onAdd,
   });
 
   Color get _deColor {
@@ -843,7 +902,31 @@ class _MatchTile extends StatelessWidget {
                         color: scheme.onSurface.withOpacity(0.45))),
               ],
             ),
+            const SizedBox(width: 4),
+            _buildAction(context),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAction(BuildContext context) {
+    final l = AppL10n.of(context);
+    if (match.fromInventory) {
+      return Tooltip(
+        message: l.paletteInStock,
+        child: Icon(Icons.check_circle,
+            color: const Color(0xFF2F8F57), size: 22),
+      );
+    }
+    return Tooltip(
+      message: l.paintAddToInventoryTooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onAdd,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(Icons.add_circle_outline, color: scheme.primary, size: 22),
         ),
       ),
     );

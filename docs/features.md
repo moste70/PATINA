@@ -829,7 +829,7 @@ Ogni codice riconosciuto riceve:
 | 3.1 | Sistema abbonamento | RevenueCat + Firebase Auth + Firestore + paywall UI definitivo |
 | 3.2 | Scan istruzioni AI Vision | Claude Vision sostituisce MLKit OCR — riconosce codici colore con contesto visivo |
 | 3.3 | Miscelazione AI avanzata | Suggerisce ricette partendo da colore target o foto |
-| 3.4 | ✅ Riconoscimento colore da foto | `PhotoColorPickerSheet`: viewer zoomabile + cerchio draggable + campionamento pixel + ΔE offline → top 2 inventario + top 2 catalogo con % precisione. Foto camera non salvata. |
+| 3.4 | ✅ Riconoscimento colore da foto | `PhotoColorPickerSheet`: viewer con pan/zoom reale via `InteractiveViewer` (cerchio overlay fuori dall'`InteractiveViewer`, coordinate risolte con `RenderBox.globalToLocal`/`localToGlobal` come in `PinViewerScreen` — niente più conflitto tra tap-per-campionare e gesture di pan/zoom) + campionamento pixel + ΔE offline → top 2 inventario + top 2 catalogo con % precisione, azione "Aggiungi all'inventario" sui suggerimenti da catalogo. Foto camera non salvata. |
 | 3.5 | Istruzioni AR | Overlay esagoni colorati su foto libretto B/N |
 | 3.6 | Sincronizzazione cloud | Backup automatico e sync multi-dispositivo |
 | 3.7 | Community ricette | Condivisione ricette tra utenti |
