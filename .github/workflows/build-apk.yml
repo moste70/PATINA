@@ -27,14 +27,6 @@ jobs:
       - name: Write google-services.json
         run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/android/app/google-services.json
 
-      - name: Print debug keystore SHA-1 (for Firebase Console)
-        run: |
-          keytool -list -v \
-            -keystore ~/.android/debug.keystore \
-            -alias androiddebugkey \
-            -storepass android -keypass android \
-            2>/dev/null | grep -E "SHA1|SHA-1"
-
       - name: Flutter pub get
         working-directory: app
         run: flutter pub get
@@ -57,6 +49,14 @@ jobs:
           fi
           echo "Found debug APK: $APK"
           echo "apk_path=$APK" >> $GITHUB_OUTPUT
+
+      - name: Print debug keystore SHA-1 (for Firebase Console)
+        run: |
+          keytool -list -v \
+            -keystore ~/.android/debug.keystore \
+            -alias androiddebugkey \
+            -storepass android -keypass android \
+            2>/dev/null | grep -E "SHA1|SHA-1" || echo "Keystore non trovato"
 
       - name: Upload debug APK
         if: steps.find_debug_apk.outputs.apk_path != ''
