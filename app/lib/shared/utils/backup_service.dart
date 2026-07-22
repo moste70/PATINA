@@ -137,18 +137,27 @@ class BackupService {
       }
     }
 
-    // Replace DB.
+    // Replace DB — copia nel path reale dove _dbFile() ha trovato il DB esistente.
+    // Se non esiste ancora (primo import su dispositivo nuovo) usa docsDir.
     final importedDb = File(p.join(extractDir.path, 'patina_db'));
     if (importedDb.existsSync()) {
-      final liveDb = File(p.join(docsDir.path, 'patina_db'));
+      File? liveDb;
+      try {
+        liveDb = await _dbFile();
+      } catch (_) {
+        // DB non trovato — primo avvio o dispositivo nuovo: usa docsDir
+        liveDb = File(p.join(docsDir.path, 'patina_db'));
+      }
+      liveDb.parent.createSync(recursive: true);
       importedDb.copySync(liveDb.path);
     }
 
-    // Copy photos.
+    // Copy photos into docsDir (stesso dir dove l'app salva le foto).
     final importedPhotosDir = Directory(p.join(extractDir.path, 'photos'));
     if (importedPhotosDir.existsSync()) {
       for (final f in importedPhotosDir.listSync().whereType<File>()) {
         final dest = File(p.join(docsDir.path, p.basename(f.path)));
+        dest.parent.createSync(recursive: true);
         f.copySync(dest.path);
       }
     }
