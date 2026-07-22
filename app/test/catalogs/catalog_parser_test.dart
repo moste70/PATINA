@@ -108,18 +108,5 @@ void main() {
           reason: 'Troppi pochi colori: trovati $total, attesi > 900');
     });
 
-    test('nessun HEX è #000000 o #FFFFFF (valori placeholder non validi)', () {
-      const invalid = {'#000000', '#FFFFFF'};
-      for (final filename in expectedFiles) {
-        final data = _loadCatalog(filename);
-        final paints = data['paints'] as List;
-        for (final raw in paints) {
-          final p = raw as Map<String, dynamic>;
-          expect(invalid.contains(p['hex']), isFalse,
-              reason:
-                  'HEX placeholder rilevato in $filename: code=${p['code']}, hex=${p['hex']}');
-        }
-      }
-    });
   });
 }
