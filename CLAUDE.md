@@ -47,11 +47,12 @@ Per ogni task avviato in una sessione/branch, in quest'ordine:
 5. **Aggiornamento documentazione** — a build autorizzata e testata, aggiornare
    `docs/roadmap.md` e `docs/features.md` con quanto realizzato (vedi "Regola:
    aggiornamento documentazione" più sotto), nello stesso giro di lavoro del merge.
-6. **Eliminazione branch** — subito dopo il merge, eliminare il branch di lavoro
-   sia in locale (`git branch -d <branch>`) sia su origin
-   (`git push origin --delete <branch>`). Se l'eliminazione su origin fallisce per
-   permessi (es. 403 dal proxy git di sessione), lasciare quello locale eliminato e
-   segnalarlo esplicitamente all'utente invece di riprovare o forzare.
+6. **Eliminazione branch** — subito dopo il merge, eliminare il branch di lavoro in
+   locale (`git branch -d <branch>`). L'eliminazione su origin (`git push origin
+   --delete <branch>`) è bloccata per policy in questo ambiente (403 dal proxy git
+   di sessione): **non tentarla** — eliminare solo in locale e ricordare
+   esplicitamente all'utente di cancellare il branch su GitHub manualmente lui
+   stesso.
 
 Questo flusso (1→6) va ripetuto identico per **ogni nuova sessione o branch**, non
 solo per la prima richiesta.
