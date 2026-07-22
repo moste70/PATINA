@@ -95,7 +95,7 @@
 | 1C.6 | Colore miscelato CIELAB calcolato automaticamente dagli ingredienti (chip esagonale in tempo reale) | ✅ Completato |
 | 1C.7 | Collegamento ricette ↔ progetti — tab "Ricette personali" nel picker palette kit; sezione progetti nella scheda ricetta | ✅ Completato |
 | 1C.8 | Schermata dettaglio ricetta con colore blended, ingredienti, ΔE match e lista progetti collegati | ✅ Completato |
-| 1C.9 | Cerca ricetta per colore target (HEX picker → ΔE ranking) | 🔄 Rimosso temporaneamente — UX da riprogettare (vedi DT.14) |
+| 1C.9 | Cerca ricetta per colore target (HEX picker → ΔE ranking) | ✅ Completato — riprogettato: input HEX o foto (cerchio trascinabile), ranking ΔE sulle ricette salvate, hint inline al primo uso (vedi DT.14) |
 
 ---
 
@@ -221,16 +221,16 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 | Task | Priorità | Descrizione | Stato |
 |------|----------|-------------|-------|
-| 1F.1 | 🔴 Alta | Crea `AdaptiveLayout` helper — `LayoutBuilder` con breakpoint `compact / medium / expanded`; espone un `WindowSizeClass` usabile ovunque tramite `InheritedWidget` o provider Riverpod | ⬜ Da fare |
-| 1F.2 | 🔴 Alta | **Navigazione adattiva** — sostituisce `BottomNavigationBar` con `NavigationRail` su Medium/Expanded; ShellRoute in Go Router rimane invariato, cambia solo il widget shell | ⬜ Da fare |
-| 1F.3 | 🔴 Alta | **Max-width constraint globale** — avvolge il contenuto delle schermate principali in un `Center` + `ConstrainedBox(maxWidth: 840)` per evitare layout spalmati su schermi da 12" | ⬜ Da fare |
+| 1F.1 | 🔴 Alta | Crea `AdaptiveLayout` helper — `LayoutBuilder` con breakpoint `compact / medium / expanded`; espone un `WindowSizeClass` usabile ovunque tramite `InheritedWidget` o provider Riverpod | ✅ Completato — `AdaptiveLayout`/`WindowSizeClass` in `shared/widgets/adaptive_layout.dart`, installato in `main.dart` |
+| 1F.2 | 🔴 Alta | **Navigazione adattiva** — sostituisce `BottomNavigationBar` con `NavigationRail` su Medium/Expanded; ShellRoute in Go Router rimane invariato, cambia solo il widget shell | ✅ Completato — `AppShell` sceglie `NavigationBar`/`NavigationRail` in base a `WindowSizeClass` |
+| 1F.3 | 🔴 Alta | **Max-width constraint globale** — avvolge il contenuto delle schermate principali in un `Center` + `ConstrainedBox(maxWidth: 840)` per evitare layout spalmati su schermi da 12" | ✅ Completato — helper `AdaptiveMaxWidth` riusabile, applicato a `ProjectsScreen` come esempio |
 
 ### Layout adattivi per feature
 
 | Task | Priorità | Descrizione | Stato |
 |------|----------|-------------|-------|
 | 1F.4 | 🟡 Media | **Archivio progetti — pannello maestro-dettaglio** — su Expanded, lista progetto a sinistra (330 dp) e scheda dettaglio a destra nella stessa schermata; Go Router aggiorna l'URL normalmente | ⬜ Da fare |
-| 1F.5 | 🟡 Media | **Griglia archivio adattiva** — `crossAxisCount` dinamico: 2 su Compact, 3 su Medium, 4 su Expanded | ⬜ Da fare |
+| 1F.5 | 🟡 Media | **Griglia archivio adattiva** — `crossAxisCount` dinamico: 2 su Compact, 3 su Medium, 4 su Expanded | ✅ Completato — Compact invariato (ListView), GridView 2 colonne su Medium, 3 su Expanded |
 | 1F.6 | 🟡 Media | **Wizard nuovo progetto** — su Expanded, layout a due colonne (form a sinistra, anteprima/info a destra) invece di PageView lineare | ⬜ Da fare |
 | 1F.7 | 🟡 Media | **Inventario vernici** (Fase 1B) — griglia esagonale con `crossAxisCount` adattivo; sidebar filtri permanente su Expanded | ⬜ Da fare |
 | 1F.8 | 🟢 Bassa | **Pin su foto** (Fase 1D) — pannello pin-list a fianco del viewer foto su Expanded | ⬜ Da fare |
@@ -264,7 +264,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 |------|----------|-------------|-------|
 | 2.1 | 🔴 Alta | Setup `flutter_localizations` + `intl` — struttura `.arb` files, delegate in MaterialApp | ✅ Completato |
 | 2.2 | 🔴 Alta | Chiavi IT/EN per azioni comuni, validazione, onboarding, categorie, stati, galleria | ✅ Completato |
-| 2.3 | 🔴 Alta | Migrazione stringhe hardcoded esistenti → `AppL10n.of(context).*` (feature per feature) | ⬜ Da fare |
+| 2.3 | 🔴 Alta | Migrazione stringhe hardcoded esistenti → `AppL10n.of(context).*` (feature per feature) | ✅ Completato — login/account/logout, miscelazione AI, paywall, date/tempo relativo scheda progetto, badge e tooltip residui |
 | 2.4 | 🟡 Media | Traduzione spagnolo (ES) — community Warhammer/miniature painting hispanofona molto attiva | ⬜ Da fare |
 | 2.5 | 🟡 Media | Traduzione francese (FR) — tradizione modellismo statico forte in Francia | ⬜ Da fare |
 | 2.6 | 🟢 Bassa | Store listing localizzato per ogni lingua (titolo, descrizione, screenshot) | ⬜ Da fare |
@@ -492,7 +492,7 @@ export const revenueCatWebhook = onRequest(async (req, res) => {
 | DT.11 | 🟢 Bassa | OCR istruzioni kit — MLKit offline riconosce il testo ma fallisce su font piccoli, layout multi-colonna e codici parzialmente sovrapposti a icone (es. Tamiya). La funzione è utile come aiuto alla compilazione ma non affidabile al 100%. Limite strutturale dell'OCR testuale; da risolvere in Fase 3 con **AI Vision** (vedi milestone 3.8). Nessun intervento necessario ora. | Rimandato a Fase 3 — milestone 3.8 | ⏳ Rimandato |
 | DT.12 | 🟢 Bassa | `HexColorChip` — bordo fisso `scheme.outline` non visibile sui colori molto scuri (nero, navy) su sfondo scuro, né sui colori molto chiari (bianco, avorio) su sfondo chiaro | `HexColorChip.build()`: calcola luminanza relativa WCAG del colore; se luminanza > 0.18 applica bordo `nero/25%`, altrimenti `bianco/35%`. Applicato globalmente a tutte le schermate (palette, shopping, scan, inventario, ricette). | ✅ Risolto |
 | DT.13 | 🟡 Media | Selector quantità inventario — 4 bottoni GestureDetector+AnimatedContainer sostituiti con `DropdownButtonFormField` nel detail sheet (`paints_screen.dart`). | ✅ Risolto |
-| DT.14 | 🟡 Media | "Cerca ricetta per colore target" (1C.9) — funzionalità rimossa temporaneamente perché poco comprensibile (UX confusa). Da riprogettare: entry point più chiaro, tutorial inline, possibilmente fotocamera come input alternativo al HEX picker. | Da riprogettare in fase futura |
+| DT.14 | 🟡 Media | "Cerca ricetta per colore target" (1C.9) — funzionalità rimossa temporaneamente perché poco comprensibile (UX confusa). Da riprogettare: entry point più chiaro, tutorial inline, possibilmente fotocamera come input alternativo al HEX picker. | ✅ Risolto — nuovo sheet `FindRecipeByColorSheet`: icona dedicata in AppBar Ricette, hint inline al primo uso (`GestureHintBar`), input HEX o foto con cerchio trascinabile (esteso anche a `PhotoColorPickerSheet` per coerenza), ranking ΔE sulle ricette salvate |
 
 ---
 
@@ -502,14 +502,14 @@ export const revenueCatWebhook = onRequest(async (req, res) => {
 Fase 0       ██████████  100%  — completata (incl. icone nav custom)
 Fase 1A      ██████████  100%  — completa: wizard, scheda dettaglio, galleria, ricerca, modifica, eliminazione, stato pausa, devlog
 Fase 1B      ██████████  100%  — completa
-Fase 1C      ██████████  100%  — completa
+Fase 1C      ██████████  100%  — completa, incl. 1C.9 (cerca ricetta per colore) riprogettata
 Fase 1D      █████████░   86%  — 1D.1-1D.7 completati (UX redesign con PaintPickerSheet e tooltip overlay); manca 1D.6 (toggle visibilità)
 Fase 1E      ████████░░   80%  — backup ZIP, empty state, performance, hint gesti completati; mancano store listing e beta release
-Fase 1F      ░░░░░░░░░░    0%  — Supporto Tablet (12 task pianificati)
-Fase 2       ████░░░░░░   40%  — i18n IT+EN completo per tutte le feature implementate; manca migrazione stringhe legacy + ES/FR
+Fase 1F      ███░░░░░░░   33%  — fondamenta complete (AdaptiveLayout, NavigationRail, max-width) + griglia archivio adattiva; mancano i layout per le altre feature e i polish (1F.4, 1F.6-1F.12)
+Fase 2       ██████░░░░   60%  — i18n IT+EN completo incl. migrazione stringhe legacy residue (2.3); manca ES/FR
 Fase 3       ████░░░░░░   38%  — Firebase Auth + Google Sign-In (3.1 parziale); scan istruzioni AI Vision Pro (3.2 ✅); miscelazione AI (3.3 ✅); rileva colore da foto offline (3.4 ✅)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; DT.14 rimandato
+Debito Tecnico ██████████ 100% — DT.1÷14 tutti risolti
 ```
 
 ### Schema DB attuale: v10
@@ -526,9 +526,9 @@ Debito Tecnico ████████░░  80% — DT.1÷10/12/13 risolti; D
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟢 `2.3` — Migrazione stringhe hardcoded residue → `AppL10n`
-2. 🟢 `1F` — Supporto Tablet (breakpoint + NavigationRail)
-3. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
+1. 🟡 `1F.4/1F.6-1F.8` — Layout adattivi per feature (archivio maestro-dettaglio, wizard, inventario, pin) — fondamenta già pronte
+2. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
+3. 🟢 `2.4/2.5` — Traduzione ES/FR
 
 ---
 

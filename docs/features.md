@@ -459,6 +459,14 @@ Le ricette vengono collegate ai progetti tramite la palette del kit. Nel bottom 
 - La relazione è bidirezionale e in tempo reale (Drift stream).
 - Implementazione: colonna `brand='ricetta'` + `code=recipeId` nella tabella `project_paints` — nessuna tabella di join separata.
 
+**Cerca ricetta per colore target:**
+
+Icona dedicata nell'AppBar di Ricette (accanto a "rileva colore da foto" e "miscelazione AI"), gratuita e senza limiti Free/Pro. Apre uno sheet con due modalità di input:
+- **HEX manuale** — campo testo con swatch di anteprima live e validazione formato
+- **Foto** — scatta o scegli un'immagine, posiziona un cerchio sull'area del colore (tap per saltare direttamente al punto, oppure trascina il cerchio per un posizionamento fine), poi campiona il pixel
+
+In entrambi i casi il colore scelto viene confrontato in tempo reale con tutte le ricette salvate (colore miscelato in CIELAB, distanza Delta-E), mostrando le più simili ordinate per ΔE con etichetta qualitativa (Ottimo/Buono/Approssimato/Lontano); il tap su un risultato apre la scheda ricetta. Hint inline dismissibile al primo utilizzo. Calcolo interamente offline, in Dart puro — nessuna chiamata AI.
+
 #### 2.4 Assistenza alla Miscelazione
 
 **Algoritmo interno Fase 1 (gratuito):**
