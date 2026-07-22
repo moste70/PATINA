@@ -25,12 +25,22 @@ cd app && flutter build apk --release
 
 ## Flusso di lavoro per sessione/branch — nessuna compilazione automatica
 
-> **REGOLA ASSOLUTA — la build APK non parte mai in automatico**
-> `flutter build apk` (debug o release) richiede sempre un'autorizzazione esplicita
-> dell'utente, data dopo aver letto il report del punto 2. Non lanciarla di propria
-> iniziativa — nemmeno come "verifica finale" del task. `flutter analyze` e
-> `flutter test` restano invece liberi da eseguire in qualunque momento: non sono
+> **REGOLA ASSOLUTA — la build APK locale non parte mai di propria iniziativa**
+> `flutter build apk` (debug o release) in locale richiede sempre un'autorizzazione
+> esplicita dell'utente, data dopo aver letto il report del punto 2. Non lanciarla
+> di propria iniziativa — nemmeno come "verifica finale" del task. `flutter analyze`
+> e `flutter test` restano invece liberi da eseguire in qualunque momento: non sono
 > compilazione APK e servono proprio a preparare il report del punto 1-2.
+>
+> **Nota — build via CI già automatica al push:** questa regola riguarda
+> l'esecuzione locale di `flutter build apk`, che qui non è comunque eseguibile
+> (rete di sessione blocca l'Android SDK/Maven di Google). La GitHub Action
+> `build-apk.yml` invece si attiva **automaticamente** ad ogni push su un branch
+> `claude/**` o su `main` (debug + release, upload come artifact) — è già così,
+> non è qualcosa che Claude Code "lancia". Un `git push` su questi branch
+> **comporta già** la build APK via CI: non serve una richiesta separata tipo
+> "genera apk" per ogni commit — un semplice "committa" è sufficiente e implica
+> anche quella.
 
 Per ogni task avviato in una sessione/branch, in quest'ordine:
 
@@ -41,8 +51,9 @@ Per ogni task avviato in una sessione/branch, in quest'ordine:
 2. **Report all'utente** — riassumere cosa è stato realizzato (file toccati,
    comportamento nuovo o cambiato, eventuali limiti/rischi noti) e attendere una
    risposta esplicita, prima di proseguire.
-3. **Autorizzazione alla build** — procedere con `flutter build apk` solo dopo che
-   l'utente conferma che quanto realizzato corrisponde a quanto richiesto.
+3. **Autorizzazione alla build** — il commit/push su un branch `claude/**` attiva
+   già da solo la build APK via CI (vedi nota sopra): non serve chiedere "genera
+   apk" a parte, un "committa" dell'utente autorizza entrambe le cose insieme.
 4. **Merge su `main`** — solo dopo che la build è stata testata (dall'utente o da CI).
 5. **Aggiornamento documentazione** — a build autorizzata e testata, aggiornare
    `docs/roadmap.md` e `docs/features.md` con quanto realizzato (vedi "Regola:
