@@ -264,13 +264,20 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
             child: Row(
               children: [
                 Icon(Icons.search, color: scheme.primary, size: 22),
                 const SizedBox(width: 10),
-                Text(l.recipesFindByColorTitle,
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Expanded(
+                  child: Text(l.recipesFindByColorTitle,
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: l.tooltipClose,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ],
             ),
           ),
