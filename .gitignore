@@ -21,3 +21,9 @@ app/android/*.jks
 # Dart
 app/.packages
 app/.pub-cache/
+
+# Codegen (rigenerato da build_runner / flutter gen-l10n — vedi CLAUDE.md)
+app/lib/database/*.g.dart
+app/lib/l10n/app_localizations.dart
+app/lib/l10n/app_localizations_*.dart
+app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
