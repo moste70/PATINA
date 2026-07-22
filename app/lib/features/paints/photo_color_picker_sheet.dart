@@ -194,30 +194,20 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     final img = _uiImage;
     if (img == null) return null;
 
-    final px = (_circle.dx * _imgW).clamp(0, _imgW - 1).round();
-    final py = (_circle.dy * _imgH).clamp(0, _imgH - 1).round();
+    final x = (_circle.dx * _imgW).clamp(0, _imgW - 1).round();
+    final y = (_circle.dy * _imgH).clamp(0, _imgH - 1).round();
 
-    // Average a 5×5 patch to reduce noise
-    final region = 5;
-    int r = 0, g = 0, b = 0, count = 0;
-    for (var dy = -region ~/ 2; dy <= region ~/ 2; dy++) {
-      for (var dx = -region ~/ 2; dx <= region ~/ 2; dx++) {
-        final x = (px + dx).clamp(0, _imgW - 1);
-        final y = (py + dy).clamp(0, _imgH - 1);
-        final byteData = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
-        if (byteData == null) continue;
-        final offset = (y * _imgW + x) * 4;
-        if (offset + 3 >= byteData.lengthInBytes) continue;
-        r += byteData.getUint8(offset);
-        g += byteData.getUint8(offset + 1);
-        b += byteData.getUint8(offset + 2);
-        count++;
-        break; // toByteData is expensive — sample just the centre pixel
-      }
-      break;
-    }
-    if (count == 0) return null;
-    return Color.fromARGB(255, r ~/ count, g ~/ count, b ~/ count);
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) return null;
+    final offset = (y * _imgW + x) * 4;
+    if (offset + 3 >= byteData.lengthInBytes) return null;
+
+    return Color.fromARGB(
+      255,
+      byteData.getUint8(offset),
+      byteData.getUint8(offset + 1),
+      byteData.getUint8(offset + 2),
+    );
   }
 
   Future<void> _onSample() async {
