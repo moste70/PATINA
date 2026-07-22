@@ -13,6 +13,7 @@ import 'package:patina/l10n/app_localizations.dart';
 import 'features/settings/settings_screen.dart' show localePrefProvider;
 import 'shared/services/firebase_options.dart';
 import 'shared/services/revenuecat_service.dart';
+import 'shared/widgets/adaptive_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +62,7 @@ class PatinaApp extends ConsumerWidget {
       darkTheme: PatinaTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
+      builder: (context, child) => AdaptiveLayout(child: child!),
       locale: locale,
       localizationsDelegates: const [
         AppL10n.delegate,

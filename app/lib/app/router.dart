@@ -12,6 +12,7 @@ import '../features/paints/paints_screen.dart';
 import '../features/recipes/recipes_screen.dart';
 import '../features/recipes/recipe_detail_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../shared/widgets/adaptive_layout.dart';
 
 // Provider che espone se l'onboarding è già stato completato.
 // Caricato una sola volta in main.dart e passato come override.
@@ -103,40 +104,66 @@ class AppShell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final location = GoRouterState.of(context).uri.path;
     final l = AppL10n.of(context);
+    final sizeClass = AdaptiveLayout.of(context);
+    final selectedIndex = _indexFromPath(location);
 
+    final destinations = [
+      _NavEntry(icon: (c) => ProjectsIcon(color: c), label: l.navProjects),
+      _NavEntry(icon: (c) => PaintsIcon(color: c), label: l.navPaints),
+      _NavEntry(icon: (c) => RecipesIcon(color: c), label: l.navRecipes),
+      _NavEntry(icon: (c) => SettingsIcon(color: c), label: l.navSettings),
+    ];
+
+    // Compact: BottomNavigationBar (NavigationBar M3) attuale.
+    if (sizeClass == WindowSizeClass.compact) {
+      return Scaffold(
+        backgroundColor: scheme.surface,
+        body: child,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: scheme.outline, width: 1)),
+          ),
+          child: NavigationBar(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (index) => _navigateTo(context, index),
+            destinations: [
+              for (final d in destinations)
+                NavigationDestination(
+                  icon: _NavIcon(builder: d.icon),
+                  selectedIcon: _NavIcon(builder: d.icon),
+                  label: d.label,
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Medium/Expanded: NavigationRail laterale al posto della bottom bar.
+    // Label estese solo su Expanded (rail non extended su Medium).
+    final extended = sizeClass == WindowSizeClass.expanded;
     return Scaffold(
       backgroundColor: scheme.surface,
-      body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: scheme.outline, width: 1)),
-        ),
-        child: NavigationBar(
-          selectedIndex: _indexFromPath(location),
-          onDestinationSelected: (index) => _navigateTo(context, index),
-          destinations: [
-            NavigationDestination(
-              icon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
-              selectedIcon: _NavIcon(builder: (c) => ProjectsIcon(color: c)),
-              label: l.navProjects,
-            ),
-            NavigationDestination(
-              icon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
-              selectedIcon: _NavIcon(builder: (c) => PaintsIcon(color: c)),
-              label: l.navPaints,
-            ),
-            NavigationDestination(
-              icon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
-              selectedIcon: _NavIcon(builder: (c) => RecipesIcon(color: c)),
-              label: l.navRecipes,
-            ),
-            NavigationDestination(
-              icon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
-              selectedIcon: _NavIcon(builder: (c) => SettingsIcon(color: c)),
-              label: l.navSettings,
-            ),
-          ],
-        ),
+      body: Row(
+        children: [
+          NavigationRail(
+            backgroundColor: scheme.surface,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (index) => _navigateTo(context, index),
+            extended: extended,
+            labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
+            destinations: [
+              for (final d in destinations)
+                NavigationRailDestination(
+                  icon: _NavIcon(builder: d.icon),
+                  selectedIcon: _NavIcon(builder: d.icon),
+                  label: Text(d.label),
+                ),
+            ],
+          ),
+          VerticalDivider(width: 1, color: scheme.outline),
+          Expanded(child: child),
+        ],
       ),
     );
   }
@@ -156,6 +183,12 @@ class AppShell extends StatelessWidget {
       case 3: context.go('/settings');
     }
   }
+}
+
+class _NavEntry {
+  final Widget Function(Color color) icon;
+  final String label;
+  const _NavEntry({required this.icon, required this.label});
 }
 
 // Reads icon color from the surrounding IconTheme (set by NavigationBar).

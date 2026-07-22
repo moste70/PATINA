@@ -10,6 +10,7 @@ import '../../shared/constants/app_constants.dart';
 import '../../shared/pro/pro_gate.dart';
 import '../../shared/pro/paywall_sheet.dart';
 import '../../shared/widgets/gesture_hint_bar.dart';
+import '../../shared/widgets/adaptive_layout.dart';
 import 'create_project/create_project_wizard.dart';
 import 'project_repository.dart';
 
@@ -79,29 +80,28 @@ class ProjectsScreen extends ConsumerWidget {
                 .toList();
           }
 
-          return Column(
-            children: [
-              _FilterBar(current: filter),
-              GestureHintBar(
-                hintKey: 'hint_projects',
-                message: l.hintProjectsSwipe,
-              ),
-              Expanded(
-                child: filtered.isEmpty
-                    ? _EmptyFilter(
-                        query: query,
-                        label: filter != null
-                            ? AppL10n.of(context).projectStatusLabel(filter)
-                            : null,
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, i) =>
-                            _ProjectCard(project: filtered[i]),
-                      ),
-              ),
-            ],
+          final sizeClass = AdaptiveLayout.of(context);
+
+          return AdaptiveMaxWidth(
+            child: Column(
+              children: [
+                _FilterBar(current: filter),
+                GestureHintBar(
+                  hintKey: 'hint_projects',
+                  message: l.hintProjectsSwipe,
+                ),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? _EmptyFilter(
+                          query: query,
+                          label: filter != null
+                              ? AppL10n.of(context).projectStatusLabel(filter)
+                              : null,
+                        )
+                      : _ProjectList(projects: filtered, sizeClass: sizeClass),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -208,6 +208,37 @@ class _SearchFieldState extends State<_SearchField> {
       ),
       textInputAction: TextInputAction.search,
       onChanged: widget.onChanged,
+    );
+  }
+}
+
+// ── Lista/griglia progetti (1F.5 — adattiva per WindowSizeClass) ──────────────
+
+class _ProjectList extends StatelessWidget {
+  final List<Project> projects;
+  final WindowSizeClass sizeClass;
+  const _ProjectList({required this.projects, required this.sizeClass});
+
+  @override
+  Widget build(BuildContext context) {
+    if (sizeClass == WindowSizeClass.compact) {
+      return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+        itemCount: projects.length,
+        itemBuilder: (context, i) => _ProjectCard(project: projects[i]),
+      );
+    }
+
+    final crossAxisCount = sizeClass == WindowSizeClass.medium ? 2 : 3;
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 90, // altezza fissa _ProjectCard (80) + margin (10)
+      ),
+      itemCount: projects.length,
+      itemBuilder: (context, i) => _ProjectCard(project: projects[i]),
     );
   }
 }
