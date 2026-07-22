@@ -38,8 +38,9 @@ class _RecipeColorMatch {
 final _recipesProvider = StreamProvider.autoDispose<List<Recipe>>(
     (ref) => ref.watch(recipeRepositoryProvider).watchAllRecipes());
 
-final _allIngredientsProvider = StreamProvider.autoDispose<List<RecipeIngredient>>(
-    (ref) => ref.watch(recipeRepositoryProvider).watchAllIngredients());
+final _allIngredientsProvider =
+    StreamProvider.autoDispose<List<RecipeIngredient>>(
+        (ref) => ref.watch(recipeRepositoryProvider).watchAllIngredients());
 
 class FindRecipeByColorSheet extends ConsumerStatefulWidget {
   const FindRecipeByColorSheet({super.key});
@@ -213,7 +214,8 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
           ings.map((i) => (hex: i.hex!, weight: i.percentage)).toList());
       final de = deltaE(target, blended);
       if (de > _kMaxDeltaE) continue;
-      matches.add(_RecipeColorMatch(recipe: recipe, blended: blended, deltaE: de));
+      matches
+          .add(_RecipeColorMatch(recipe: recipe, blended: blended, deltaE: de));
     }
     matches.sort((a, b) => a.deltaE.compareTo(b.deltaE));
     setState(() {
@@ -256,7 +258,8 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: scheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
@@ -271,7 +274,8 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(l.recipesFindByColorTitle,
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      style: tt.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600)),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -308,6 +312,8 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
             ),
           ),
           const SizedBox(height: 12),
+          if (_mode == _InputMode.photo && _xfile != null)
+            _buildPhotoBox(scheme),
           Expanded(
             child: ListView(
               controller: scrollCtrl,
@@ -332,9 +338,12 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: 48, height: 48,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: _hexValid ? hexToColor(_hexPreview) : scheme.surfaceContainerHigh,
+              color: _hexValid
+                  ? hexToColor(_hexPreview)
+                  : scheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: scheme.outline.withOpacity(0.4)),
             ),
@@ -386,7 +395,8 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
               Text(
                 l.photoPickerChooseHint,
                 textAlign: TextAlign.center,
-                style: tt.bodySmall?.copyWith(color: scheme.onSurface.withOpacity(0.55)),
+                style: tt.bodySmall
+                    ?.copyWith(color: scheme.onSurface.withOpacity(0.55)),
               ),
               const SizedBox(height: 20),
               Row(
@@ -411,71 +421,90 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
       ];
     }
 
+    // Il box foto vero e proprio (InteractiveViewer) vive fuori da qui, come
+    // fratello non-scrollabile del ListView — vedi _buildPhotoBox() e la nota
+    // lì sopra sul perché non deve mai stare dentro una ListView.
     return [
-      SizedBox(
-        height: 280,
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapUp: (d) {
-            final norm = _toImageCoords(d.globalPosition);
-            if (norm == null) return;
-            setState(() => _circle = norm);
-          },
-          child: Stack(
-            key: _sceneKey,
-            children: [
-              Container(color: Colors.black),
-              InteractiveViewer(
-                transformationController: _transformCtrl,
-                minScale: 0.5,
-                maxScale: 6,
-                child: SizedBox.expand(
-                  child: Center(
-                    child: Image(
-                      key: _imageKey,
-                      image: _imageProvider!,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              _buildCircleOverlay(scheme),
-              Positioned(
-                top: 8, right: 8,
-                child: _PhotoChangeChip(
-                  label: l.photoPickerChangePhoto,
-                  onTap: () => _pickPhoto(ImageSource.gallery),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
       const SizedBox(height: 8),
       Text(l.photoPickerZoomHint,
-          style: tt.bodySmall?.copyWith(color: scheme.onSurface.withOpacity(0.55))),
+          style: tt.bodySmall
+              ?.copyWith(color: scheme.onSurface.withOpacity(0.55))),
       const SizedBox(height: 16),
       FilledButton.icon(
         onPressed: _sampling ? null : _onSample,
         icon: _sampling
             ? const SizedBox(
-                width: 18, height: 18,
+                width: 18,
+                height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2))
             : const Icon(Icons.colorize),
-        label: Text(_sampling ? l.photoPickerSampling : l.photoPickerDetectButton),
+        label:
+            Text(_sampling ? l.photoPickerSampling : l.photoPickerDetectButton),
         style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
       ),
     ];
   }
 
+  // Il visualizzatore foto NON deve mai stare dentro una ListView: un
+  // InteractiveViewer annidato in uno Scrollable compete con lo scroll/resize
+  // del bottom sheet per lo stesso gesto di trascinamento, e lo Scrollable
+  // tende a vincere l'arena — pan/pinch sulla foto finiva per scorrere/
+  // ridimensionare il sheet invece di spostare/zoomare l'immagine. Tenendolo
+  // come fratello non-scrollabile del ListView (invece che suo figlio),
+  // InteractiveViewer non ha più nessuno Scrollable con cui competere in quel
+  // punto dello schermo.
+  Widget _buildPhotoBox(ColorScheme scheme) {
+    final l = AppL10n.of(context);
+    return SizedBox(
+      height: 280,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTapUp: (d) {
+          final norm = _toImageCoords(d.globalPosition);
+          if (norm == null) return;
+          setState(() => _circle = norm);
+        },
+        child: Stack(
+          key: _sceneKey,
+          children: [
+            Container(color: Colors.black),
+            InteractiveViewer(
+              transformationController: _transformCtrl,
+              minScale: 0.5,
+              maxScale: 6,
+              child: SizedBox.expand(
+                child: Center(
+                  child: Image(
+                    key: _imageKey,
+                    image: _imageProvider!,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            _buildCircleOverlay(scheme),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: _PhotoChangeChip(
+                label: l.photoPickerChangePhoto,
+                onTap: () => _pickPhoto(ImageSource.gallery),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCircleOverlay(ColorScheme scheme) {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
-    const r = 26.0;      // raggio visivo dell'anello
-    const hitR = 40.0;   // raggio dell'area trascinabile — più grande dell'anello
-                         // visivo per rendere il trascinamento affidabile su schermo
-                         // touch (con hit area == anello visivo il dito manca spesso
-                         // il bersaglio e finisce sul pan/zoom della foto sottostante)
+    const r = 26.0; // raggio visivo dell'anello
+    const hitR = 40.0; // raggio dell'area trascinabile — più grande dell'anello
+    // visivo per rendere il trascinamento affidabile su schermo
+    // touch (con hit area == anello visivo il dito manca spesso
+    // il bersaglio e finisce sul pan/zoom della foto sottostante)
     return Positioned(
       left: screen.dx - hitR,
       top: screen.dy - hitR,
@@ -499,13 +528,17 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2.5),
-                boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black45, blurRadius: 4)
+                ],
                 color: _sampled?.withOpacity(0.35),
               ),
               child: Center(
                 child: Container(
-                  width: 4, height: 4,
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                  width: 4,
+                  height: 4,
+                  decoration: const BoxDecoration(
+                      shape: BoxShape.circle, color: Colors.white),
                 ),
               ),
             ),
@@ -575,9 +608,11 @@ class _PhotoChangeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.photo_library_outlined, size: 14, color: Colors.white),
+            const Icon(Icons.photo_library_outlined,
+                size: 14, color: Colors.white),
             const SizedBox(width: 4),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+            Text(label,
+                style: const TextStyle(color: Colors.white, fontSize: 12)),
           ],
         ),
       ),
@@ -616,18 +651,21 @@ class _RecipeMatchTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(match.recipe.name,
-                        style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                        style: tt.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     Text(
-                      l.recipeDeltaMatchLabel(
-                          l.deltaELabel(match.deltaE), match.deltaE.toStringAsFixed(1)),
-                      style: tt.bodySmall?.copyWith(color: scheme.onSurface.withOpacity(0.6)),
+                      l.recipeDeltaMatchLabel(l.deltaELabel(match.deltaE),
+                          match.deltaE.toStringAsFixed(1)),
+                      style: tt.bodySmall
+                          ?.copyWith(color: scheme.onSurface.withOpacity(0.6)),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurface.withOpacity(0.3)),
+              Icon(Icons.chevron_right,
+                  color: scheme.onSurface.withOpacity(0.3)),
             ],
           ),
         ),
