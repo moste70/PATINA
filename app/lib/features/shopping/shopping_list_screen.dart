@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:share_plus/share_plus.dart' show Share;
+import 'package:share_plus/share_plus.dart';
 import '../projects/project_repository.dart';
 import '../../database/app_database.dart';
 import '../../l10n/app_localizations.dart';
@@ -249,7 +249,7 @@ class ShoppingListScreen extends ConsumerWidget {
       buf.writeln(l.shoppingShareEmpty);
     }
 
-    Share.share(buf.toString());
+    SharePlus.instance.share(ShareParams(text: buf.toString()));
   }
 
   void _showAddItemSheet(BuildContext context, WidgetRef ref) {

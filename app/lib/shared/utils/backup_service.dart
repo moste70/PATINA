@@ -71,9 +71,11 @@ class BackupService {
 
     encoder.close();
 
-    await Share.shareXFiles(
-      [XFile(zipPath)],
-      subject: 'Patina backup',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(zipPath)],
+        subject: 'Patina backup',
+      ),
     );
   }
 
