@@ -440,7 +440,10 @@ class _ProjectDetailContentState
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
               child: Text(
-                'Creato il ${_formatDate(p.createdAt)}  ·  Modificato ${_timeAgo(p.updatedAt)}',
+                AppL10n.of(context).projectCreatedModifiedInfo(
+                  _formatDate(AppL10n.of(context), p.createdAt),
+                  _timeAgo(AppL10n.of(context), p.updatedAt),
+                ),
                 style: tt.bodySmall?.copyWith(
                   color: scheme.onSurface.withOpacity(0.35),
                 ),
@@ -452,36 +455,36 @@ class _ProjectDetailContentState
     );
   }
 
-  String _formatDate(int ts) {
+  String _formatDate(AppL10n l, int ts) {
     final d = DateTime.fromMillisecondsSinceEpoch(ts);
     return '${d.day.toString().padLeft(2, '0')} '
-        '${_monthName(d.month)} ${d.year}';
+        '${_monthName(l, d.month)} ${d.year}';
   }
 
-  String _timeAgo(int ts) {
+  String _timeAgo(AppL10n l, int ts) {
     final diff = DateTime.now()
         .difference(DateTime.fromMillisecondsSinceEpoch(ts));
-    if (diff.inDays > 30) return _formatDate(ts);
-    if (diff.inDays > 1) return '${diff.inDays} giorni fa';
-    if (diff.inDays == 1) return 'ieri';
-    if (diff.inHours > 1) return '${diff.inHours} ore fa';
-    return 'poco fa';
+    if (diff.inDays > 30) return _formatDate(l, ts);
+    if (diff.inDays > 1) return l.projectTimeAgoDays(diff.inDays);
+    if (diff.inDays == 1) return l.projectTimeAgoYesterday;
+    if (diff.inHours > 1) return l.projectTimeAgoHours(diff.inHours);
+    return l.projectTimeAgoJustNow;
   }
 
-  String _monthName(int m) => const [
+  String _monthName(AppL10n l, int m) => [
         '',
-        'gen',
-        'feb',
-        'mar',
-        'apr',
-        'mag',
-        'giu',
-        'lug',
-        'ago',
-        'set',
-        'ott',
-        'nov',
-        'dic'
+        l.monthAbbrevJan,
+        l.monthAbbrevFeb,
+        l.monthAbbrevMar,
+        l.monthAbbrevApr,
+        l.monthAbbrevMay,
+        l.monthAbbrevJun,
+        l.monthAbbrevJul,
+        l.monthAbbrevAug,
+        l.monthAbbrevSep,
+        l.monthAbbrevOct,
+        l.monthAbbrevNov,
+        l.monthAbbrevDec,
       ][m];
 }
 

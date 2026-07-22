@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../l10n/app_localizations.dart';
 
 // Placeholder paywall — da sostituire con UI definitiva in Fase 3 (milestone 3.1)
 // quando Google Play Billing / Apple IAP saranno integrati.
@@ -23,6 +24,7 @@ class PaywallSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -45,7 +47,7 @@ class PaywallSheet extends StatelessWidget {
                 size: 48, color: scheme.primary),
             const SizedBox(height: 16),
             Text(
-              'Funzionalità Pro',
+              l.paywallTitle,
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -54,13 +56,13 @@ class PaywallSheet extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '"$feature" è disponibile con PATINA Pro.',
+              l.paywallFeatureMessage(feature),
               style: tt.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Sblocca tutte le funzionalità AI con un abbonamento mensile o annuale.',
+              l.paywallUnlockDescription,
               style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
@@ -71,12 +73,12 @@ class PaywallSheet extends StatelessWidget {
               style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
               ),
-              child: const Text('Disponibile prossimamente'),
+              child: Text(l.paywallComingSoon),
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Non ora'),
+              child: Text(l.paywallNotNow),
             ),
           ],
         ),

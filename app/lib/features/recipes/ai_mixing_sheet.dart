@@ -59,7 +59,7 @@ class MixingIngredient {
 
 // ── Mock per debug senza Firebase Functions ───────────────────────────────────
 
-MixingSuggestion _mockSuggestion(String targetHex) => MixingSuggestion(
+MixingSuggestion _mockSuggestion(String targetHex, String mockNote) => MixingSuggestion(
       targetHex: targetHex,
       ingredients: [
         const MixingIngredient(
@@ -84,8 +84,7 @@ MixingSuggestion _mockSuggestion(String targetHex) => MixingSuggestion(
           percentage: 50,
         ),
       ],
-      notes: '[MOCK] Questa è una risposta di test. Configura Firebase Functions '
-          'con la Claude API key per ottenere suggerimenti reali.',
+      notes: mockNote,
     );
 
 // ── Sheet principale ───────────────────────────────────────────────────────────
@@ -171,7 +170,8 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
       if (kDebugMode) {
         // Mock in debug — nessuna chiamata Firebase
         await Future.delayed(const Duration(seconds: 2));
-        setState(() => _result = _mockSuggestion(_hexPreview));
+        final mockNote = AppL10n.of(context).aiMixingMockNote;
+        setState(() => _result = _mockSuggestion(_hexPreview, mockNote));
       } else {
         final svc = ref.read(claudeServiceProvider);
         final raw = await svc.suggestMixingRecipe(
@@ -202,6 +202,7 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -231,7 +232,7 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
               children: [
                 Icon(Icons.auto_fix_high, color: scheme.primary, size: 22),
                 const SizedBox(width: 10),
-                Text('Miscelazione AI',
+                Text(l.aiMixingTitle,
                     style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                 const Spacer(),
                 Container(
@@ -240,7 +241,7 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
                     color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('PRO',
+                  child: Text(l.badgePro,
                       style: tt.labelSmall?.copyWith(
                           color: scheme.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
@@ -256,7 +257,7 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               children: [
                 // ── Colore target ─────────────────────────────────────────
-                Text('Colore target', style: tt.labelMedium?.copyWith(
+                Text(l.aiMixingTargetColorLabel, style: tt.labelMedium?.copyWith(
                     color: scheme.onSurface.withOpacity(0.6),
                     letterSpacing: 0.8)),
                 const SizedBox(height: 8),
@@ -280,10 +281,10 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
                         focusNode: _hexFocus,
                         textCapitalization: TextCapitalization.characters,
                         decoration: InputDecoration(
-                          labelText: 'Codice HEX',
+                          labelText: l.aiMixingHexLabel,
                           hintText: '#A3B18A',
                           errorText: _hexCtrl.text.length > 1 && !_hexValid
-                              ? 'Formato non valido (es. #4A7A3D)'
+                              ? l.aiMixingHexInvalid
                               : null,
                           prefixIcon: const Icon(Icons.colorize_outlined),
                         ),
@@ -307,7 +308,7 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
                 const SizedBox(height: 20),
 
                 // ── Marche disponibili ─────────────────────────────────────
-                Text('Marche disponibili', style: tt.labelMedium?.copyWith(
+                Text(l.aiMixingBrandsLabel, style: tt.labelMedium?.copyWith(
                     color: scheme.onSurface.withOpacity(0.6),
                     letterSpacing: 0.8)),
                 const SizedBox(height: 8),
@@ -342,7 +343,7 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
                           width: 18, height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.auto_fix_high),
-                  label: Text(_loading ? 'Analisi in corso…' : 'Genera ricetta AI'),
+                  label: Text(_loading ? l.aiMixingAnalyzing : l.aiMixingGenerate),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                   ),
@@ -402,6 +403,7 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -412,7 +414,7 @@ class _ResultCard extends StatelessWidget {
           children: [
             Icon(Icons.check_circle_outline, color: scheme.primary, size: 18),
             const SizedBox(width: 6),
-            Text('Ricetta suggerita',
+            Text(l.aiMixingSuggestedRecipe,
                 style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           ],
         ),
@@ -504,7 +506,7 @@ class _ResultCard extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onSave,
           icon: const Icon(Icons.save_outlined),
-          label: const Text('Salva come ricetta'),
+          label: Text(l.aiMixingSaveAsRecipe),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(44),
           ),

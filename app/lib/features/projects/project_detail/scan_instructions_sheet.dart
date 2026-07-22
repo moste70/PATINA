@@ -201,7 +201,7 @@ Stream<ScanState> _runScan(String imagePath) async* {
       matched.add(ScanPaintResult(
         brand: entry.value,
         code: entry.key,
-        name: 'Non in catalogo',
+        name: '',
         hex: '#808080',
         unknownInCatalog: true,
       ));
@@ -289,7 +289,7 @@ Stream<ScanState> _runAiScan(String imagePath, ClaudeService svc) async* {
     matched.add(ScanPaintResult(
       brand: entry.value,
       code: entry.key,
-      name: 'Non in catalogo',
+      name: '',
       hex: '#808080',
       unknownInCatalog: true,
     ));
@@ -384,7 +384,7 @@ class _TipsSheet extends StatelessWidget {
                     color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text('AI PRO',
+                  child: Text(l.badgeAiPro,
                       style: tt.labelSmall?.copyWith(
                           color: scheme.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
@@ -670,7 +670,7 @@ class _ScanSheetState extends State<_ScanSheet> {
                 : null,
           ),
           title: Text(
-            '${p.code}  ${p.name}',
+            p.unknownInCatalog ? p.code : '${p.code}  ${p.name}',
             style: GoogleFonts.jetBrainsMono(
               fontSize: 12,
               fontWeight: FontWeight.w500,

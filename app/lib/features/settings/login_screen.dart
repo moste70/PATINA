@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Accesso con Google non riuscito. Riprova.')),
+        SnackBar(content: Text(AppL10n.of(context).loginGoogleSignInFailed)),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -80,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_authErrorMessage(e.code))),
+        SnackBar(content: Text(_authErrorMessage(AppL10n.of(context), e.code))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -88,38 +88,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _resetPassword() async {
+    final l = AppL10n.of(context);
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inserisci la tua email per reimpostare la password.')),
+        SnackBar(content: Text(l.loginEnterEmailForReset)),
       );
       return;
     }
     await ref.read(authServiceProvider).sendPasswordReset(email);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Email di reimpostazione inviata.')),
+      SnackBar(content: Text(l.loginResetEmailSent)),
     );
   }
 
-  String _authErrorMessage(String code) => switch (code) {
-        'user-not-found'       => 'Nessun account trovato con questa email.',
-        'wrong-password'       => 'Password errata.',
-        'email-already-in-use' => 'Esiste già un account con questa email.',
-        'weak-password'        => 'La password deve essere di almeno 6 caratteri.',
-        'invalid-email'        => 'Indirizzo email non valido.',
-        'network-request-failed' => 'Errore di rete. Controlla la connessione.',
-        _                      => 'Errore di autenticazione. Riprova.',
+  String _authErrorMessage(AppL10n l, String code) => switch (code) {
+        'user-not-found'       => l.loginErrorUserNotFound,
+        'wrong-password'       => l.loginErrorWrongPassword,
+        'email-already-in-use' => l.loginErrorEmailInUse,
+        'weak-password'        => l.loginErrorWeakPassword,
+        'invalid-email'        => l.loginErrorInvalidEmail,
+        'network-request-failed' => l.loginErrorNetwork,
+        _                      => l.loginErrorGeneric,
       };
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
+    final l      = AppL10n.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isLogin ? 'Accedi' : 'Crea account'),
+        title: Text(_isLogin ? l.loginTitleSignIn : l.loginTitleSignUp),
         centerTitle: false,
       ),
       body: Center(
@@ -141,14 +143,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 12),
                   Text(
                     _isLogin
-                        ? 'Bentornato in Patina Pro'
-                        : 'Crea il tuo account Patina',
+                        ? l.loginWelcomeBack
+                        : l.loginCreateAccountSubtitle,
                     style: tt.titleLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'L\'account è necessario per attivare e sincronizzare il tuo abbonamento Pro.',
+                    l.loginAccountRequiredHint,
                     style: tt.bodySmall?.copyWith(
                         color: scheme.onSurface.withOpacity(0.6)),
                     textAlign: TextAlign.center,
@@ -159,7 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   OutlinedButton.icon(
                     onPressed: _loading ? null : _signInWithGoogle,
                     icon: const _GoogleLogo(),
-                    label: const Text('Continua con Google'),
+                    label: Text(l.loginContinueWithGoogle),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -170,7 +172,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const Expanded(child: Divider()),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('oppure',
+                        child: Text(l.loginOrDivider,
                             style: tt.bodySmall?.copyWith(
                                 color: scheme.onSurface.withOpacity(0.5))),
                       ),
@@ -184,12 +186,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                    decoration: InputDecoration(
+                      labelText: l.loginEmailLabel,
+                      prefixIcon: const Icon(Icons.email_outlined),
                     ),
                     validator: (v) => (v == null || !v.contains('@'))
-                        ? 'Email non valida'
+                        ? l.loginEmailInvalid
                         : null,
                   ),
                   const SizedBox(height: 16),
@@ -201,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: l.loginPasswordLabel,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(_obscure
@@ -212,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     validator: (v) => (v == null || v.length < 6)
-                        ? 'Minimo 6 caratteri'
+                        ? l.loginPasswordMinChars
                         : null,
                   ),
                   const SizedBox(height: 8),
@@ -223,7 +225,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _resetPassword,
-                        child: const Text('Password dimenticata?'),
+                        child: Text(l.loginForgotPassword),
                       ),
                     ),
 
@@ -238,7 +240,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(_isLogin ? 'Accedi' : 'Crea account'),
+                        : Text(_isLogin ? l.loginTitleSignIn : l.loginTitleSignUp),
                   ),
                   const SizedBox(height: 16),
 
@@ -248,14 +250,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Text(
                         _isLogin
-                            ? 'Non hai un account?'
-                            : 'Hai già un account?',
+                            ? l.loginNoAccount
+                            : l.loginHaveAccount,
                         style: tt.bodySmall,
                       ),
                       TextButton(
                         onPressed: () =>
                             setState(() => _isLogin = !_isLogin),
-                        child: Text(_isLogin ? 'Registrati' : 'Accedi'),
+                        child: Text(_isLogin ? l.loginSignUpAction : l.loginTitleSignIn),
                       ),
                     ],
                   ),

@@ -91,7 +91,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           // ── Account ──────────────────────────────────────────────────────
-          _SectionHeader(title: 'Account'),
+          _SectionHeader(title: l.settingsAccountSection),
           const _AccountTile(),
 
           // ── Aiuto ────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
 
           // ── Developer (solo debug build) ──────────────────────────────────
           if (kDebugMode) ...[
-            _SectionHeader(title: 'Developer'),
+            _SectionHeader(title: l.settingsDeveloperSection),
             _ProOverrideTile(),
           ],
 
@@ -389,13 +389,14 @@ class _AccountTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final userAsync = ref.watch(authUserProvider);
     final scheme = Theme.of(context).colorScheme;
 
     return userAsync.when(
-      loading: () => const ListTile(
-        leading: SizedBox(width: 36, height: 36),
-        title: Text('Account'),
+      loading: () => ListTile(
+        leading: const SizedBox(width: 36, height: 36),
+        title: Text(l.settingsAccountSection),
       ),
       error: (_, __) => const SizedBox.shrink(),
       data: (User? user) {
@@ -410,9 +411,9 @@ class _AccountTile extends ConsumerWidget {
               ),
               child: Icon(Icons.person_outline, size: 20, color: scheme.primary),
             ),
-            title: const Text('Accedi o crea account'),
+            title: Text(l.settingsAccountSignInTitle),
             subtitle: Text(
-              'Necessario per attivare Patina Pro',
+              l.settingsAccountSignInSubtitle,
               style: TextStyle(fontSize: 13, color: scheme.onSurface.withOpacity(0.6)),
             ),
             trailing: Icon(Icons.chevron_right, color: scheme.onSurface.withOpacity(0.3)),
@@ -435,17 +436,17 @@ class _AccountTile extends ConsumerWidget {
                 ),
                 child: Icon(Icons.person, size: 20, color: scheme.primary),
               ),
-              title: Text(user.email ?? 'Account'),
+              title: Text(user.email ?? l.settingsAccountSection),
               subtitle: Text(
-                'Connesso',
+                l.settingsAccountConnectedLabel,
                 style: TextStyle(fontSize: 13, color: scheme.primary),
               ),
             ),
             ListTile(
               leading: const SizedBox(width: 36),
-              title: const Text('Esci dall\'account'),
+              title: Text(l.settingsLogoutTile),
               textColor: scheme.error,
-              onTap: () => _signOut(context, ref),
+              onTap: () => _signOut(context, ref, l),
             ),
           ],
         );
@@ -453,15 +454,15 @@ class _AccountTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+  Future<void> _signOut(BuildContext context, WidgetRef ref, AppL10n l) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Esci dall\'account'),
-        content: const Text('Verrai disconnesso. L\'abbonamento Pro sarà disattivato su questo dispositivo.'),
+        title: Text(l.settingsLogoutTile),
+        content: Text(l.settingsLogoutDialogContent),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Esci')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.actionCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l.settingsLogoutConfirm)),
         ],
       ),
     );
@@ -477,6 +478,7 @@ class _ProOverrideTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     final isPro = ref.watch(proStatusProvider);
     final scheme = Theme.of(context).colorScheme;
     return SwitchListTile(
@@ -495,9 +497,9 @@ class _ProOverrideTile extends ConsumerWidget {
           color: isPro ? scheme.primary : scheme.onSurfaceVariant,
         ),
       ),
-      title: const Text('Simula abbonamento Pro'),
+      title: Text(l.settingsProOverrideTitle),
       subtitle: Text(
-        isPro ? 'Pro attivo — tutte le funzioni sbloccate' : 'Free — funzioni Pro bloccate',
+        isPro ? l.settingsProOverrideActiveSubtitle : l.settingsProOverrideFreeSubtitle,
         style: TextStyle(
           fontSize: 13,
           color: isPro

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/app_localizations.dart';
 
 // One-time dismissable hint bar. Shows on first visit, then never again.
 // Usage: GestureHintBar(hintKey: 'hint_inventory', message: '...')
@@ -88,7 +89,7 @@ class _GestureHintBarState extends State<GestureHintBar>
               icon: Icon(Icons.close, size: 16, color: scheme.onSurface.withOpacity(0.4)),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              tooltip: 'Chiudi',
+              tooltip: AppL10n.of(context).tooltipClose,
               onPressed: _dismiss,
             ),
           ],

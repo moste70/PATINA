@@ -70,15 +70,15 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
           if (!_searching) ...[
             IconButton(
               icon: const Icon(Icons.colorize_outlined),
-              tooltip: 'Rileva colore da foto',
+              tooltip: l.tooltipDetectColorFromPhoto,
               onPressed: () => PhotoColorPickerSheet.show(context),
             ),
             IconButton(
               icon: const Icon(Icons.auto_fix_high),
-              tooltip: 'Miscelazione AI',
+              tooltip: l.aiMixingTitle,
               onPressed: () {
                 if (!ProGate.isProUser(ref)) {
-                  PaywallSheet.show(context, feature: 'Miscelazione AI');
+                  PaywallSheet.show(context, feature: l.aiMixingTitle);
                   return;
                 }
                 AiMixingSheet.show(context);
@@ -155,7 +155,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
       final count = await ref.read(recipeRepositoryProvider).count();
       if (count >= _kFreeRecipesLimit) {
         if (context.mounted) {
-          PaywallSheet.show(context, feature: 'Ricette illimitate');
+          PaywallSheet.show(context, feature: AppL10n.of(context).recipesUnlimitedFeatureName);
         }
         return;
       }

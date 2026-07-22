@@ -338,7 +338,7 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.colorize_outlined),
-            tooltip: 'Rileva colore da foto',
+            tooltip: l.tooltipDetectColorFromPhoto,
             onPressed: () => PhotoColorPickerSheet.show(context),
           ),
         ],
@@ -1325,7 +1325,7 @@ class _PaintDetailSheetState extends ConsumerState<_PaintDetailSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'QUANTITÀ',
+                    l.inventoryQuantitySectionLabel,
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       letterSpacing: 1.5,
