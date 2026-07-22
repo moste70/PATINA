@@ -7,9 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../database/app_database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../shared/constants/app_constants.dart';
 import '../../shared/utils/lab_mixer.dart';
 import '../../shared/widgets/gesture_hint_bar.dart';
 import '../../shared/widgets/hex_color_chip.dart';
+import '../projects/project_repository.dart';
 import 'paints_repository.dart';
 
 // ── Catalog loading ───────────────────────────────────────────────────────────
@@ -316,17 +318,15 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
 
   // ── Actions on a match ──────────────────────────────────────────────────────
 
-  Future<void> _addToInventory(_ColorMatch match) async {
+  Future<void> _addToShoppingList(_ColorMatch match) async {
     HapticFeedback.lightImpact();
-    await ref
-        .read(paintsRepositoryProvider)
-        .addInventoryPaint(brand: match.brand, code: match.code);
+    final brandLabel = AppConstants.brandLabels[match.brand] ?? match.brand;
+    await ref.read(projectRepositoryProvider).addShoppingItem(
+        '$brandLabel ${match.code} · ${match.name}');
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(AppL10n.of(context).paintAddedToInventory(match.code)),
+      content: Text(AppL10n.of(context).paintAddedToShoppingList),
     ));
-    // Re-run matching so the paint moves from "catalog" to "inventory".
-    if (_sampled != null) await _findMatches(_sampled!);
   }
 
   // ── Tap handling ───────────────────────────────────────────────────────────
@@ -647,7 +647,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
                   match: m,
                   scheme: scheme,
                   tt: tt,
-                  onAdd: () => _addToInventory(m),
+                  onAdd: () => _addToShoppingList(m),
                 )),
           ],
         ],
@@ -689,12 +689,16 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   Widget _buildCircleOverlay(ColorScheme scheme) {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
-    const r = 28.0;
+    const r = 28.0;      // raggio visivo dell'anello
+    const hitR = 40.0;   // raggio dell'area trascinabile — più grande dell'anello
+                         // visivo per rendere il trascinamento affidabile su schermo
+                         // touch (con hit area == anello visivo il dito manca spesso
+                         // il bersaglio e finisce sul pan/zoom della foto sottostante)
     final sampled = _sampled;
 
     return Positioned(
-      left: screen.dx - r,
-      top: screen.dy - r,
+      left: screen.dx - hitR,
+      top: screen.dy - hitR,
       // Opaque + onPanUpdate: un trascinamento che parte dal cerchio lo
       // riposiziona direttamente, senza competere con il pan/zoom di
       // InteractiveViewer sottostante (bloccato dall'hit test opaco).
@@ -705,21 +709,27 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
           final norm = _toImageCoords(d.globalPosition);
           if (norm != null) setState(() => _circle = norm);
         },
-        child: Container(
-          width: r * 2,
-          height: r * 2,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2.5),
-            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
-            color: sampled?.withOpacity(0.35),
-          ),
+        child: SizedBox(
+          width: hitR * 2,
+          height: hitR * 2,
           child: Center(
             child: Container(
-              width: 4, height: 4,
-              decoration: const BoxDecoration(
+              width: r * 2,
+              height: r * 2,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white,
+                border: Border.all(color: Colors.white, width: 2.5),
+                boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
+                color: sampled?.withOpacity(0.35),
+              ),
+              child: Center(
+                child: Container(
+                  width: 4, height: 4,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
@@ -926,13 +936,13 @@ class _MatchTile extends StatelessWidget {
       );
     }
     return Tooltip(
-      message: l.paintAddToInventoryTooltip,
+      message: l.paintAddToShoppingList,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onAdd,
         child: Padding(
           padding: const EdgeInsets.all(4),
-          child: Icon(Icons.add_circle_outline, color: scheme.primary, size: 22),
+          child: Icon(Icons.add_shopping_cart_outlined, color: scheme.primary, size: 22),
         ),
       ),
     );

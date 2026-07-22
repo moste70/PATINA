@@ -471,10 +471,14 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
   Widget _buildCircleOverlay(ColorScheme scheme) {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
-    const r = 26.0;
+    const r = 26.0;      // raggio visivo dell'anello
+    const hitR = 40.0;   // raggio dell'area trascinabile — più grande dell'anello
+                         // visivo per rendere il trascinamento affidabile su schermo
+                         // touch (con hit area == anello visivo il dito manca spesso
+                         // il bersaglio e finisce sul pan/zoom della foto sottostante)
     return Positioned(
-      left: screen.dx - r,
-      top: screen.dy - r,
+      left: screen.dx - hitR,
+      top: screen.dy - hitR,
       // Opaque + onPanUpdate: un trascinamento che parte dal cerchio lo
       // riposiziona direttamente, senza competere con il pan/zoom di
       // InteractiveViewer sottostante (bloccato dall'hit test opaco).
@@ -485,19 +489,25 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
           final norm = _toImageCoords(d.globalPosition);
           if (norm != null) setState(() => _circle = norm);
         },
-        child: Container(
-          width: r * 2,
-          height: r * 2,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2.5),
-            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
-            color: _sampled?.withOpacity(0.35),
-          ),
+        child: SizedBox(
+          width: hitR * 2,
+          height: hitR * 2,
           child: Center(
             child: Container(
-              width: 4, height: 4,
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+              width: r * 2,
+              height: r * 2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.5),
+                boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
+                color: _sampled?.withOpacity(0.35),
+              ),
+              child: Center(
+                child: Container(
+                  width: 4, height: 4,
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                ),
+              ),
             ),
           ),
         ),
