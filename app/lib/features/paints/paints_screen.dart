@@ -341,6 +341,11 @@ class _PaintsScreenState extends ConsumerState<PaintsScreen>
             tooltip: l.tooltipDetectColorFromPhoto,
             onPressed: () => PhotoColorPickerSheet.show(context),
           ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            tooltip: l.shoppingScreenTitle,
+            onPressed: () => context.push('/shopping'),
+          ),
         ],
         bottom: TabBar(
           controller: _tabController,
