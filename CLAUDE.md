@@ -70,6 +70,13 @@ Text(l.greeting(user.name))
 3. Le stringhe hardcoded esistenti si migrano gradualmente feature per feature
 4. Non usare mai stringhe hardcoded per testi nuovi
 
+> **REGOLA ASSOLUTA — nessuna stringa hardcoded**
+> Ogni testo visibile all'utente — label, titolo, messaggio di errore, tooltip, hint, testo di empty state,
+> testo di conferma, testo di snackbar — deve essere definito **immediatamente** nei file `.arb` (IT + EN)
+> e referenziato via `AppL10n.of(context).<chiave>`.
+> Non è accettabile scrivere prima il testo hardcoded e rimandare la localizzazione a dopo.
+> **L'aggiunta alla chiave `.arb` è parte atomica del task, non un'attività separata.**
+
 ## UX — Principio dei passi minimi
 
 Usare più passaggi **solo** se aumentano chiarezza o comprensione per l'utente.
