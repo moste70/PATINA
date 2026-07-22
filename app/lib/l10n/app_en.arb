@@ -378,7 +378,7 @@
   "@photoPickerChooseHint": {},
   "photoPickerChangePhoto": "Change",
   "@photoPickerChangePhoto": {},
-  "photoPickerZoomHint": "Pinch to zoom, drag to pan the photo, tap to place the circle",
+  "photoPickerZoomHint": "Pinch to zoom, drag the photo to pan it, tap or drag the circle to place it",
   "@photoPickerZoomHint": {},
   "photoPickerTapToSample": "Tap the circle onto the colour to detect",
   "@photoPickerTapToSample": {},

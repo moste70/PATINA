@@ -468,7 +468,16 @@ class _State extends ConsumerState<FindRecipeByColorSheet> {
     return Positioned(
       left: screen.dx - r,
       top: screen.dy - r,
-      child: IgnorePointer(
+      // Opaque + onPanUpdate: un trascinamento che parte dal cerchio lo
+      // riposiziona direttamente, senza competere con il pan/zoom di
+      // InteractiveViewer sottostante (bloccato dall'hit test opaco).
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onPanStart: (_) => HapticFeedback.selectionClick(),
+        onPanUpdate: (d) {
+          final norm = _toImageCoords(d.globalPosition);
+          if (norm != null) setState(() => _circle = norm);
+        },
         child: Container(
           width: r * 2,
           height: r * 2,
