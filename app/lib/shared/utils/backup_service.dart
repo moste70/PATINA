@@ -22,17 +22,43 @@ class BackupService {
   // Su Android il path reale è <documents>/patina_db — verifica anche <support>/patina_db
   // come fallback nel caso in cui la versione del package cambi comportamento.
   static Future<File> _dbFile() async {
+    final candidates = <File>[];
+
     final docsDir = await getApplicationDocumentsDirectory();
-    final docsFile = File(p.join(docsDir.path, 'patina_db'));
-    if (docsFile.existsSync()) return docsFile;
+    final base = Platform.isAndroid ? docsDir.parent.path : docsDir.path;
+
+    for (final name in ['patina_db', 'patina_db.db', 'patina_db.sqlite']) {
+      candidates.add(File(p.join(docsDir.path, name)));
+      if (Platform.isAndroid) {
+        candidates.add(File(p.join(base, 'databases', name)));
+        candidates.add(File(p.join(base, 'files', name)));
+        candidates.add(File(p.join(base, 'app_flutter', name)));
+      }
+    }
 
     if (Platform.isAndroid) {
       final supportDir = await getApplicationSupportDirectory();
-      final supportFile = File(p.join(supportDir.path, 'patina_db'));
-      if (supportFile.existsSync()) return supportFile;
+      for (final name in ['patina_db', 'patina_db.db']) {
+        candidates.add(File(p.join(supportDir.path, name)));
+      }
     }
 
-    throw Exception('Database not found. Checked: ${docsDir.path}');
+    for (final f in candidates) {
+      if (f.existsSync()) return f;
+    }
+
+    // In debug, stampa tutti i file trovati nelle directory candidate per diagnosi
+    String debugInfo = '';
+    if (kDebugMode) {
+      final dirs = {docsDir.path, if (Platform.isAndroid) ...['$base/databases', '$base/files', '$base/app_flutter']};
+      for (final d in dirs) {
+        try {
+          final entries = Directory(d).listSync().map((e) => p.basename(e.path)).join(', ');
+          debugInfo += '\n  $d: [$entries]';
+        } catch (_) {}
+      }
+    }
+    throw Exception('Database not found.$debugInfo');
   }
 
   // ── Export ──────────────────────────────────────────────────────────────────
