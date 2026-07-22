@@ -113,11 +113,48 @@ Breakpoint Material 3 adottati per PATINA:
 | Medium | 600–900 dp | Tablet piccolo / smartphone landscape — `NavigationRail`, colonne |
 | Expanded | > 900 dp | Tablet grande / foldable — `NavigationRail` estesa, pannello maestro-dettaglio |
 
-**Regole da rispettare in ogni nuova schermata:**
-1. **Non usare** `MediaQuery.of(context).size.width` raw — usare sempre `AdaptiveLayout` / `WindowSizeClass` (Fase 1F.1) quando sarà implementato; nel frattempo aggiungere un `TODO(tablet)` come commento
-2. **Max-width** — i contenuti delle schermate a colonna singola non devono superare `840 dp`; avvolgere con `Center` + `ConstrainedBox(maxWidth: 840)` (Fase 1F.3)
-3. **Griglie** — dichiarare `crossAxisCount` come variabile calcolata dalla larghezza, non come costante hardcoded
-4. La `ShellRoute` di Go Router rimane invariata — il supporto tablet cambia solo il widget shell (nav rail vs bottom bar), non la struttura delle route
+**Regole da rispettare in ogni nuova schermata — OBBLIGATORIE, parte atomica del task:**
+
+> **REGOLA ASSOLUTA — predisposizione tablet ad ogni sviluppo**
+> Ogni nuova schermata o widget deve includere le predisposizioni tablet descritte qui sotto.
+> Non è richiesto implementare il layout tablet, ma è obbligatorio lasciare i segnaposto corretti
+> in modo che la Fase 1F possa intervenire senza riscrivere il codice esistente.
+
+1. **`TODO(tablet)` obbligatorio** — ogni punto in cui il layout dovrebbe cambiare su tablet va marcato con un commento esplicito. Esempi:
+   ```dart
+   // TODO(tablet): su Medium/Expanded usare GridView a 2 colonne invece di ListView
+   // TODO(tablet): su Expanded mostrare NavigationRail invece di BottomNavigationBar
+   // TODO(tablet): su Medium/Expanded showDialog centrato invece di showModalBottomSheet
+   // TODO(tablet): kCols adattivo — Compact: 3, Medium: 5, Expanded: 7
+   ```
+
+2. **`crossAxisCount` mai hardcoded** — nelle griglie dichiararlo sempre come variabile locale con un commento tablet:
+   ```dart
+   final cols = 4; // TODO(tablet): rendere adattivo con LayoutBuilder
+   ```
+
+3. **Max-width sulle schermate a colonna singola** — avvolgere il `body` con `Center` + `ConstrainedBox` per evitare che il contenuto si spalmi su display larghi:
+   ```dart
+   body: Center(
+     child: ConstrainedBox(
+       constraints: const BoxConstraints(maxWidth: 840),
+       child: /* contenuto */,
+     ),
+   ),
+   ```
+
+4. **`showModalBottomSheet` — aggiungere il TODO** quando il contenuto è ricco o fullscreen:
+   ```dart
+   // TODO(tablet): su Medium/Expanded usare showDialog centrato (showAdaptiveSheet helper — Fase 1F)
+   showModalBottomSheet(...)
+   ```
+
+5. **`MediaQuery.of(context).size.width` raw vietato** — non usare magic number raw. Se serve un breakpoint prima che `AdaptiveLayout` sia implementato, usare una costante e marcarla:
+   ```dart
+   const _tabletBreakpoint = 600.0; // TODO(tablet): sostituire con WindowSizeClass (Fase 1F.1)
+   ```
+
+6. La `ShellRoute` di Go Router rimane invariata — il supporto tablet cambia solo il widget shell (nav rail vs bottom bar), non la struttura delle route.
 
 ## Design system Ottone v1.0
 
