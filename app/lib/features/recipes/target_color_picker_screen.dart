@@ -49,7 +49,6 @@ class _TargetColorPickerScreenState extends State<TargetColorPickerScreen> {
   final _transformCtrl = TransformationController();
   Color? _sampled;
   bool _sampling = false;
-  bool _isDragging = false;
   int _imgW = 1, _imgH = 1;
   final _imageKey = GlobalKey();
   final _sceneKey = GlobalKey();
@@ -398,59 +397,58 @@ class _TargetColorPickerScreenState extends State<TargetColorPickerScreen> {
     );
   }
 
-  // Stesso pattern del color picker foto (photo_color_picker_sheet.dart): a
-  // riposo l'anello è disegnato esattamente nella posizione reale (hit test e
-  // disegno coincidono), l'offset visivo sopra al dito si applica SOLO
-  // durante il trascinamento.
+  // Durante il trascinamento il punto campionato (_circle) viene spostato
+  // sopra al dito di _kCircleVisualOffset — non è un offset solo visivo:
+  // finché si trascina, l'anello resta esattamente dove viene disegnato,
+  // quindi al rilascio NON scatta più in giù sotto al dito. Il tap sposta
+  // invece _circle sulla posizione reale toccata, senza alcun offset — un
+  // tocco rapido sposta il punto esattamente dove si è toccato.
   Widget _buildCircleOverlay() {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
     const r = _kRingRadius;
     const hitR = _kHitRadius;
     final sampled = _sampled;
+
+    Offset offsetGlobal(Offset globalPos) =>
+        globalPos - const Offset(0, _kCircleVisualOffset);
+
     return Positioned(
       left: screen.dx - hitR,
       top: screen.dy - hitR,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPanStart: (_) {
+        onPanStart: (d) {
           HapticFeedback.selectionClick();
-          setState(() => _isDragging = true);
-        },
-        onPanUpdate: (d) {
-          final norm = _toImageCoords(d.globalPosition);
+          final norm = _toImageCoords(offsetGlobal(d.globalPosition));
           if (norm != null) setState(() => _circle = norm);
         },
-        onPanEnd: (_) => setState(() => _isDragging = false),
-        onPanCancel: () => setState(() => _isDragging = false),
+        onPanUpdate: (d) {
+          final norm = _toImageCoords(offsetGlobal(d.globalPosition));
+          if (norm != null) setState(() => _circle = norm);
+        },
         child: SizedBox(
           width: hitR * 2,
           height: hitR * 2,
           child: Center(
-            child: Transform.translate(
-              offset: _isDragging
-                  ? const Offset(0, -_kCircleVisualOffset)
-                  : Offset.zero,
-              transformHitTests: false,
-              child: Container(
-                width: r * 2,
-                height: r * 2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black45, blurRadius: 4),
-                  ],
-                  color: sampled?.withOpacity(0.35),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 4,
-                    height: 4,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
+            child: Container(
+              width: r * 2,
+              height: r * 2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.5),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black45, blurRadius: 4),
+                ],
+                color: sampled?.withOpacity(0.35),
+              ),
+              child: Center(
+                child: Container(
+                  width: 4,
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
                   ),
                 ),
               ),

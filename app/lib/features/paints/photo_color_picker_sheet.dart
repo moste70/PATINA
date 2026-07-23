@@ -120,8 +120,9 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   ui.Image? _uiImage;
   ImageProvider? _imageProvider;
 
-  // Circle position in normalised image coordinates (0–1) — corrisponde
-  // sempre al punto reale sotto al dito, non alla posizione disegnata.
+  // Circle position in normalised image coordinates (0–1) — coincide sempre
+  // con il punto disegnato/campionato: sul tap è il punto toccato, durante il
+  // trascinamento è il punto sopra al dito (vedi _buildCircleOverlay).
   Offset _circle = const Offset(0.5, 0.5);
 
   // Viewer transform
@@ -132,7 +133,6 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   Color? _sampled;
   bool _tooltipVisible = false;
   bool _matching = false;
-  bool _isDragging = false; // true solo mentre si trascina l'anello
   List<_ColorMatch> _inventoryMatches = [];
   List<_ColorMatch> _catalogMatches = [];
 
@@ -551,60 +551,55 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     // facile da afferrare su schermo touch.
     final sampled = _sampled;
 
-    // A riposo l'anello è disegnato esattamente nella posizione reale (hit
-    // test e disegno coincidono, quindi toccarlo per iniziare a trascinare
-    // funziona sempre). SOLO mentre lo si sta trascinando (_isDragging) il
-    // disegno viene spostato sopra al dito (Transform.translate, non tocca
-    // l'hit test) così l'anello resta visibile e non coperto; il gesto è
-    // comunque già "catturato" dal puntatore quindi lo spostamento visivo
-    // non interrompe il trascinamento. Al rilascio l'anello torna a
-    // disegnarsi esattamente nel punto campionato.
+    // Durante il trascinamento il punto campionato (_circle) viene spostato
+    // sopra al dito di _kCircleVisualOffset — non è un offset solo visivo:
+    // finché si trascina, l'anello resta esattamente dove viene disegnato,
+    // quindi al rilascio NON scatta più in giù sotto al dito (bug precedente).
+    // Il tap/tap prolungato invece impostano _circle sulla posizione reale
+    // toccata, senza alcun offset — così un tocco rapido sposta il punto
+    // esattamente dove si è toccato.
+    Offset offsetGlobal(Offset globalPos) =>
+        globalPos - const Offset(0, _kCircleVisualOffset);
+
     return Positioned(
       left: screen.dx - hitR,
       top: screen.dy - hitR,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPanStart: (_) {
+        onPanStart: (d) {
           HapticFeedback.selectionClick();
+          final norm = _toImageCoords(offsetGlobal(d.globalPosition));
           setState(() {
-            _isDragging = true;
             _tooltipVisible = false;
+            if (norm != null) _circle = norm;
           });
         },
         onPanUpdate: (d) {
-          final norm = _toImageCoords(d.globalPosition);
+          final norm = _toImageCoords(offsetGlobal(d.globalPosition));
           if (norm != null) setState(() => _circle = norm);
         },
-        onPanEnd: (_) => setState(() => _isDragging = false),
-        onPanCancel: () => setState(() => _isDragging = false),
         child: SizedBox(
           width: hitR * 2,
           height: hitR * 2,
           child: Center(
-            child: Transform.translate(
-              offset: _isDragging
-                  ? const Offset(0, -_kCircleVisualOffset)
-                  : Offset.zero,
-              transformHitTests: false,
-              child: Container(
-                width: r * 2,
-                height: r * 2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black45, blurRadius: 4),
-                  ],
-                  color: sampled?.withOpacity(0.35),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 4,
-                    height: 4,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
+            child: Container(
+              width: r * 2,
+              height: r * 2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.5),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black45, blurRadius: 4),
+                ],
+                color: sampled?.withOpacity(0.35),
+              ),
+              child: Center(
+                child: Container(
+                  width: 4,
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
                   ),
                 ),
               ),
