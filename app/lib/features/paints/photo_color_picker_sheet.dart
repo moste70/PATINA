@@ -81,22 +81,22 @@ class _ColorMatch {
     required this.deltaE,
     required this.fromInventory,
   });
-
-  // Precisione 0–100: ΔE=0 → 100%, ΔE≥20 → 0%
-  int get precision => (((20.0 - deltaE.clamp(0, 20)) / 20.0) * 100).round();
 }
 
 // ── Sheet ─────────────────────────────────────────────────────────────────────
 
 class PhotoColorPickerSheet extends ConsumerStatefulWidget {
-  const PhotoColorPickerSheet({super.key});
+  final int? projectId;
+  const PhotoColorPickerSheet({super.key, this.projectId});
 
-  static Future<void> show(BuildContext context) {
+  /// [projectId] — se presente, i suggerimenti mostrano "+" per aggiungere il
+  /// colore alla palette/kit di quel progetto invece del carrello lista spesa.
+  static Future<void> show(BuildContext context, {int? projectId}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => const PhotoColorPickerSheet(),
+      builder: (_) => PhotoColorPickerSheet(projectId: projectId),
     );
   }
 
@@ -105,27 +105,26 @@ class PhotoColorPickerSheet extends ConsumerStatefulWidget {
 }
 
 class _State extends ConsumerState<PhotoColorPickerSheet> {
+  static const _kCircleVisualOffset = 56.0; // il cerchio resta sopra il dito
+  static const _kRingRadius = 28.0; // raggio visivo dell'anello
+
   // Image state
   XFile? _xfile;
   ui.Image? _uiImage;
   ImageProvider? _imageProvider;
 
-  // Circle position in normalised image coordinates (0–1)
+  // Circle position in normalised image coordinates (0–1) — corrisponde
+  // sempre al punto reale sotto al dito, non alla posizione disegnata.
   Offset _circle = const Offset(0.5, 0.5);
 
   // Viewer transform
   final _transformCtrl = TransformationController();
 
-  // Sampled color
+  // Sampled color + suggerimenti (mostrati nel tooltip su tap prolungato)
   Color? _sampled;
-  bool _sampling = false;
-
-  // Match results
+  bool _tooltipVisible = false;
   bool _matching = false;
-  List<_ColorMatch> _inventoryMatches = [];
-  List<_ColorMatch> _catalogMatches = [];
-
-  String? _error;
+  List<_ColorMatch> _tooltipMatches = [];
 
   // Image size in pixels
   int _imgW = 1, _imgH = 1;
@@ -175,9 +174,8 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       _imageProvider = MemoryImage(bytes);
       _circle = const Offset(0.5, 0.5);
       _sampled = null;
-      _inventoryMatches = [];
-      _catalogMatches = [];
-      _error = null;
+      _tooltipVisible = false;
+      _tooltipMatches = [];
       _transformCtrl.value = Matrix4.identity();
     });
     // The circle overlay needs the Image's RenderBox to be laid out before it
@@ -212,61 +210,49 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     );
   }
 
-  Future<void> _onSample() async {
-    if (_uiImage == null) return;
+  // Tap prolungato ovunque sulla foto: sposta il cerchio lì, campiona e apre
+  // subito il tooltip con i suggerimenti — nessun bottone separato.
+  Future<void> _onLongPressAt(Offset norm) async {
     setState(() {
-      _sampling = true;
-      _error = null;
+      _circle = norm;
+      _tooltipVisible = true;
+      _sampled = null;
+      _tooltipMatches = [];
+      _matching = true;
     });
-    HapticFeedback.lightImpact();
-    try {
-      final color = await _samplePixel();
-      if (color == null) {
-        setState(() {
-          _error = AppL10n.of(context).photoPickerSampleError;
-          _sampling = false;
-        });
-        return;
-      }
+    HapticFeedback.mediumImpact();
+    final color = await _samplePixel();
+    if (!mounted) return;
+    if (color == null) {
       setState(() {
-        _sampled = color;
-        _sampling = false;
+        _tooltipVisible = false;
+        _matching = false;
       });
-      await _findMatches(color);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = AppL10n.of(context).photoPickerSampleError;
-        _sampling = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppL10n.of(context).photoPickerSampleError),
+      ));
+      return;
     }
+    setState(() => _sampled = color);
+    await _findMatches(color);
   }
 
   // ── ΔE matching ───────────────────────────────────────────────────────────
 
   Future<void> _findMatches(Color target) async {
-    setState(() {
-      _matching = true;
-    });
-
     const kMaxDeltaE = 18.0;
-    const kMaxEach = 2;
+    const kMaxResults = 3;
 
     // Load catalog once — used for both inventory hex resolution and catalog search
     final catalog = await _loadAllCatalogEntries();
-    // Build index brand+code → entry
     final catalogIndex = <String, _CatalogEntry>{
       for (final e in catalog) '${e.brand}+${e.code}': e,
     };
-
-    // Custom paints index for hex resolution
     final customIndex = ref.read(_customIndexProvider).valueOrNull ?? {};
-
-    // Inventory — resolve hex from catalog or custom index
     final inventory = ref.read(rawInventoryProvider).valueOrNull ?? [];
     final invKeys = <String>{};
 
-    final invMatches = <_ColorMatch>[];
+    final matches = <_ColorMatch>[];
     for (final p in inventory) {
       String brand, code, name, hex;
       if (p.catalogBrand != null && p.catalogCode != null) {
@@ -289,7 +275,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       invKeys.add('$brand+$code');
       final de = deltaE(target, hexToColor(hex));
       if (de > kMaxDeltaE) continue;
-      invMatches.add(_ColorMatch(
+      matches.add(_ColorMatch(
         brand: brand,
         code: code,
         name: name,
@@ -298,15 +284,12 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
         fromInventory: true,
       ));
     }
-    invMatches.sort((a, b) => a.deltaE.compareTo(b.deltaE));
 
-    // Catalog — skip what's already in inventory
-    final catMatches = <_ColorMatch>[];
     for (final e in catalog) {
       if (invKeys.contains('${e.brand}+${e.code}')) continue;
       final de = deltaE(target, hexToColor(e.hex));
       if (de > kMaxDeltaE) continue;
-      catMatches.add(_ColorMatch(
+      matches.add(_ColorMatch(
         brand: e.brand,
         code: e.code,
         name: e.name,
@@ -315,11 +298,12 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
         fromInventory: false,
       ));
     }
-    catMatches.sort((a, b) => a.deltaE.compareTo(b.deltaE));
 
+    matches.sort((a, b) => a.deltaE.compareTo(b.deltaE));
+
+    if (!mounted) return;
     setState(() {
-      _inventoryMatches = invMatches.take(kMaxEach).toList();
-      _catalogMatches = catMatches.take(kMaxEach).toList();
+      _tooltipMatches = matches.take(kMaxResults).toList();
       _matching = false;
     });
   }
@@ -338,14 +322,31 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     ));
   }
 
-  // ── Tap handling ───────────────────────────────────────────────────────────
+  Future<void> _addToProjectKit(_ColorMatch match) async {
+    final projectId = widget.projectId;
+    if (projectId == null) return;
+    HapticFeedback.lightImpact();
+    await ref.read(projectRepositoryProvider).addProjectPaint(
+          projectId: projectId,
+          brand: match.brand,
+          code: match.code,
+          name: match.name,
+          hex: match.hex,
+        );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(AppL10n.of(context).paletteSnackAdded(1)),
+    ));
+  }
+
+  // ── Tap / long-press handling ────────────────────────────────────────────
   //
   // Same technique as PinViewerScreen: the Image's own RenderBox (found via
   // _imageKey) already reflects BoxFit.contain letterboxing *and* the current
   // InteractiveViewer pan/zoom transform, because we never give it an
   // explicit width+height — it self-sizes to the visible picture inside the
   // bounded constraints from its parent. globalToLocal/localToGlobal on that
-  // box then do all the transform math for us, so tap-to-sample never needs
+  // box then do all the transform math for us, so tap/long-press never needs
   // to fight InteractiveViewer's own pan/zoom gesture recognizer for the
   // pointer (they're siblings, not nested).
 
@@ -379,23 +380,26 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = AppL10n.of(context);
 
     // Keep these autoDispose stream providers alive and loaded for the whole
     // life of the sheet — _findMatches only `ref.read`s them, so without a
     // `watch` here they may still be AsyncLoading (or already disposed) the
-    // first time the user taps "Rileva colore", silently yielding an empty
+    // first time the user fa un tap prolungato, silently yielding an empty
     // inventory-matches list.
     ref.watch(rawInventoryProvider);
     ref.watch(_customIndexProvider);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.93,
+      initialChildSize: 0.95,
       minChildSize: 0.5,
       maxChildSize: 0.97,
       expand: false,
       builder: (_, scrollCtrl) => Column(
         children: [
-          // Handle
+          // Handle — anche unico modo per ridimensionare/trascinare il sheet
+          // (il resto del contenuto è la foto, che gestisce da sola i suoi
+          // gesti di pan/zoom/tap/tap-prolungato).
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: Container(
@@ -407,30 +411,36 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
               ),
             ),
           ),
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
-            child: Row(
+          Expanded(
+            child: Stack(
               children: [
-                Icon(Icons.colorize, color: scheme.primary, size: 22),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(AppL10n.of(context).colorPickerPhoto,
-                      style: tt.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: AppL10n.of(context).tooltipClose,
-                  onPressed: () => Navigator.of(context).pop(),
+                _xfile == null
+                    ? _buildSourcePicker(context, scheme, tt)
+                    : _buildViewer(context, scheme, tt),
+                Positioned(
+                  top: 4,
+                  right: 8,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_xfile != null) ...[
+                        _IconChip(
+                          icon: Icons.photo_library_outlined,
+                          label: l.photoPickerChangePhoto,
+                          onTap: () => _pickPhoto(ImageSource.gallery),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      _IconChip(
+                        icon: Icons.close,
+                        label: l.tooltipClose,
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: _xfile == null
-                ? _buildSourcePicker(context, scheme, tt)
-                : _buildViewer(context, scheme, tt, scrollCtrl),
           ),
         ],
       ),
@@ -480,252 +490,78 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     );
   }
 
-  // Il visualizzatore foto NON deve mai stare dentro una ListView: un
-  // InteractiveViewer annidato in uno Scrollable compete con lo scroll/resize
-  // del bottom sheet per lo stesso gesto di trascinamento, e lo Scrollable
-  // tende a vincere l'arena — pan/pinch sulla foto finiva per scorrere/
-  // ridimensionare il sheet invece di spostare/zoomare l'immagine. Tenendolo
-  // come fratello non-scrollabile del ListView (invece che suo figlio),
-  // InteractiveViewer non ha più nessuno Scrollable con cui competere in quel
-  // punto dello schermo.
-  Widget _buildPhotoBox(BuildContext context, ColorScheme scheme) {
-    final l = AppL10n.of(context);
-    return SizedBox(
-      height: 340,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapUp: (d) {
-          final norm = _toImageCoords(d.globalPosition);
-          if (norm == null) return;
-          setState(() {
-            _circle = norm;
-          });
-        },
-        child: Stack(
-          key: _sceneKey,
-          children: [
-            // Background
-            Container(color: Colors.black),
-            // Photo, pannable/zoomable
-            InteractiveViewer(
-              transformationController: _transformCtrl,
-              minScale: 0.5,
-              maxScale: 6,
-              child: SizedBox.expand(
-                child: Center(
-                  child: Image(
-                    key: _imageKey,
-                    image: _imageProvider!,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-            ),
-            // Circle indicator — overlay, outside InteractiveViewer
-            _buildCircleOverlay(scheme),
-            // Change photo button
-            Positioned(
-              top: 8,
-              right: 8,
-              child: _IconChip(
-                icon: Icons.photo_library_outlined,
-                label: l.photoPickerChangePhoto,
-                onTap: () => _pickPhoto(ImageSource.gallery),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildViewer(
-    BuildContext context,
-    ColorScheme scheme,
-    TextTheme tt,
-    ScrollController scrollCtrl,
-  ) {
+  Widget _buildViewer(BuildContext context, ColorScheme scheme, TextTheme tt) {
     final l = AppL10n.of(context);
     return Column(
       children: [
-        _buildPhotoBox(context, scheme),
-        Expanded(
-          child: ListView(
-            controller: scrollCtrl,
-            padding: EdgeInsets.zero,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: GestureHintBar(
-                  hintKey: 'hint_photo_color_picker_zoom',
-                  message: l.photoPickerZoomHint,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // ── Sampled color + sample button ─────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    // Preview swatch
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: _sampled ?? scheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(10),
-                        border:
-                            Border.all(color: scheme.outline.withOpacity(0.4)),
-                      ),
-                      child: _sampled == null
-                          ? Icon(Icons.colorize_outlined,
-                              color: scheme.onSurface.withOpacity(0.3))
-                          : null,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _sampled != null
-                                ? '#${(_sampled!.value & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6, '0')}'
-                                : l.photoPickerTapToSample,
-                            style: tt.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                          Text(
-                            l.photoPickerThenDetect,
-                            style: tt.bodySmall?.copyWith(
-                                color: scheme.onSurface.withOpacity(0.55)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: FilledButton.icon(
-                  onPressed: (_sampling || _matching) ? null : _onSample,
-                  icon: (_sampling || _matching)
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.colorize),
-                  label: Text(_sampling
-                      ? l.photoPickerSampling
-                      : _matching
-                          ? l.photoPickerSearching
-                          : l.photoPickerDetectButton),
-                  style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48)),
-                ),
-              ),
-
-              // ── Error ────────────────────────────────────────────────────────────
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: scheme.errorContainer,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(_error!,
-                        style: tt.bodySmall
-                            ?.copyWith(color: scheme.onErrorContainer)),
-                  ),
-                ),
-              ],
-
-              // ── Results ──────────────────────────────────────────────────────────
-              if (_sampled != null &&
-                  !_matching &&
-                  (_inventoryMatches.isNotEmpty ||
-                      _catalogMatches.isNotEmpty)) ...[
-                const SizedBox(height: 24),
-                if (_inventoryMatches.isNotEmpty) ...[
-                  _SectionLabel(
-                    icon: Icons.inventory_2_outlined,
-                    label: l.photoPickerFromInventory,
-                    scheme: scheme,
-                    tt: tt,
-                  ),
-                  const SizedBox(height: 8),
-                  ..._inventoryMatches
-                      .map((m) => _MatchTile(match: m, scheme: scheme, tt: tt)),
-                ],
-                if (_catalogMatches.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _SectionLabel(
-                    icon: Icons.menu_book_outlined,
-                    label: l.photoPickerFromCatalog,
-                    scheme: scheme,
-                    tt: tt,
-                  ),
-                  const SizedBox(height: 8),
-                  ..._catalogMatches.map((m) => _MatchTile(
-                        match: m,
-                        scheme: scheme,
-                        tt: tt,
-                        onAdd: () => _addToShoppingList(m),
-                      )),
-                ],
-              ],
-
-              if (_sampled != null &&
-                  !_matching &&
-                  _inventoryMatches.isEmpty &&
-                  _catalogMatches.isEmpty) ...[
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.search_off,
-                            color: scheme.onSurface.withOpacity(0.5)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            l.photoPickerNoMatches,
-                            style: tt.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 32),
-            ],
+        Expanded(child: _buildPhotoStack(context, scheme, tt)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: GestureHintBar(
+            hintKey: 'hint_photo_color_picker_zoom',
+            message: l.photoPickerZoomHint,
           ),
         ),
       ],
     );
   }
 
+  // Il visualizzatore foto NON deve mai stare dentro una ListView: un
+  // InteractiveViewer annidato in uno Scrollable compete con lo scroll/resize
+  // del bottom sheet per lo stesso gesto di trascinamento, e lo Scrollable
+  // tende a vincere l'arena — pan/pinch sulla foto finiva per scorrere/
+  // ridimensionare il sheet invece di spostare/zoomare l'immagine. Qui la
+  // foto occupa tutto lo spazio disponibile (Expanded) e non c'è più nessuna
+  // ListView in gioco.
+  Widget _buildPhotoStack(
+      BuildContext context, ColorScheme scheme, TextTheme tt) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTapUp: (d) {
+        final norm = _toImageCoords(d.globalPosition);
+        if (norm == null) return;
+        setState(() {
+          _circle = norm;
+          _tooltipVisible = false;
+        });
+      },
+      onLongPressStart: (d) {
+        final norm = _toImageCoords(d.globalPosition);
+        if (norm == null) return;
+        _onLongPressAt(norm);
+      },
+      child: Stack(
+        key: _sceneKey,
+        children: [
+          // Background
+          Container(color: Colors.black),
+          // Photo, pannable/zoomable
+          InteractiveViewer(
+            transformationController: _transformCtrl,
+            minScale: 0.5,
+            maxScale: 6,
+            child: SizedBox.expand(
+              child: Center(
+                child: Image(
+                  key: _imageKey,
+                  image: _imageProvider!,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+          // Circle indicator — overlay, outside InteractiveViewer
+          _buildCircleOverlay(scheme),
+          if (_tooltipVisible) _buildTooltip(context, scheme, tt),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCircleOverlay(ColorScheme scheme) {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
-    const r = 28.0; // raggio visivo dell'anello
+    const r = _kRingRadius;
     const hitR = 40.0; // raggio dell'area trascinabile — più grande dell'anello
     // visivo per rendere il trascinamento affidabile su schermo
     // touch (con hit area == anello visivo il dito manca spesso
@@ -737,10 +573,16 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       top: screen.dy - hitR,
       // Opaque + onPanUpdate: un trascinamento che parte dal cerchio lo
       // riposiziona direttamente, senza competere con il pan/zoom di
-      // InteractiveViewer sottostante (bloccato dall'hit test opaco).
+      // InteractiveViewer sottostante (bloccato dall'hit test opaco). Il
+      // punto realmente campionato resta esattamente sotto al dito (hit test
+      // non spostato); solo il disegno dell'anello viene spinto più in alto
+      // (transformHitTests:false) così resta visibile e non coperto dal dito.
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPanStart: (_) => HapticFeedback.selectionClick(),
+        onPanStart: (_) {
+          HapticFeedback.selectionClick();
+          setState(() => _tooltipVisible = false);
+        },
         onPanUpdate: (d) {
           final norm = _toImageCoords(d.globalPosition);
           if (norm != null) setState(() => _circle = norm);
@@ -748,30 +590,126 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
         child: SizedBox(
           width: hitR * 2,
           height: hitR * 2,
-          child: Center(
-            child: Container(
-              width: r * 2,
-              height: r * 2,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2.5),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black45, blurRadius: 4)
-                ],
-                color: sampled?.withOpacity(0.35),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              // Punto esatto campionato — resta sempre sotto al dito.
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black45, blurRadius: 2),
+                  ],
+                ),
               ),
-              child: Center(
+              Transform.translate(
+                offset: const Offset(0, -_kCircleVisualOffset),
+                transformHitTests: false,
                 child: Container(
-                  width: 4,
-                  height: 4,
-                  decoration: const BoxDecoration(
+                  width: r * 2,
+                  height: r * 2,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black45, blurRadius: 4),
+                    ],
+                    color: sampled?.withOpacity(0.35),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTooltip(BuildContext context, ColorScheme scheme, TextTheme tt) {
+    final l = AppL10n.of(context);
+    final screen = _toScenePos(_circle);
+    final sceneBox = _sceneKey.currentContext?.findRenderObject() as RenderBox?;
+    if (screen == null || sceneBox == null) return const SizedBox.shrink();
+    final size = sceneBox.size;
+
+    const tooltipW = 260.0;
+    final rowH = 44.0;
+    final tooltipH = _matching || _tooltipMatches.isEmpty
+        ? 56.0
+        : _tooltipMatches.length * rowH + 16;
+
+    final maxLeft = (size.width - tooltipW - 8).clamp(8.0, size.width);
+    final left = (screen.dx - tooltipW / 2).clamp(8.0, maxLeft);
+    // Prova sopra l'anello (già spostato sopra il dito); se non c'è spazio,
+    // sotto al punto reale.
+    double top = screen.dy - _kCircleVisualOffset - _kRingRadius - tooltipH - 12;
+    if (top < 8) top = screen.dy + 28 + 12;
+
+    return Positioned(
+      left: left,
+      top: top,
+      width: tooltipW,
+      child: Material(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+        elevation: 8,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: (_matching || _tooltipMatches.isEmpty)
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_matching) ...[
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 10),
+                    ] else
+                      Icon(Icons.search_off,
+                          color: scheme.onSurface.withOpacity(0.5), size: 18),
+                    if (!_matching) const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _matching
+                            ? l.photoPickerSearching
+                            : l.photoPickerNoMatches,
+                        style: tt.bodySmall,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _tooltipMatches.map((m) {
+                    final hasProject = widget.projectId != null;
+                    IconData? icon;
+                    String? tip;
+                    VoidCallback? onTap;
+                    if (hasProject) {
+                      icon = Icons.add_circle_outline;
+                      tip = l.paletteAddPaintTooltip;
+                      onTap = () => _addToProjectKit(m);
+                    } else if (!m.fromInventory) {
+                      icon = Icons.add_shopping_cart_outlined;
+                      tip = l.paintAddToShoppingList;
+                      onTap = () => _addToShoppingList(m);
+                    }
+                    return _TooltipRow(
+                      match: m,
+                      scheme: scheme,
+                      tt: tt,
+                      actionIcon: icon,
+                      actionTooltip: tip,
+                      onAction: onTap,
+                    );
+                  }).toList(),
+                ),
         ),
       ),
     );
@@ -842,151 +780,69 @@ class _IconChip extends StatelessWidget {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final ColorScheme scheme;
-  final TextTheme tt;
-  const _SectionLabel({
-    required this.icon,
-    required this.label,
-    required this.scheme,
-    required this.tt,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: scheme.onSurface.withOpacity(0.5)),
-          const SizedBox(width: 6),
-          Text(
-            label.toUpperCase(),
-            style: tt.labelSmall?.copyWith(
-              color: scheme.onSurface.withOpacity(0.5),
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MatchTile extends StatelessWidget {
+class _TooltipRow extends StatelessWidget {
   final _ColorMatch match;
   final ColorScheme scheme;
   final TextTheme tt;
-  // Present only for catalog matches — adds the paint to the inventory.
-  // Inventory matches (already owned) have no action, just a status icon.
-  final VoidCallback? onAdd;
-  const _MatchTile({
+  final IconData? actionIcon;
+  final String? actionTooltip;
+  final VoidCallback? onAction;
+  const _TooltipRow({
     required this.match,
     required this.scheme,
     required this.tt,
-    this.onAdd,
+    this.actionIcon,
+    this.actionTooltip,
+    this.onAction,
   });
 
-  Color get _deColor {
-    if (match.deltaE < 4) return const Color(0xFF2F8F57);
-    if (match.deltaE < 10) return const Color(0xFFC87A20);
-    return scheme.onSurfaceVariant;
-  }
-
-  String get _brandLabel => switch (match.brand) {
-        'tamiya' => 'Tamiya',
-        'vallejo' => 'Vallejo',
-        'citadel' => 'Citadel',
-        'gunze' => 'Gunze',
-        'humbrol' => 'Humbrol',
-        'lifecolor' => 'Lifecolor',
-        _ => match.brand,
-      };
+  String get _brandLabel => AppConstants.brandLabels[match.brand] ?? match.brand;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            HexColorChip(color: hexToColor(match.hex), size: 30),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(match.name,
-                      style:
-                          tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  Text('$_brandLabel · ${match.code}',
-                      style: tt.bodySmall
-                          ?.copyWith(color: scheme.onSurface.withOpacity(0.6))),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          HexColorChip(color: hexToColor(match.hex), size: 26),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${match.precision}%',
-                    style: tt.labelLarge?.copyWith(
-                        color: _deColor, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: 56,
-                  height: 4,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: match.precision / 100,
-                      backgroundColor: scheme.outline.withOpacity(0.2),
-                      valueColor: AlwaysStoppedAnimation(_deColor),
-                    ),
-                  ),
+                Text(
+                  match.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 2),
-                Text('ΔE ${match.deltaE.toStringAsFixed(1)}',
-                    style: tt.labelSmall
-                        ?.copyWith(color: scheme.onSurface.withOpacity(0.45))),
+                Text(
+                  '$_brandLabel · ${match.code}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.labelSmall
+                      ?.copyWith(color: scheme.onSurface.withOpacity(0.6)),
+                ),
               ],
             ),
-            const SizedBox(width: 4),
-            _buildAction(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAction(BuildContext context) {
-    final l = AppL10n.of(context);
-    if (match.fromInventory) {
-      return Tooltip(
-        message: l.paletteInStock,
-        child:
-            Icon(Icons.check_circle, color: const Color(0xFF2F8F57), size: 22),
-      );
-    }
-    return Tooltip(
-      message: l.paintAddToShoppingList,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onAdd,
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Icon(Icons.add_shopping_cart_outlined,
-              color: scheme.primary, size: 22),
-        ),
+          ),
+          const SizedBox(width: 6),
+          if (actionIcon != null)
+            Tooltip(
+              message: actionTooltip ?? '',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: onAction,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(actionIcon, color: scheme.primary, size: 20),
+                ),
+              ),
+            )
+          else
+            const Icon(Icons.check_circle, color: Color(0xFF2F8F57), size: 20),
+        ],
       ),
     );
   }

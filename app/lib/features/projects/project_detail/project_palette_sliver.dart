@@ -12,6 +12,7 @@ import '../../../shared/services/claude_service.dart';
 import '../../../shared/utils/lab_mixer.dart';
 import '../../../shared/widgets/hex_color_chip.dart';
 import '../../../shared/widgets/paint_suggestion_sheet.dart';
+import '../../paints/photo_color_picker_sheet.dart';
 import '../../recipes/recipe_repository.dart';
 import '../project_repository.dart';
 
@@ -129,6 +130,15 @@ class ProjectPaletteSliver extends ConsumerWidget {
                     onTap: () {
                       HapticFeedback.lightImpact();
                       context.push('/shopping');
+                    },
+                    color: scheme.primary,
+                  ),
+                  _HeaderIconButton(
+                    icon: Icons.colorize_outlined,
+                    tooltip: l.tooltipDetectColorFromPhoto,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      PhotoColorPickerSheet.show(context, projectId: projectId);
                     },
                     color: scheme.primary,
                   ),

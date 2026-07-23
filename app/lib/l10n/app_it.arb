@@ -787,7 +787,7 @@
   "@photoPickerChooseHint": {},
   "photoPickerChangePhoto": "Cambia",
   "@photoPickerChangePhoto": {},
-  "photoPickerZoomHint": "Pizzica per zoomare, trascina la foto per spostarla, tocca o trascina il cerchio per posizionarlo",
+  "photoPickerZoomHint": "Pizzica per zoomare, trascina la foto o il cerchio, tieni premuto per vedere i colori simili",
   "@photoPickerZoomHint": {},
   "photoPickerTapToSample": "Tocca il cerchio sul colore da rilevare",
   "@photoPickerTapToSample": {},
