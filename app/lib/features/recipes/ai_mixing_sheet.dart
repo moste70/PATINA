@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../database/app_database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../shared/constants/app_constants.dart';
 import '../../shared/services/claude_service.dart';
+import '../../shared/utils/lab_mixer.dart';
 import '../../shared/widgets/hex_color_chip.dart';
+import '../paints/paints_repository.dart';
 import 'create_recipe_screen.dart';
+import 'target_color_picker_screen.dart';
 
 // ── Model ─────────────────────────────────────────────────────────────────────
 
@@ -22,7 +25,8 @@ class MixingSuggestion {
     required this.targetHex,
   });
 
-  factory MixingSuggestion.fromJson(Map<String, dynamic> json, String targetHex) {
+  factory MixingSuggestion.fromJson(
+      Map<String, dynamic> json, String targetHex) {
     return MixingSuggestion(
       ingredients: (json['ingredients'] as List<dynamic>? ?? [])
           .map((e) => MixingIngredient.fromJson(e as Map<String, dynamic>))
@@ -48,7 +52,8 @@ class MixingIngredient {
     required this.percentage,
   });
 
-  factory MixingIngredient.fromJson(Map<String, dynamic> json) => MixingIngredient(
+  factory MixingIngredient.fromJson(Map<String, dynamic> json) =>
+      MixingIngredient(
         brand: json['brand'] as String? ?? '',
         code: json['code'] as String? ?? '',
         name: json['name'] as String? ?? '',
@@ -59,7 +64,8 @@ class MixingIngredient {
 
 // ── Mock per debug senza Firebase Functions ───────────────────────────────────
 
-MixingSuggestion _mockSuggestion(String targetHex, String mockNote) => MixingSuggestion(
+MixingSuggestion _mockSuggestion(String targetHex, String mockNote) =>
+    MixingSuggestion(
       targetHex: targetHex,
       ingredients: [
         const MixingIngredient(
@@ -105,58 +111,44 @@ class AiMixingSheet extends ConsumerStatefulWidget {
   ConsumerState<AiMixingSheet> createState() => _AiMixingSheetState();
 }
 
+// Vernici dell'inventario dell'utente, per il selettore "solo censite" vs
+// "tutto il catalogo" — deriva l'insieme delle marche già presenti in
+// inventario (catalogo o custom) per filtrare i FilterChip marca.
+final _inventoryBrandsProvider = StreamProvider.autoDispose<Set<String>>(
+  (ref) => ref.watch(paintsRepositoryProvider).watchInventoryPaints().map(
+        (rows) => rows
+            .map((r) => (r.catalogBrand ?? r.customBrand ?? '').toLowerCase())
+            .where((b) => b.isNotEmpty)
+            .toSet(),
+      ),
+);
+
 class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
-  final _hexCtrl = TextEditingController(text: '#');
-  final _hexFocus = FocusNode();
-  String _hexPreview = '#888888';
-  bool _hexValid = false;
+  String? _targetHex;
 
   final Set<String> _selectedBrands = {'vallejo', 'tamiya', 'citadel'};
+  bool _inventoryOnly = false;
   bool _loading = false;
   MixingSuggestion? _result;
   String? _error;
 
-  static const _kBrands = [
-    ('vallejo', 'Vallejo'),
-    ('tamiya', 'Tamiya'),
-    ('citadel', 'Citadel'),
-    ('gunze', 'Gunze'),
-    ('humbrol', 'Humbrol'),
-    ('lifecolor', 'Lifecolor'),
-  ];
+  static final _kBrands =
+      AppConstants.brandLabels.entries.map((e) => (e.key, e.value)).toList();
 
-  @override
-  void dispose() {
-    _hexCtrl.dispose();
-    _hexFocus.dispose();
-    super.dispose();
-  }
-
-  bool _isValidHex(String v) {
-    final s = v.startsWith('#') ? v.substring(1) : v;
-    return RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(s);
-  }
-
-  void _onHexChanged(String v) {
-    final normalized = v.startsWith('#') ? v : '#$v';
-    final valid = _isValidHex(normalized);
+  Future<void> _pickTargetColor() async {
+    final hex =
+        await TargetColorPickerScreen.show(context, initialHex: _targetHex);
+    if (hex == null || !mounted) return;
     setState(() {
-      _hexValid = valid;
-      if (valid) _hexPreview = normalized.toUpperCase();
+      _targetHex = hex;
+      _result = null;
+      _error = null;
     });
   }
 
-  Color _previewColor() {
-    try {
-      final hex = _hexPreview.replaceFirst('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (_) {
-      return Colors.grey;
-    }
-  }
-
   Future<void> _generate() async {
-    if (!_hexValid) return;
+    final targetHex = _targetHex;
+    if (targetHex == null) return;
     if (_selectedBrands.isEmpty) return;
 
     setState(() {
@@ -171,21 +163,35 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
         // Mock in debug — nessuna chiamata Firebase
         await Future.delayed(const Duration(seconds: 2));
         final mockNote = AppL10n.of(context).aiMixingMockNote;
-        setState(() => _result = _mockSuggestion(_hexPreview, mockNote));
+        setState(() => _result = _mockSuggestion(targetHex, mockNote));
       } else {
         final svc = ref.read(claudeServiceProvider);
+        // TODO(urgente, backend): vincolare la ricetta a marca/linea unica
+        // (non miscelare Tamiya lacquer con Vallejo acrilico, ecc.) va fatto
+        // nel prompt della Firebase Function suggestMixingRecipe
+        // (functions/index.js), non qui — la selezione degli ingredienti è
+        // interamente lato Claude/server. Richiede un redeploy separato
+        // (deploy-functions.yml). Vedi docs/roadmap.md § Debito Tecnico.
         final raw = await svc.suggestMixingRecipe(
-          targetHex: _hexPreview,
+          targetHex: targetHex,
           availableBrands: _selectedBrands.toList(),
         );
         final decoded = jsonDecode(raw) as Map<String, dynamic>;
-        setState(() => _result = MixingSuggestion.fromJson(decoded, _hexPreview));
+        setState(() => _result = MixingSuggestion.fromJson(decoded, targetHex));
       }
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
       setState(() => _loading = false);
     }
+  }
+
+  Color? _blendedResultColor() {
+    final ingredients = _result?.ingredients;
+    if (ingredients == null || ingredients.isEmpty) return null;
+    return blendColorsInLab(ingredients
+        .map((i) => (hex: i.hex, weight: i.percentage.toDouble()))
+        .toList());
   }
 
   void _saveAsRecipe() {
@@ -205,6 +211,12 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
     final l = AppL10n.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final inventoryBrands =
+        ref.watch(_inventoryBrandsProvider).valueOrNull ?? {};
+    final visibleBrands = _inventoryOnly
+        ? _kBrands.where((b) => inventoryBrands.contains(b.$1)).toList()
+        : _kBrands;
+    final blendedResult = _blendedResultColor();
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
@@ -217,7 +229,8 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: scheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
@@ -233,10 +246,12 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
                 Icon(Icons.auto_fix_high, color: scheme.primary, size: 22),
                 const SizedBox(width: 10),
                 Text(l.aiMixingTitle,
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    style:
+                        tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
@@ -257,93 +272,155 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               children: [
                 // ── Colore target ─────────────────────────────────────────
-                Text(l.aiMixingTargetColorLabel, style: tt.labelMedium?.copyWith(
-                    color: scheme.onSurface.withOpacity(0.6),
-                    letterSpacing: 0.8)),
+                Text(l.aiMixingTargetColorLabel,
+                    style: tt.labelMedium?.copyWith(
+                        color: scheme.onSurface.withOpacity(0.6),
+                        letterSpacing: 0.8)),
                 const SizedBox(height: 8),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 48, height: 48,
-                      decoration: BoxDecoration(
-                        color: _previewColor(),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: scheme.outline.withOpacity(0.4),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _hexCtrl,
-                        focusNode: _hexFocus,
-                        textCapitalization: TextCapitalization.characters,
-                        decoration: InputDecoration(
-                          labelText: l.aiMixingHexLabel,
-                          hintText: '#A3B18A',
-                          errorText: _hexCtrl.text.length > 1 && !_hexValid
-                              ? l.aiMixingHexInvalid
-                              : null,
-                          prefixIcon: const Icon(Icons.colorize_outlined),
-                        ),
-                        onChanged: _onHexChanged,
-                        inputFormatters: [
-                          TextInputFormatter.withFunction((old, newVal) {
-                            var text = newVal.text.toUpperCase();
-                            if (!text.startsWith('#')) text = '#$text';
-                            if (text.length > 7) text = text.substring(0, 7);
-                            return newVal.copyWith(
-                              text: text,
-                              selection: TextSelection.collapsed(offset: text.length),
-                            );
-                          }),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(28),
+                      onTap: _pickTargetColor,
+                      child: Column(
+                        children: [
+                          HexColorChip(
+                            color: _targetHex != null
+                                ? hexToColor(_targetHex!)
+                                : scheme.surfaceContainerHigh,
+                            size: 52,
+                            child: _targetHex == null
+                                ? Icon(Icons.colorize_outlined,
+                                    color: scheme.onSurface.withOpacity(0.3))
+                                : null,
+                          ),
+                          if (blendedResult != null) ...[
+                            const SizedBox(height: 8),
+                            HexColorChip(color: blendedResult, size: 52),
+                          ],
                         ],
                       ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_targetHex ?? l.aiMixingSelectTargetHint,
+                              style: tt.bodyMedium),
+                          if (blendedResult != null) ...[
+                            const SizedBox(height: 8),
+                            Text(l.aiMixingResultColorLabel,
+                                style: tt.bodySmall?.copyWith(
+                                    color: scheme.onSurface.withOpacity(0.6))),
+                          ],
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      tooltip: l.actionChangeColor,
+                      onPressed: _pickTargetColor,
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 20),
 
-                // ── Marche disponibili ─────────────────────────────────────
-                Text(l.aiMixingBrandsLabel, style: tt.labelMedium?.copyWith(
-                    color: scheme.onSurface.withOpacity(0.6),
-                    letterSpacing: 0.8)),
+                // ── Vernici considerate (inventario/catalogo) ──────────────
+                Text(l.aiMixingSourceLabel,
+                    style: tt.labelMedium?.copyWith(
+                        color: scheme.onSurface.withOpacity(0.6),
+                        letterSpacing: 0.8)),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: _kBrands.map((b) {
-                    final selected = _selectedBrands.contains(b.$1);
-                    return FilterChip(
-                      label: Text(b.$2),
-                      selected: selected,
-                      onSelected: (v) => setState(() {
-                        if (v) {
-                          _selectedBrands.add(b.$1);
-                        } else {
-                          _selectedBrands.remove(b.$1);
-                        }
-                      }),
-                    );
-                  }).toList(),
+                SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(
+                      value: false,
+                      label: Text(l.aiMixingSourceCatalog),
+                      icon: const Icon(Icons.inventory_2_outlined),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      label: Text(l.aiMixingSourceInventory),
+                      icon: const Icon(Icons.checklist_outlined),
+                    ),
+                  ],
+                  selected: {_inventoryOnly},
+                  onSelectionChanged: (s) => setState(() {
+                    _inventoryOnly = s.first;
+                    if (_inventoryOnly) {
+                      _selectedBrands
+                          .removeWhere((b) => !inventoryBrands.contains(b));
+                    }
+                  }),
                 ),
+
+                const SizedBox(height: 20),
+
+                // ── Marche disponibili ─────────────────────────────────────
+                Text(l.aiMixingBrandsLabel,
+                    style: tt.labelMedium?.copyWith(
+                        color: scheme.onSurface.withOpacity(0.6),
+                        letterSpacing: 0.8)),
+                const SizedBox(height: 8),
+                if (_inventoryOnly && visibleBrands.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline,
+                            size: 18, color: scheme.onSurface.withOpacity(0.5)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(l.aiMixingNoInventoryBrands,
+                              style: tt.bodySmall),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: visibleBrands.map((b) {
+                      final selected = _selectedBrands.contains(b.$1);
+                      return FilterChip(
+                        label: Text(b.$2),
+                        selected: selected,
+                        onSelected: (v) => setState(() {
+                          if (v) {
+                            _selectedBrands.add(b.$1);
+                          } else {
+                            _selectedBrands.remove(b.$1);
+                          }
+                        }),
+                      );
+                    }).toList(),
+                  ),
 
                 const SizedBox(height: 24),
 
                 // ── Bottone genera ─────────────────────────────────────────
                 FilledButton.icon(
-                  onPressed: (_hexValid && _selectedBrands.isNotEmpty && !_loading)
+                  onPressed: (_targetHex != null &&
+                          _selectedBrands.isNotEmpty &&
+                          !_loading)
                       ? _generate
                       : null,
                   icon: _loading
                       ? const SizedBox(
-                          width: 18, height: 18,
+                          width: 18,
+                          height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.auto_fix_high),
-                  label: Text(_loading ? l.aiMixingAnalyzing : l.aiMixingGenerate),
+                  label:
+                      Text(_loading ? l.aiMixingAnalyzing : l.aiMixingGenerate),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                   ),
@@ -360,11 +437,13 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: scheme.error, size: 20),
+                        Icon(Icons.error_outline,
+                            color: scheme.error, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(_error!,
-                              style: tt.bodySmall?.copyWith(color: scheme.onErrorContainer)),
+                              style: tt.bodySmall
+                                  ?.copyWith(color: scheme.onErrorContainer)),
                         ),
                       ],
                     ),
@@ -386,11 +465,6 @@ class _AiMixingSheetState extends ConsumerState<AiMixingSheet> {
       ),
     );
   }
-}
-
-Color _hexToColor(String hex) {
-  final h = hex.replaceAll('#', '').padLeft(6, '0');
-  return Color(int.parse('FF$h', radix: 16));
 }
 
 // ── Result card ───────────────────────────────────────────────────────────────
@@ -424,22 +498,23 @@ class _ResultCard extends StatelessWidget {
         ...suggestion.ingredients.map((ing) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    HexColorChip(color: _hexToColor(ing.hex), size: 28),
+                    HexColorChip(color: hexToColor(ing.hex), size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(ing.name,
-                              style: tt.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500)),
+                              style: tt.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500)),
                           Text('${ing.brand.toUpperCase()} ${ing.code}',
                               style: tt.bodySmall?.copyWith(
                                   color: scheme.onSurface.withOpacity(0.6))),
@@ -464,7 +539,8 @@ class _ResultCard extends StatelessWidget {
                             child: LinearProgressIndicator(
                               value: ing.percentage / 100,
                               backgroundColor: scheme.outline.withOpacity(0.2),
-                              valueColor: AlwaysStoppedAnimation(scheme.primary),
+                              valueColor:
+                                  AlwaysStoppedAnimation(scheme.primary),
                             ),
                           ),
                         ),
@@ -492,8 +568,8 @@ class _ResultCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(suggestion.notes,
-                      style: tt.bodySmall?.copyWith(
-                          color: scheme.onSecondaryContainer)),
+                      style: tt.bodySmall
+                          ?.copyWith(color: scheme.onSecondaryContainer)),
                 ),
               ],
             ),

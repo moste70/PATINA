@@ -836,7 +836,7 @@ Ogni codice riconosciuto riceve:
 |-----------|---------|-------------|
 | 3.1 | Sistema abbonamento | RevenueCat + Firebase Auth + Firestore + paywall UI definitivo |
 | 3.2 | Scan istruzioni AI Vision | Claude Vision sostituisce MLKit OCR — riconosce codici colore con contesto visivo |
-| 3.3 | Miscelazione AI avanzata | Suggerisce ricette partendo da colore target o foto |
+| 3.3 | ✅ Miscelazione AI avanzata | `AiMixingSheet`: colore target scelto con schermata dedicata a tutto schermo (`TargetColorPickerScreen`, HEX manuale o campionamento da foto con cerchio trascinabile — stesso pattern di `PhotoColorPickerSheet`), mostrato come `HexColorChip` esagonale affiancato all'esagono del colore realmente ottenuto dalla miscela (`blendColorsInLab` sugli ingredienti suggeriti), selettore "solo vernici censite in inventario" vs "tutto il catalogo" per le marche disponibili all'AI. **Nota:** il vincolo "non miscelare marche/tipologie diverse" non è ancora imposto — richiede modifica al prompt della Function `suggestMixingRecipe` lato backend (vedi DT.15 in `docs/roadmap.md`) |
 | 3.4 | ✅ Riconoscimento colore da foto | `PhotoColorPickerSheet`: viewer con pan/zoom reale via `InteractiveViewer` (cerchio overlay fuori dall'`InteractiveViewer`, coordinate risolte con `RenderBox.globalToLocal`/`localToGlobal` come in `PinViewerScreen` — niente più conflitto tra tap-per-campionare e gesture di pan/zoom) + campionamento pixel + ΔE offline → top 2 inventario + top 2 catalogo con % precisione, azione "Aggiungi all'inventario" sui suggerimenti da catalogo. Foto camera non salvata. |
 | 3.5 | Istruzioni AR | Overlay esagoni colorati su foto libretto B/N |
 | 3.6 | Sincronizzazione cloud | Backup automatico e sync multi-dispositivo |

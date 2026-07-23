@@ -493,6 +493,7 @@ export const revenueCatWebhook = onRequest(async (req, res) => {
 | DT.12 | 🟢 Bassa | `HexColorChip` — bordo fisso `scheme.outline` non visibile sui colori molto scuri (nero, navy) su sfondo scuro, né sui colori molto chiari (bianco, avorio) su sfondo chiaro | `HexColorChip.build()`: calcola luminanza relativa WCAG del colore; se luminanza > 0.18 applica bordo `nero/25%`, altrimenti `bianco/35%`. Applicato globalmente a tutte le schermate (palette, shopping, scan, inventario, ricette). | ✅ Risolto |
 | DT.13 | 🟡 Media | Selector quantità inventario — 4 bottoni GestureDetector+AnimatedContainer sostituiti con `DropdownButtonFormField` nel detail sheet (`paints_screen.dart`). | ✅ Risolto |
 | DT.14 | 🟡 Media | "Cerca ricetta per colore target" (1C.9) — funzionalità rimossa temporaneamente perché poco comprensibile (UX confusa). Da riprogettare: entry point più chiaro, tutorial inline, possibilmente fotocamera come input alternativo al HEX picker. | ✅ Risolto — nuovo sheet `FindRecipeByColorSheet`: icona dedicata in AppBar Ricette, hint inline al primo uso (`GestureHintBar`), input HEX o foto con cerchio trascinabile (esteso anche a `PhotoColorPickerSheet` per coerenza), ranking ΔE sulle ricette salvate |
+| DT.15 | 🔴 Alta | **TODO urgente (backend)** — Miscelazione AI: le ricette suggerite possono combinare vernici di marche/tipologie diverse e incompatibili tra loro (es. smalto Tamiya lacquer + acrilico Vallejo), che nella realtà non sono miscelabili. La selezione degli ingredienti avviene interamente lato Claude/server (prompt in `suggestMixingRecipe`), quindi non è correggibile lato Flutter. | Vincolare il prompt della Firebase Function `suggestMixingRecipe` (`functions/index.js`) a usare una sola marca/linea di prodotto per ricetta (o comunque tipologie compatibili tra loro). Richiede un redeploy separato via `deploy-functions.yml`, non incluso nella build APK. Segnalato con commento `TODO(urgente, backend)` in `ai_mixing_sheet.dart` presso la chiamata a `suggestMixingRecipe`. | ⬜ Da fare |
 
 ---
 
@@ -509,7 +510,7 @@ Fase 1F      ███░░░░░░░   33%  — fondamenta complete (Adap
 Fase 2       ██████░░░░   60%  — i18n IT+EN completo incl. migrazione stringhe legacy residue (2.3); manca ES/FR
 Fase 3       ████░░░░░░   38%  — Firebase Auth + Google Sign-In (3.1 parziale); scan istruzioni AI Vision Pro (3.2 ✅); miscelazione AI (3.3 ✅); rileva colore da foto offline (3.4 ✅)
 Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo separato)
-Debito Tecnico ██████████ 100% — DT.1÷14 tutti risolti
+Debito Tecnico █████████░  93% — DT.1÷14 risolti; DT.15 aperto (vincolo marca/linea unica in suggestMixingRecipe, backend)
 ```
 
 ### Schema DB attuale: v10
@@ -526,9 +527,10 @@ Debito Tecnico ██████████ 100% — DT.1÷14 tutti risolti
 
 ### Prossimi step immediati (ordine esecuzione)
 
-1. 🟡 `1F.4/1F.6-1F.8` — Layout adattivi per feature (archivio maestro-dettaglio, wizard, inventario, pin) — fondamenta già pronte
-2. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
-3. 🟢 `2.4/2.5` — Traduzione ES/FR
+1. 🔴 `DT.15` — Vincolo marca/linea unica nel prompt `suggestMixingRecipe` (backend, richiede redeploy `deploy-functions.yml`)
+2. 🟡 `1F.4/1F.6-1F.8` — Layout adattivi per feature (archivio maestro-dettaglio, wizard, inventario, pin) — fondamenta già pronte
+3. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
+4. 🟢 `2.4/2.5` — Traduzione ES/FR
 
 ---
 
