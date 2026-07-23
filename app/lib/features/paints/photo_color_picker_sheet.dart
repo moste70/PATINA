@@ -81,6 +81,9 @@ class _ColorMatch {
     required this.deltaE,
     required this.fromInventory,
   });
+
+  // Precisione 0–100: ΔE=0 → 100%, ΔE≥20 → 0%
+  int get precision => (((20.0 - deltaE.clamp(0, 20)) / 20.0) * 100).round();
 }
 
 // ── Sheet ─────────────────────────────────────────────────────────────────────
@@ -92,11 +95,15 @@ class PhotoColorPickerSheet extends ConsumerStatefulWidget {
   /// [projectId] — se presente, i suggerimenti mostrano "+" per aggiungere il
   /// colore alla palette/kit di quel progetto invece del carrello lista spesa.
   static Future<void> show(BuildContext context, {int? projectId}) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => PhotoColorPickerSheet(projectId: projectId),
+    // Fullscreen, non bottom sheet: stesso pattern del viewer foto
+    // fullscreen già usato altrove nell'app (MaterialPageRoute con
+    // fullscreenDialog:true) — bottone chiudi sempre visibile in AppBar,
+    // invece di icone overlay facili da non notare sopra la foto.
+    return Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PhotoColorPickerSheet(projectId: projectId),
+      ),
     );
   }
 
@@ -120,11 +127,13 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   // Viewer transform
   final _transformCtrl = TransformationController();
 
-  // Sampled color + suggerimenti (mostrati nel tooltip su tap prolungato)
+  // Sampled color + suggerimenti (mostrati nel tooltip su tap prolungato).
+  // Inventario prima, catalogo dopo; ordine alfabetico all'interno di ognuno.
   Color? _sampled;
   bool _tooltipVisible = false;
   bool _matching = false;
-  List<_ColorMatch> _tooltipMatches = [];
+  List<_ColorMatch> _inventoryMatches = [];
+  List<_ColorMatch> _catalogMatches = [];
 
   // Image size in pixels
   int _imgW = 1, _imgH = 1;
@@ -175,7 +184,8 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       _circle = const Offset(0.5, 0.5);
       _sampled = null;
       _tooltipVisible = false;
-      _tooltipMatches = [];
+      _inventoryMatches = [];
+      _catalogMatches = [];
       _transformCtrl.value = Matrix4.identity();
     });
     // The circle overlay needs the Image's RenderBox to be laid out before it
@@ -217,7 +227,8 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       _circle = norm;
       _tooltipVisible = true;
       _sampled = null;
-      _tooltipMatches = [];
+      _inventoryMatches = [];
+      _catalogMatches = [];
       _matching = true;
     });
     HapticFeedback.mediumImpact();
@@ -241,7 +252,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
 
   Future<void> _findMatches(Color target) async {
     const kMaxDeltaE = 18.0;
-    const kMaxResults = 3;
+    const kMaxEach = 3;
 
     // Load catalog once — used for both inventory hex resolution and catalog search
     final catalog = await _loadAllCatalogEntries();
@@ -252,7 +263,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     final inventory = ref.read(rawInventoryProvider).valueOrNull ?? [];
     final invKeys = <String>{};
 
-    final matches = <_ColorMatch>[];
+    final invMatches = <_ColorMatch>[];
     for (final p in inventory) {
       String brand, code, name, hex;
       if (p.catalogBrand != null && p.catalogCode != null) {
@@ -275,7 +286,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       invKeys.add('$brand+$code');
       final de = deltaE(target, hexToColor(hex));
       if (de > kMaxDeltaE) continue;
-      matches.add(_ColorMatch(
+      invMatches.add(_ColorMatch(
         brand: brand,
         code: code,
         name: name,
@@ -285,11 +296,12 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       ));
     }
 
+    final catMatches = <_ColorMatch>[];
     for (final e in catalog) {
       if (invKeys.contains('${e.brand}+${e.code}')) continue;
       final de = deltaE(target, hexToColor(e.hex));
       if (de > kMaxDeltaE) continue;
-      matches.add(_ColorMatch(
+      catMatches.add(_ColorMatch(
         brand: e.brand,
         code: e.code,
         name: e.name,
@@ -299,11 +311,15 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
       ));
     }
 
-    matches.sort((a, b) => a.deltaE.compareTo(b.deltaE));
+    // Inventario prima, poi catalogo; ordine alfabetico all'interno di ognuno
+    // (non per ΔE — la percentuale di somiglianza resta comunque mostrata).
+    invMatches.sort((a, b) => a.name.compareTo(b.name));
+    catMatches.sort((a, b) => a.name.compareTo(b.name));
 
     if (!mounted) return;
     setState(() {
-      _tooltipMatches = matches.take(kMaxResults).toList();
+      _inventoryMatches = invMatches.take(kMaxEach).toList();
+      _catalogMatches = catMatches.take(kMaxEach).toList();
       _matching = false;
     });
   }
@@ -390,60 +406,32 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     ref.watch(rawInventoryProvider);
     ref.watch(_customIndexProvider);
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.95,
-      minChildSize: 0.5,
-      maxChildSize: 0.97,
-      expand: false,
-      builder: (_, scrollCtrl) => Column(
-        children: [
-          // Handle — anche unico modo per ridimensionare/trascinare il sheet
-          // (il resto del contenuto è la foto, che gestisce da sola i suoi
-          // gesti di pan/zoom/tap/tap-prolungato).
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 4),
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: scheme.onSurface.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
+    // Fullscreen come il viewer foto già usato altrove nell'app: AppBar
+    // scura con bottone chiudi sempre visibile (mai un'icona overlay sopra
+    // la foto, facile da non notare), solo icone con tooltip — mai testo.
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: l.tooltipClose,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          if (_xfile != null)
+            IconButton(
+              icon: const Icon(Icons.photo_library_outlined),
+              tooltip: l.photoPickerChangePhoto,
+              onPressed: () => _pickPhoto(ImageSource.gallery),
             ),
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                _xfile == null
-                    ? _buildSourcePicker(context, scheme, tt)
-                    : _buildViewer(context, scheme, tt),
-                Positioned(
-                  top: 4,
-                  right: 8,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_xfile != null) ...[
-                        _IconChip(
-                          icon: Icons.photo_library_outlined,
-                          label: l.photoPickerChangePhoto,
-                          onTap: () => _pickPhoto(ImageSource.gallery),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      _IconChip(
-                        icon: Icons.close,
-                        label: l.tooltipClose,
-                        onTap: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
+      body: _xfile == null
+          ? _buildSourcePicker(context, scheme, tt)
+          : _buildViewer(context, scheme, tt),
     );
   }
 
@@ -562,21 +550,29 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
     const r = _kRingRadius;
-    const hitR = 40.0; // raggio dell'area trascinabile — più grande dell'anello
-    // visivo per rendere il trascinamento affidabile su schermo
-    // touch (con hit area == anello visivo il dito manca spesso
-    // il bersaglio e finisce sul pan/zoom della foto sottostante)
+    const hitR = 40.0; // raggio orizzontale dell'area trascinabile attorno
+    // sia al punto esatto sia all'anello — più largo dell'anello visivo per
+    // rendere il trascinamento affidabile su schermo touch.
     final sampled = _sampled;
+
+    // L'area toccabile copre SIA il punto esatto (sotto al dito) SIA
+    // l'anello (disegnato più in alto): un box singolo, non spostato con
+    // Transform, che si estende dal punto reale fino all'anello. Toccare
+    // l'anello — cosa che l'utente farà naturalmente, visto che è l'unica
+    // cosa visibile — altrimenti cadrebbe fuori dall'area sensibile e il
+    // trascinamento non partirebbe mai.
+    const boxWidth = hitR * 2;
+    const boxHeight = hitR * 2 + _kCircleVisualOffset;
+    // Coordinate locali (origine in alto a sinistra del box):
+    const dotCenterY = hitR + _kCircleVisualOffset; // punto esatto, in basso
+    const ringCenterY = hitR; // anello, in alto
 
     return Positioned(
       left: screen.dx - hitR,
-      top: screen.dy - hitR,
-      // Opaque + onPanUpdate: un trascinamento che parte dal cerchio lo
+      top: screen.dy - hitR - _kCircleVisualOffset,
+      // Opaque + onPanUpdate: un trascinamento che parte da qui lo
       // riposiziona direttamente, senza competere con il pan/zoom di
-      // InteractiveViewer sottostante (bloccato dall'hit test opaco). Il
-      // punto realmente campionato resta esattamente sotto al dito (hit test
-      // non spostato); solo il disegno dell'anello viene spinto più in alto
-      // (transformHitTests:false) così resta visibile e non coperto dal dito.
+      // InteractiveViewer sottostante (bloccato dall'hit test opaco).
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: (_) {
@@ -588,27 +584,26 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
           if (norm != null) setState(() => _circle = norm);
         },
         child: SizedBox(
-          width: hitR * 2,
-          height: hitR * 2,
+          width: boxWidth,
+          height: boxHeight,
           child: Stack(
             clipBehavior: Clip.none,
-            alignment: Alignment.center,
             children: [
-              // Punto esatto campionato — resta sempre sotto al dito.
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black45, blurRadius: 2),
-                  ],
+              // Stelo di collegamento tra punto esatto e anello, per
+              // chiarire che sono lo stesso indicatore.
+              Positioned(
+                left: hitR - 1,
+                top: ringCenterY + r,
+                child: Container(
+                  width: 2,
+                  height: dotCenterY - (ringCenterY + r),
+                  color: Colors.white.withOpacity(0.7),
                 ),
               ),
-              Transform.translate(
-                offset: const Offset(0, -_kCircleVisualOffset),
-                transformHitTests: false,
+              // Anello colorato — resta sopra al dito, sempre visibile.
+              Positioned(
+                left: hitR - r,
+                top: ringCenterY - r,
                 child: Container(
                   width: r * 2,
                   height: r * 2,
@@ -619,6 +614,22 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
                       BoxShadow(color: Colors.black45, blurRadius: 4),
                     ],
                     color: sampled?.withOpacity(0.35),
+                  ),
+                ),
+              ),
+              // Punto esatto campionato — resta sempre sotto al dito.
+              Positioned(
+                left: hitR - 3,
+                top: dotCenterY - 3,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black45, blurRadius: 2),
+                    ],
                   ),
                 ),
               ),
@@ -636,17 +647,21 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     if (screen == null || sceneBox == null) return const SizedBox.shrink();
     final size = sceneBox.size;
 
+    // Inventario prima, poi catalogo — l'ordine di visualizzazione segue
+    // esattamente questo elenco concatenato.
+    final allMatches = [..._inventoryMatches, ..._catalogMatches];
+
     const tooltipW = 260.0;
-    final rowH = 44.0;
-    final tooltipH = _matching || _tooltipMatches.isEmpty
-        ? 56.0
-        : _tooltipMatches.length * rowH + 16;
+    const rowH = 50.0;
+    final tooltipH =
+        _matching || allMatches.isEmpty ? 56.0 : allMatches.length * rowH + 16;
 
     final maxLeft = (size.width - tooltipW - 8).clamp(8.0, size.width);
     final left = (screen.dx - tooltipW / 2).clamp(8.0, maxLeft);
     // Prova sopra l'anello (già spostato sopra il dito); se non c'è spazio,
     // sotto al punto reale.
-    double top = screen.dy - _kCircleVisualOffset - _kRingRadius - tooltipH - 12;
+    double top =
+        screen.dy - _kCircleVisualOffset - _kRingRadius - tooltipH - 12;
     if (top < 8) top = screen.dy + 28 + 12;
 
     return Positioned(
@@ -659,7 +674,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
         elevation: 8,
         child: Padding(
           padding: const EdgeInsets.all(10),
-          child: (_matching || _tooltipMatches.isEmpty)
+          child: (_matching || allMatches.isEmpty)
               ? Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -686,7 +701,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: _tooltipMatches.map((m) {
+                  children: allMatches.map((m) {
                     final hasProject = widget.projectId != null;
                     IconData? icon;
                     String? tip;
@@ -749,37 +764,6 @@ class _SourceButton extends StatelessWidget {
   }
 }
 
-class _IconChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  const _IconChip(
-      {required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.55),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: Colors.white),
-            const SizedBox(width: 4),
-            Text(label,
-                style: const TextStyle(color: Colors.white, fontSize: 12)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _TooltipRow extends StatelessWidget {
   final _ColorMatch match;
   final ColorScheme scheme;
@@ -796,7 +780,8 @@ class _TooltipRow extends StatelessWidget {
     this.onAction,
   });
 
-  String get _brandLabel => AppConstants.brandLabels[match.brand] ?? match.brand;
+  String get _brandLabel =>
+      AppConstants.brandLabels[match.brand] ?? match.brand;
 
   @override
   Widget build(BuildContext context) {
@@ -828,6 +813,14 @@ class _TooltipRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
+          Text(
+            '${match.precision}%',
+            style: tt.labelSmall?.copyWith(
+              color: scheme.onSurface.withOpacity(0.55),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 4),
           if (actionIcon != null)
             Tooltip(
               message: actionTooltip ?? '',
