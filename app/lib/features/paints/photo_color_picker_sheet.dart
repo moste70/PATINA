@@ -132,6 +132,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
   Color? _sampled;
   bool _tooltipVisible = false;
   bool _matching = false;
+  bool _isDragging = false; // true solo mentre si trascina l'anello
   List<_ColorMatch> _inventoryMatches = [];
   List<_ColorMatch> _catalogMatches = [];
 
@@ -220,11 +221,11 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     );
   }
 
-  // Tap prolungato ovunque sulla foto: sposta il cerchio lì, campiona e apre
-  // subito il tooltip con i suggerimenti — nessun bottone separato.
-  Future<void> _onLongPressAt(Offset norm) async {
+  // Tap prolungato ovunque sulla foto: NON sposta il cerchio (per
+  // riposizionarlo si trascina l'anello), campiona la posizione attuale e
+  // apre subito il tooltip con i suggerimenti — nessun bottone separato.
+  Future<void> _onLongPress() async {
     setState(() {
-      _circle = norm;
       _tooltipVisible = true;
       _sampled = null;
       _inventoryMatches = [];
@@ -513,11 +514,7 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
           _tooltipVisible = false;
         });
       },
-      onLongPressStart: (d) {
-        final norm = _toImageCoords(d.globalPosition);
-        if (norm == null) return;
-        _onLongPressAt(norm);
-      },
+      onLongPressStart: (_) => _onLongPress(),
       child: Stack(
         key: _sceneKey,
         children: [
@@ -550,90 +547,68 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
     final screen = _toScenePos(_circle);
     if (screen == null) return const SizedBox.shrink();
     const r = _kRingRadius;
-    const hitR = 40.0; // raggio orizzontale dell'area trascinabile attorno
-    // sia al punto esatto sia all'anello — più largo dell'anello visivo per
-    // rendere il trascinamento affidabile su schermo touch.
+    const hitR = 40.0; // area trascinabile, più larga dell'anello per essere
+    // facile da afferrare su schermo touch.
     final sampled = _sampled;
 
-    // L'area toccabile copre SIA il punto esatto (sotto al dito) SIA
-    // l'anello (disegnato più in alto): un box singolo, non spostato con
-    // Transform, che si estende dal punto reale fino all'anello. Toccare
-    // l'anello — cosa che l'utente farà naturalmente, visto che è l'unica
-    // cosa visibile — altrimenti cadrebbe fuori dall'area sensibile e il
-    // trascinamento non partirebbe mai.
-    const boxWidth = hitR * 2;
-    const boxHeight = hitR * 2 + _kCircleVisualOffset;
-    // Coordinate locali (origine in alto a sinistra del box):
-    const dotCenterY = hitR + _kCircleVisualOffset; // punto esatto, in basso
-    const ringCenterY = hitR; // anello, in alto
-
+    // A riposo l'anello è disegnato esattamente nella posizione reale (hit
+    // test e disegno coincidono, quindi toccarlo per iniziare a trascinare
+    // funziona sempre). SOLO mentre lo si sta trascinando (_isDragging) il
+    // disegno viene spostato sopra al dito (Transform.translate, non tocca
+    // l'hit test) così l'anello resta visibile e non coperto; il gesto è
+    // comunque già "catturato" dal puntatore quindi lo spostamento visivo
+    // non interrompe il trascinamento. Al rilascio l'anello torna a
+    // disegnarsi esattamente nel punto campionato.
     return Positioned(
       left: screen.dx - hitR,
-      top: screen.dy - hitR - _kCircleVisualOffset,
-      // Opaque + onPanUpdate: un trascinamento che parte da qui lo
-      // riposiziona direttamente, senza competere con il pan/zoom di
-      // InteractiveViewer sottostante (bloccato dall'hit test opaco).
+      top: screen.dy - hitR,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: (_) {
           HapticFeedback.selectionClick();
-          setState(() => _tooltipVisible = false);
+          setState(() {
+            _isDragging = true;
+            _tooltipVisible = false;
+          });
         },
         onPanUpdate: (d) {
           final norm = _toImageCoords(d.globalPosition);
           if (norm != null) setState(() => _circle = norm);
         },
+        onPanEnd: (_) => setState(() => _isDragging = false),
+        onPanCancel: () => setState(() => _isDragging = false),
         child: SizedBox(
-          width: boxWidth,
-          height: boxHeight,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Stelo di collegamento tra punto esatto e anello, per
-              // chiarire che sono lo stesso indicatore.
-              Positioned(
-                left: hitR - 1,
-                top: ringCenterY + r,
-                child: Container(
-                  width: 2,
-                  height: dotCenterY - (ringCenterY + r),
-                  color: Colors.white.withOpacity(0.7),
+          width: hitR * 2,
+          height: hitR * 2,
+          child: Center(
+            child: Transform.translate(
+              offset: _isDragging
+                  ? const Offset(0, -_kCircleVisualOffset)
+                  : Offset.zero,
+              transformHitTests: false,
+              child: Container(
+                width: r * 2,
+                height: r * 2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2.5),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black45, blurRadius: 4),
+                  ],
+                  color: sampled?.withOpacity(0.35),
                 ),
-              ),
-              // Anello colorato — resta sopra al dito, sempre visibile.
-              Positioned(
-                left: hitR - r,
-                top: ringCenterY - r,
-                child: Container(
-                  width: r * 2,
-                  height: r * 2,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2.5),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black45, blurRadius: 4),
-                    ],
-                    color: sampled?.withOpacity(0.35),
+                child: Center(
+                  child: Container(
+                    width: 4,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-              // Punto esatto campionato — resta sempre sotto al dito.
-              Positioned(
-                left: hitR - 3,
-                top: dotCenterY - 3,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black45, blurRadius: 2),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -658,11 +633,11 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
 
     final maxLeft = (size.width - tooltipW - 8).clamp(8.0, size.width);
     final left = (screen.dx - tooltipW / 2).clamp(8.0, maxLeft);
-    // Prova sopra l'anello (già spostato sopra il dito); se non c'è spazio,
-    // sotto al punto reale.
-    double top =
-        screen.dy - _kCircleVisualOffset - _kRingRadius - tooltipH - 12;
-    if (top < 8) top = screen.dy + 28 + 12;
+    // Il tooltip appare dopo un tap prolungato (l'anello non è in
+    // trascinamento, quindi è nella sua posizione reale): prova sopra
+    // l'anello; se non c'è spazio, sotto al punto reale.
+    double top = screen.dy - _kRingRadius - tooltipH - 12;
+    if (top < 8) top = screen.dy + _kRingRadius + 12;
 
     return Positioned(
       left: left,
