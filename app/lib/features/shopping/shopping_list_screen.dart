@@ -90,12 +90,17 @@ class ShoppingListScreen extends ConsumerWidget {
                 );
               }
               final sorted = [
-                ...entries.where((e) => !checkedPaints.contains('${e.brand}+${e.code}')),
-                ...entries.where((e) => checkedPaints.contains('${e.brand}+${e.code}')),
+                ...entries.where(
+                    (e) => !checkedPaints.contains('${e.brand}+${e.code}')),
+                ...entries.where(
+                    (e) => checkedPaints.contains('${e.brand}+${e.code}')),
               ];
               final grouped = <String, List<ShoppingEntry>>{};
               for (final e in sorted) {
-                grouped.putIfAbsent(e.projectName, () => []).add(e);
+                grouped
+                    .putIfAbsent(
+                        e.projectName ?? l.shoppingManualGroupLabel, () => [])
+                    .add(e);
               }
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
@@ -125,13 +130,21 @@ class ShoppingListScreen extends ConsumerWidget {
                       onToggle: (v) {
                         ref.read(_checkedPaintsProvider.notifier).update((s) {
                           final next = Set<String>.from(s);
-                          if (v) next.add(key); else next.remove(key);
+                          if (v)
+                            next.add(key);
+                          else
+                            next.remove(key);
                           return next;
                         });
                       },
-                      onExclude: () => ref
-                          .read(projectRepositoryProvider)
-                          .setShoppingExclusion(e.brand, e.code, excluded: true),
+                      onExclude: () => e.manualId != null
+                          ? ref
+                              .read(projectRepositoryProvider)
+                              .deleteShoppingItem(e.manualId!)
+                          : ref
+                              .read(projectRepositoryProvider)
+                              .setShoppingExclusion(e.brand, e.code,
+                                  excluded: true),
                     );
                   },
                   childCount: _flattenGroups(grouped).length,
@@ -150,7 +163,8 @@ class ShoppingListScreen extends ConsumerWidget {
           ),
           itemsAsync.when(
             loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-            error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+            error: (_, __) =>
+                const SliverToBoxAdapter(child: SizedBox.shrink()),
             data: (items) {
               if (items.isEmpty) {
                 return SliverToBoxAdapter(
@@ -178,9 +192,11 @@ class ShoppingListScreen extends ConsumerWidget {
           // ── Sezione escluse ───────────────────────────────────────
           excludedAsync.when(
             loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-            error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+            error: (_, __) =>
+                const SliverToBoxAdapter(child: SizedBox.shrink()),
             data: (excluded) {
-              if (excluded.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+              if (excluded.isEmpty)
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
               return SliverToBoxAdapter(
                 child: _ExcludedSection(
                   entries: excluded,
@@ -222,12 +238,15 @@ class ShoppingListScreen extends ConsumerWidget {
       buf.writeln(l.shoppingPaintsSection);
       final byProject = <String, List<ShoppingEntry>>{};
       for (final e in paints) {
-        byProject.putIfAbsent(e.projectName, () => []).add(e);
+        byProject
+            .putIfAbsent(e.projectName ?? l.shoppingManualGroupLabel, () => [])
+            .add(e);
       }
       for (final project in byProject.keys) {
         buf.writeln('\n$project');
         for (final e in byProject[project]!) {
-          final done = checkedPaints.contains('${e.brand}+${e.code}') ? '✓' : '○';
+          final done =
+              checkedPaints.contains('${e.brand}+${e.code}') ? '✓' : '○';
           buf.writeln('  $done ${e.brand}  ${e.code}  ${e.name}');
         }
       }
@@ -341,7 +360,9 @@ class _PaintRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: ValueKey('paint_${entry.brand}_${entry.code}'),
+      key: ValueKey(entry.manualId != null
+          ? 'paint_manual_${entry.manualId}'
+          : 'paint_${entry.brand}_${entry.code}'),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -351,57 +372,65 @@ class _PaintRow extends StatelessWidget {
           color: scheme.error,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(Icons.remove_circle_outline, color: scheme.onError),
+        child: Icon(
+          entry.manualId != null
+              ? Icons.delete_outline
+              : Icons.remove_circle_outline,
+          color: scheme.onError,
+        ),
       ),
       onDismissed: (_) => onExclude(),
       child: Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      decoration: BoxDecoration(
-        color: checked
-            ? scheme.surfaceContainerHigh.withOpacity(0.5)
-            : scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Checkbox(
-            value: checked,
-            onChanged: (v) => onToggle(v ?? false),
-            visualDensity: VisualDensity.compact,
-          ),
-          HexColorChip(
-            color: _hexColor(entry.hex),
-            size: 26,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${entry.brand}  ${entry.code}',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: checked ? scheme.onSurfaceVariant : scheme.onSurface,
-                    letterSpacing: 0.3,
-                    decoration: checked ? TextDecoration.lineThrough : null,
-                  ),
-                ),
-                Text(
-                  entry.name,
-                  style: tt.bodySmall?.copyWith(
-                    color: checked ? scheme.onSurfaceVariant.withOpacity(0.6) : null,
-                    decoration: checked ? TextDecoration.lineThrough : null,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        decoration: BoxDecoration(
+          color: checked
+              ? scheme.surfaceContainerHigh.withOpacity(0.5)
+              : scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Checkbox(
+              value: checked,
+              onChanged: (v) => onToggle(v ?? false),
+              visualDensity: VisualDensity.compact,
             ),
-          ),
-        ],
-      ),
+            HexColorChip(
+              color: _hexColor(entry.hex),
+              size: 26,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${entry.brand}  ${entry.code}',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          checked ? scheme.onSurfaceVariant : scheme.onSurface,
+                      letterSpacing: 0.3,
+                      decoration: checked ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  Text(
+                    entry.name,
+                    style: tt.bodySmall?.copyWith(
+                      color: checked
+                          ? scheme.onSurfaceVariant.withOpacity(0.6)
+                          : null,
+                      decoration: checked ? TextDecoration.lineThrough : null,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -465,15 +494,14 @@ class _ManualItemRow extends StatelessWidget {
                   Text(
                     item.label,
                     style: tt.bodyMedium?.copyWith(
-                      decoration:
-                          item.done ? TextDecoration.lineThrough : null,
+                      decoration: item.done ? TextDecoration.lineThrough : null,
                       color: item.done ? scheme.onSurfaceVariant : null,
                     ),
                   ),
                   if (item.notes != null && item.notes!.isNotEmpty)
                     Text(item.notes!,
-                        style: tt.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant),
+                        style: tt.bodySmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
                         overflow: TextOverflow.ellipsis),
                 ],
               ),
@@ -613,53 +641,57 @@ class _ExcludedSection extends StatelessWidget {
           ),
           iconColor: scheme.onSurfaceVariant,
           collapsedIconColor: scheme.onSurfaceVariant,
-          children: entries.map((e) => Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                HexColorChip(color: _hexColor(e.hex), size: 26),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${e.brand}  ${e.code}',
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        e.name,
-                        style: tt.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant.withOpacity(0.6)),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Tooltip(
-                  message: l.shoppingRestorePaint,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () => onRestore(e),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(Icons.undo,
-                          size: 20, color: scheme.onSurfaceVariant),
+          children: entries
+              .map((e) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHigh.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          )).toList(),
+                    child: Row(
+                      children: [
+                        HexColorChip(color: _hexColor(e.hex), size: 26),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${e.brand}  ${e.code}',
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                              Text(
+                                e.name,
+                                style: tt.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant
+                                        .withOpacity(0.6)),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Tooltip(
+                          message: l.shoppingRestorePaint,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => onRestore(e),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.undo,
+                                  size: 20, color: scheme.onSurfaceVariant),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ))
+              .toList(),
         ),
       ),
     );

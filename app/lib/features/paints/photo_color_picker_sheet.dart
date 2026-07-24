@@ -329,10 +329,12 @@ class _State extends ConsumerState<PhotoColorPickerSheet> {
 
   Future<void> _addToShoppingList(_ColorMatch match) async {
     HapticFeedback.lightImpact();
-    final brandLabel = AppConstants.brandLabels[match.brand] ?? match.brand;
-    await ref
-        .read(projectRepositoryProvider)
-        .addShoppingItem('$brandLabel ${match.code} · ${match.name}');
+    await ref.read(projectRepositoryProvider).addShoppingItem(
+          match.name,
+          brand: match.brand,
+          code: match.code,
+          hex: match.hex,
+        );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(AppL10n.of(context).paintAddedToShoppingList),

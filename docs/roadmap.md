@@ -513,7 +513,7 @@ Catalog Tool ░░░░░░░░░░    0%  — tool interno Python (repo
 Debito Tecnico █████████░  93% — DT.1÷14 risolti; DT.15 aperto (vincolo marca/linea unica in suggestMixingRecipe, backend)
 ```
 
-### Schema DB attuale: v10
+### Schema DB attuale: v11
 - v1 → tabelle base (projects, photos, catalog_paints, inventory_paints, recipes, recipe_ingredients, pins)
 - v2 → aggiunta `custom_paints`
 - v3 → aggiunta `project_paints` (palette del kit)
@@ -524,6 +524,7 @@ Debito Tecnico █████████░  93% — DT.1÷14 risolti; DT.15 a
 - v8 → aggiunta tabella `project_logs` (devlog progetto)
 - v9 → aggiunta colonna `created_at` a `inventory_paints`
 - v10 → indici su `pins(photo_id)`, `project_photos(project_id)`, `project_logs(project_id)`, `project_paints(project_id)`
+- v11 → aggiunta colonne `brand`, `code`, `hex` a `shopping_items` — permette a una voce aggiunta alla lista della spesa senza un progetto attivo (es. da "rileva colore da foto") di comparire come vernice strutturata nella sezione "Vernici" invece che come testo libero in "Altro"
 
 ### Prossimi step immediati (ordine esecuzione)
 

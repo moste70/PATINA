@@ -9,16 +9,16 @@ class ProjectRepository {
   Future<int> createProject(ProjectsCompanion companion) =>
       _db.into(_db.projects).insert(companion);
 
-  Stream<List<Project>> watchAllProjects() =>
-      (_db.select(_db.projects)
-            ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
-          .watch();
+  Stream<List<Project>> watchAllProjects() => (_db.select(_db.projects)
+        ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
+      .watch();
 
   Stream<Project> watchProjectById(int id) =>
       (_db.select(_db.projects)..where((t) => t.id.equals(id))).watchSingle();
 
   Future<void> updateProject(int id, ProjectsCompanion companion) =>
-      (_db.update(_db.projects)..where((t) => t.id.equals(id))).write(companion);
+      (_db.update(_db.projects)..where((t) => t.id.equals(id)))
+          .write(companion);
 
   Future<void> deleteProject(int id) =>
       (_db.delete(_db.projects)..where((t) => t.id.equals(id))).go();
@@ -67,8 +67,10 @@ class ProjectRepository {
   Stream<List<ProjectPaint>> watchProjectPaints(int projectId) =>
       (_db.select(_db.projectPaints)
             ..where((t) => t.projectId.equals(projectId))
-            ..orderBy([(t) => OrderingTerm.asc(t.brand),
-                       (t) => OrderingTerm.asc(t.code)]))
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.brand),
+              (t) => OrderingTerm.asc(t.code)
+            ]))
           .watch();
 
   Future<void> addProjectPaint({
@@ -95,8 +97,8 @@ class ProjectRepository {
   // Controlla se una vernice (brand+code) è nell'inventario dell'utente.
   Future<bool> isPaintInInventory(String brand, String code) async {
     final row = await (_db.select(_db.inventoryPaints)
-          ..where((t) =>
-              t.catalogBrand.equals(brand) & t.catalogCode.equals(code)))
+          ..where(
+              (t) => t.catalogBrand.equals(brand) & t.catalogCode.equals(code)))
         .getSingleOrNull();
     return row != null;
   }
@@ -111,21 +113,25 @@ class ProjectRepository {
       WHERE pp.brand = 'ricetta' AND pp.code = ?
       ORDER BY p.updated_at DESC
     ''';
-    return _db.customSelect(sql,
-        variables: [Variable.withString(recipeId.toString())],
-        readsFrom: {_db.projects, _db.projectPaints}).watch().map((rows) =>
-        rows.map((r) => Project(
-              id: r.read<int>('id'),
-              name: r.read<String>('name'),
-              brand: r.readNullable<String>('brand'),
-              scale: r.readNullable<String>('scale'),
-              category: r.readNullable<String>('category'),
-              coverPhoto: r.readNullable<String>('cover_photo'),
-              status: r.read<String>('status'),
-              notes: r.readNullable<String>('notes'),
-              createdAt: r.read<int>('created_at'),
-              updatedAt: r.read<int>('updated_at'),
-            )).toList());
+    return _db
+        .customSelect(sql,
+            variables: [Variable.withString(recipeId.toString())],
+            readsFrom: {_db.projects, _db.projectPaints})
+        .watch()
+        .map((rows) => rows
+            .map((r) => Project(
+                  id: r.read<int>('id'),
+                  name: r.read<String>('name'),
+                  brand: r.readNullable<String>('brand'),
+                  scale: r.readNullable<String>('scale'),
+                  category: r.readNullable<String>('category'),
+                  coverPhoto: r.readNullable<String>('cover_photo'),
+                  status: r.read<String>('status'),
+                  notes: r.readNullable<String>('notes'),
+                  createdAt: r.read<int>('created_at'),
+                  updatedAt: r.read<int>('updated_at'),
+                ))
+            .toList());
   }
 
   Stream<List<Project>> watchProjectsUsingPaints(
@@ -141,35 +147,54 @@ class ProjectRepository {
       WHERE $conditions
       ORDER BY p.updated_at DESC
     ''';
-    return _db.customSelect(sql,
-        variables: args.map(Variable.withString).toList(),
-        readsFrom: {_db.projects, _db.projectPaints}).watch().map((rows) =>
-        rows.map((r) => Project(
-              id: r.read<int>('id'),
-              name: r.read<String>('name'),
-              brand: r.readNullable<String>('brand'),
-              scale: r.readNullable<String>('scale'),
-              category: r.readNullable<String>('category'),
-              coverPhoto: r.readNullable<String>('cover_photo'),
-              status: r.read<String>('status'),
-              notes: r.readNullable<String>('notes'),
-              createdAt: r.read<int>('created_at'),
-              updatedAt: r.read<int>('updated_at'),
-            )).toList());
+    return _db
+        .customSelect(sql,
+            variables: args.map(Variable.withString).toList(),
+            readsFrom: {_db.projects, _db.projectPaints})
+        .watch()
+        .map((rows) => rows
+            .map((r) => Project(
+                  id: r.read<int>('id'),
+                  name: r.read<String>('name'),
+                  brand: r.readNullable<String>('brand'),
+                  scale: r.readNullable<String>('scale'),
+                  category: r.readNullable<String>('category'),
+                  coverPhoto: r.readNullable<String>('cover_photo'),
+                  status: r.read<String>('status'),
+                  notes: r.readNullable<String>('notes'),
+                  createdAt: r.read<int>('created_at'),
+                  updatedAt: r.read<int>('updated_at'),
+                ))
+            .toList());
   }
 
   // ── Lista della spesa — voci manuali ─────────────────────────────────────
+  // Solo le voci senza vernice associata (brand nullo) — le vernici rilevate
+  // da foto/catalogo senza un progetto attivo vivono nella stessa tabella ma
+  // sono mostrate nella sezione "Vernici" (vedi watchShoppingList sotto).
 
   Stream<List<ShoppingItem>> watchShoppingItems() =>
       (_db.select(_db.shoppingItems)
-            ..orderBy([(t) => OrderingTerm.asc(t.done),
-                       (t) => OrderingTerm.asc(t.createdAt)]))
+            ..where((t) => t.brand.isNull())
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.done),
+              (t) => OrderingTerm.asc(t.createdAt)
+            ]))
           .watch();
 
-  Future<void> addShoppingItem(String label, {String? notes}) =>
+  Future<void> addShoppingItem(
+    String label, {
+    String? notes,
+    String? brand,
+    String? code,
+    String? hex,
+  }) =>
       _db.into(_db.shoppingItems).insert(ShoppingItemsCompanion(
             label: Value(label),
             notes: Value(notes),
+            brand: Value(brand),
+            code: Value(code),
+            hex: Value(hex),
             createdAt: Value(DateTime.now().millisecondsSinceEpoch),
           ));
 
@@ -181,11 +206,16 @@ class ProjectRepository {
       (_db.delete(_db.shoppingItems)..where((t) => t.id.equals(id))).go();
 
   // ── Lista della spesa — vernici automatiche ───────────────────────────────
-  // Tutte le project_paints non presenti in inventory_paints, con il nome
-  // del progetto. Si aggiorna automaticamente quando cambia inventario o palette.
+  // Unione di due fonti, entrambe mostrate nella sezione "Vernici" e filtrate
+  // per escludere ciò che è già in inventory_paints:
+  // 1) project_paints (kit di un progetto);
+  // 2) shopping_items con brand valorizzato (vernici rilevate da foto/catalogo
+  //    senza un progetto attivo — manual_id le identifica come eliminabili).
+  // Si aggiorna automaticamente quando cambia inventario, palette o lista.
   Stream<List<ShoppingEntry>> watchShoppingList() {
     const sql = '''
-      SELECT pp.brand, pp.code, pp.name, pp.hex, p.name AS project_name
+      SELECT pp.brand, pp.code, pp.name, pp.hex, p.name AS project_name,
+             NULL AS manual_id
       FROM project_paints pp
       JOIN projects p ON pp.project_id = p.id
       WHERE pp.exclude_from_shopping = 0
@@ -193,21 +223,35 @@ class ProjectRepository {
           SELECT 1 FROM inventory_paints ip
           WHERE ip.catalog_brand = pp.brand AND ip.catalog_code = pp.code
         )
-      ORDER BY p.name, pp.brand, pp.code
+      UNION ALL
+      SELECT si.brand, si.code, si.label AS name, si.hex, NULL AS project_name,
+             si.id AS manual_id
+      FROM shopping_items si
+      WHERE si.brand IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM inventory_paints ip
+          WHERE ip.catalog_brand = si.brand AND ip.catalog_code = si.code
+        )
+      ORDER BY project_name IS NULL, project_name, brand, code
     ''';
-    return _db.customSelect(sql, readsFrom: {
-      _db.projectPaints,
-      _db.projects,
-      _db.inventoryPaints,
-    }).watch().map((rows) => rows
-        .map((r) => ShoppingEntry(
-              brand: r.read<String>('brand'),
-              code: r.read<String>('code'),
-              name: r.read<String>('name'),
-              hex: r.read<String>('hex'),
-              projectName: r.read<String>('project_name'),
-            ))
-        .toList());
+    return _db
+        .customSelect(sql, readsFrom: {
+          _db.projectPaints,
+          _db.projects,
+          _db.inventoryPaints,
+          _db.shoppingItems,
+        })
+        .watch()
+        .map((rows) => rows
+            .map((r) => ShoppingEntry(
+                  brand: r.read<String>('brand'),
+                  code: r.read<String>('code'),
+                  name: r.read<String>('name'),
+                  hex: r.read<String>('hex'),
+                  projectName: r.read<String?>('project_name'),
+                  manualId: r.read<int?>('manual_id'),
+                ))
+            .toList());
   }
 
   Stream<List<ShoppingEntry>> watchExcludedShoppingPaints() {
@@ -222,27 +266,31 @@ class ProjectRepository {
         )
       ORDER BY p.name, pp.brand, pp.code
     ''';
-    return _db.customSelect(sql, readsFrom: {
-      _db.projectPaints,
-      _db.projects,
-      _db.inventoryPaints,
-    }).watch().map((rows) => rows
-        .map((r) => ShoppingEntry(
-              brand: r.read<String>('brand'),
-              code: r.read<String>('code'),
-              name: r.read<String>('name'),
-              hex: r.read<String>('hex'),
-              projectName: r.read<String>('project_name'),
-            ))
-        .toList());
+    return _db
+        .customSelect(sql, readsFrom: {
+          _db.projectPaints,
+          _db.projects,
+          _db.inventoryPaints,
+        })
+        .watch()
+        .map((rows) => rows
+            .map((r) => ShoppingEntry(
+                  brand: r.read<String>('brand'),
+                  code: r.read<String>('code'),
+                  name: r.read<String>('name'),
+                  hex: r.read<String>('hex'),
+                  projectName: r.read<String>('project_name'),
+                ))
+            .toList());
   }
 
-  Future<void> setShoppingExclusion(String brand, String code, {required bool excluded}) {
+  Future<void> setShoppingExclusion(String brand, String code,
+      {required bool excluded}) {
     return (_db.update(_db.projectPaints)
           ..where((pp) => pp.brand.equals(brand) & pp.code.equals(code)))
         .write(ProjectPaintsCompanion(
-          excludeFromShopping: Value(excluded),
-        ));
+      excludeFromShopping: Value(excluded),
+    ));
   }
 }
 
@@ -251,13 +299,18 @@ class ShoppingEntry {
   final String code;
   final String name;
   final String hex;
-  final String projectName;
+  // null → vernice aggiunta senza un progetto (rilevata da foto/catalogo).
+  final String? projectName;
+  // non-null → riga in shopping_items, va eliminata con deleteShoppingItem
+  // invece di setShoppingExclusion (non esiste un project_paints da escludere).
+  final int? manualId;
   const ShoppingEntry({
     required this.brand,
     required this.code,
     required this.name,
     required this.hex,
-    required this.projectName,
+    this.projectName,
+    this.manualId,
   });
 }
 

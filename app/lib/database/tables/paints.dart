@@ -3,11 +3,11 @@ import 'package:drift/drift.dart';
 class CatalogPaints extends Table {
   // brand+code sono la chiave naturale stabile — non usare l'ID come riferimento
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get brand => text()();          // vallejo|citadel|tamiya
-  TextColumn get line => text()();           // model_color|base|xf|…
-  TextColumn get code => text()();           // es. "70.950"
+  TextColumn get brand => text()(); // vallejo|citadel|tamiya
+  TextColumn get line => text()(); // model_color|base|xf|…
+  TextColumn get code => text()(); // es. "70.950"
   TextColumn get name => text()();
-  TextColumn get hex => text()();            // es. "#4A3728"
+  TextColumn get hex => text()(); // es. "#4A3728"
 
   @override
   List<Set<Column>> get uniqueKeys => [
@@ -21,10 +21,10 @@ class CatalogPaints extends Table {
 // record in catalog_paints, la voce custom viene rimossa automaticamente.
 class CustomPaints extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get brand => text()();          // obbligatorio — es. "scale75"
-  TextColumn get code => text()();           // obbligatorio — es. "SC-01"
+  TextColumn get brand => text()(); // obbligatorio — es. "scale75"
+  TextColumn get code => text()(); // obbligatorio — es. "SC-01"
   TextColumn get name => text()();
-  TextColumn get hex => text()();            // es. "#2A1F18"
+  TextColumn get hex => text()(); // es. "#2A1F18"
   IntColumn get createdAt => integer()();
 
   @override
@@ -38,27 +38,34 @@ class CustomPaints extends Table {
 class ProjectPaints extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get projectId => integer()();
-  TextColumn get brand => text()();   // es. "tamiya"
-  TextColumn get code => text()();    // es. "XF-85"
-  TextColumn get name => text()();    // denormalizzato per display offline
-  TextColumn get hex => text()();     // es. "#3A3A3A"
+  TextColumn get brand => text()(); // es. "tamiya"
+  TextColumn get code => text()(); // es. "XF-85"
+  TextColumn get name => text()(); // denormalizzato per display offline
+  TextColumn get hex => text()(); // es. "#3A3A3A"
   IntColumn get addedAt => integer()();
-  BoolColumn get excludeFromShopping => boolean().withDefault(const Constant(false))();
+  BoolColumn get excludeFromShopping =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   List<Set<Column>> get uniqueKeys => [
         {projectId, brand, code},
       ];
-
 }
 
-// Voci manuali nella lista della spesa (pennelli, diluenti, materiali, ecc.).
+// Voci manuali nella lista della spesa (pennelli, diluenti, materiali, ecc.)
+// oppure vernici rilevate da foto/catalogo senza un progetto attivo.
+// Se brand+code+hex sono valorizzati, la voce è una vernice: `label` allora
+// contiene il nome della vernice (es. "Black") e la riga viene mostrata nella
+// sezione "Vernici" della lista della spesa (HexColorChip, non testo libero).
 class ShoppingItems extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get label => text()();
   TextColumn get notes => text().nullable()();
   BoolColumn get done => boolean().withDefault(const Constant(false))();
   IntColumn get createdAt => integer()();
+  TextColumn get brand => text().nullable()();
+  TextColumn get code => text().nullable()();
+  TextColumn get hex => text().nullable()();
 }
 
 // L'inventario referenzia le vernici tramite brand+code (chiave naturale),
@@ -74,8 +81,10 @@ class InventoryPaints extends Table {
   TextColumn get customBrand => text().nullable()();
   TextColumn get customCode => text().nullable()();
   // Dati comuni
-  TextColumn get quantity => text().withDefault(const Constant('full'))();  // full|half|low|empty
+  TextColumn get quantity =>
+      text().withDefault(const Constant('full'))(); // full|half|low|empty
   TextColumn get notes => text().nullable()();
   IntColumn get purchasedAt => integer().nullable()();
-  IntColumn get createdAt => integer().withDefault(const Constant(0))();  // epoch ms, per ordinamento 1B.10
+  IntColumn get createdAt => integer()
+      .withDefault(const Constant(0))(); // epoch ms, per ordinamento 1B.10
 }

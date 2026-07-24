@@ -227,6 +227,7 @@
   "shoppingShareTooltip": "Share list",
   "shoppingPaintsSection": "PAINTS TO BUY",
   "shoppingOtherSection": "OTHER",
+  "shoppingManualGroupLabel": "Added manually",
   "shoppingPaintsEmpty": "All paints are in stock",
   "shoppingOtherEmpty": "Tap + to add brushes, thinners…",
   "shoppingAddItemTitle": "Add item",

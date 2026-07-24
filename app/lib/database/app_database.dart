@@ -25,46 +25,51 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
-    onUpgrade: (m, from, to) async {
-      if (from < 2) await m.createTable(customPaints);
-      if (from < 3) await m.createTable(projectPaints);
-      if (from < 4) await m.createTable(shoppingItems);
-      if (from < 5) {
-        await m.addColumn(recipeIngredients, recipeIngredients.brand);
-        await m.addColumn(recipeIngredients, recipeIngredients.code);
-        await m.addColumn(recipeIngredients, recipeIngredients.paintName);
-        await m.addColumn(recipeIngredients, recipeIngredients.hex);
-      }
-      if (from < 6) {
-        await m.addColumn(recipes, recipes.finish);
-        await m.addColumn(recipes, recipes.coats);
-      }
-      if (from < 7) {
-        await m.addColumn(projectPaints, projectPaints.excludeFromShopping);
-      }
-      if (from < 8) {
-        await m.createTable(projectLogs);
-      }
-      if (from < 9) {
-        await m.addColumn(inventoryPaints, inventoryPaints.createdAt);
-      }
-      if (from < 10) {
-        await m.createIndex(Index('pins_photo_idx',
-            'CREATE INDEX pins_photo_idx ON pins(photo_id)'));
-        await m.createIndex(Index('project_photos_project_idx',
-            'CREATE INDEX project_photos_project_idx ON project_photos(project_id)'));
-        await m.createIndex(Index('project_logs_project_idx',
-            'CREATE INDEX project_logs_project_idx ON project_logs(project_id)'));
-        await m.createIndex(Index('project_paints_project_idx',
-            'CREATE INDEX project_paints_project_idx ON project_paints(project_id)'));
-      }
-    },
-  );
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) await m.createTable(customPaints);
+          if (from < 3) await m.createTable(projectPaints);
+          if (from < 4) await m.createTable(shoppingItems);
+          if (from < 5) {
+            await m.addColumn(recipeIngredients, recipeIngredients.brand);
+            await m.addColumn(recipeIngredients, recipeIngredients.code);
+            await m.addColumn(recipeIngredients, recipeIngredients.paintName);
+            await m.addColumn(recipeIngredients, recipeIngredients.hex);
+          }
+          if (from < 6) {
+            await m.addColumn(recipes, recipes.finish);
+            await m.addColumn(recipes, recipes.coats);
+          }
+          if (from < 7) {
+            await m.addColumn(projectPaints, projectPaints.excludeFromShopping);
+          }
+          if (from < 8) {
+            await m.createTable(projectLogs);
+          }
+          if (from < 9) {
+            await m.addColumn(inventoryPaints, inventoryPaints.createdAt);
+          }
+          if (from < 10) {
+            await m.createIndex(Index('pins_photo_idx',
+                'CREATE INDEX pins_photo_idx ON pins(photo_id)'));
+            await m.createIndex(Index('project_photos_project_idx',
+                'CREATE INDEX project_photos_project_idx ON project_photos(project_id)'));
+            await m.createIndex(Index('project_logs_project_idx',
+                'CREATE INDEX project_logs_project_idx ON project_logs(project_id)'));
+            await m.createIndex(Index('project_paints_project_idx',
+                'CREATE INDEX project_paints_project_idx ON project_paints(project_id)'));
+          }
+          if (from < 11) {
+            await m.addColumn(shoppingItems, shoppingItems.brand);
+            await m.addColumn(shoppingItems, shoppingItems.code);
+            await m.addColumn(shoppingItems, shoppingItems.hex);
+          }
+        },
+      );
 
   Future<void> initializeDemoProject() async {
     final existing = await (select(projects)..limit(1)).get();
@@ -101,11 +106,13 @@ class AppDatabase extends _$AppDatabase {
     final demoXfPaints = ['XF-1', 'XF-2', 'XF-15', 'XF-16', 'XF-19'];
     await batch((b) {
       for (final code in demoXfPaints) {
-        b.insert(inventoryPaints, InventoryPaintsCompanion(
-          catalogBrand: const Value('tamiya'),
-          catalogCode: Value(code),
-          quantity: const Value('full'),
-        ));
+        b.insert(
+            inventoryPaints,
+            InventoryPaintsCompanion(
+              catalogBrand: const Value('tamiya'),
+              catalogCode: Value(code),
+              quantity: const Value('full'),
+            ));
       }
     });
   }

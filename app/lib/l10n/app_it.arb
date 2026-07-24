@@ -542,6 +542,8 @@
   "@shoppingPaintsSection": {},
   "shoppingOtherSection": "ALTRO",
   "@shoppingOtherSection": {},
+  "shoppingManualGroupLabel": "Aggiunte manualmente",
+  "@shoppingManualGroupLabel": {},
   "shoppingPaintsEmpty": "Tutte le vernici sono in magazzino",
   "@shoppingPaintsEmpty": {},
   "shoppingOtherEmpty": "Tocca + per aggiungere pennelli, diluenti…",
