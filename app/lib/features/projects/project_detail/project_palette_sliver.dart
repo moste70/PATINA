@@ -187,7 +187,7 @@ class ProjectPaletteSliver extends ConsumerWidget {
   Future<void> _scan(BuildContext context, WidgetRef ref) async {
     final l = AppL10n.of(context);
     final repo = ref.read(projectRepositoryProvider);
-    final isPro = ProGate.isProUser(ref);
+    final isPro = kPremiumFeaturesEnabled && ProGate.isProUser(ref);
     await showScanSheet(
       context,
       isPro: isPro,

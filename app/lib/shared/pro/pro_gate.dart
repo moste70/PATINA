@@ -7,6 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _kDevProKey = 'dev_pro_override';
 
+// ── Interruttore funzionalità Premium/Pro ─────────────────────────────────────
+//
+// Per ora l'app non può monetizzare (motivi fiscali): tutte le funzionalità
+// Pro restano nascoste e ogni utente ha accesso illimitato come se fosse
+// Standard. La logica di ProGate/RevenueCat resta intatta sotto: per
+// riattivare le funzionalità Premium basta riportare questo flag a `true`.
+const bool kPremiumFeaturesEnabled = false;
+
 // ── Provider stato Pro ────────────────────────────────────────────────────────
 //
 // Un solo provider per entrambe le modalità:

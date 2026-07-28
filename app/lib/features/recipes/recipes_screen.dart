@@ -79,17 +79,18 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
               tooltip: l.recipesFindByColor,
               onPressed: () => FindRecipeByColorSheet.show(context),
             ),
-            IconButton(
-              icon: const Icon(Icons.auto_fix_high),
-              tooltip: l.aiMixingTitle,
-              onPressed: () {
-                if (!ProGate.isProUser(ref)) {
-                  PaywallSheet.show(context, feature: l.aiMixingTitle);
-                  return;
-                }
-                AiMixingSheet.show(context);
-              },
-            ),
+            if (kPremiumFeaturesEnabled)
+              IconButton(
+                icon: const Icon(Icons.auto_fix_high),
+                tooltip: l.aiMixingTitle,
+                onPressed: () {
+                  if (!ProGate.isProUser(ref)) {
+                    PaywallSheet.show(context, feature: l.aiMixingTitle);
+                    return;
+                  }
+                  AiMixingSheet.show(context);
+                },
+              ),
           ],
           IconButton(
             icon: Icon(_searching ? Icons.close : Icons.search),
@@ -157,7 +158,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
   }
 
   Future<void> _onFabTap(BuildContext context, WidgetRef ref) async {
-    if (!ProGate.isProUser(ref)) {
+    if (kPremiumFeaturesEnabled && !ProGate.isProUser(ref)) {
       final count = await ref.read(recipeRepositoryProvider).count();
       if (count >= _kFreeRecipesLimit) {
         if (context.mounted) {

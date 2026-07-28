@@ -641,7 +641,7 @@ class _StatsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final scheme  = Theme.of(context).colorScheme;
-    final isFree  = !ProGate.watchProUser(ref);
+    final isFree  = kPremiumFeaturesEnabled && !ProGate.watchProUser(ref);
     final ratio   = isFree ? (total / _kFreeInventoryLimit).clamp(0.0, 1.0) : 0.0;
     final nearLimit = isFree && total >= _kFreeInventoryLimit - 3;
 

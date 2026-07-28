@@ -146,7 +146,7 @@ class _FabNewProject extends ConsumerWidget {
         final activeCount = all
             .where((p) => AppConstants.activeStatuses.contains(p.status))
             .length;
-        final atLimit = !isPro && activeCount >= 2;
+        final atLimit = kPremiumFeaturesEnabled && !isPro && activeCount >= 2;
 
         return FloatingActionButton(
           onPressed: () {
