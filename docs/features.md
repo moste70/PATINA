@@ -1,5 +1,14 @@
 # Patina — Specifiche Funzionalità
 
+> **Nota (2026-08) — Funzionalità Premium/Pro temporaneamente nascoste.**
+> Per motivi fiscali l'app non può momentaneamente monetizzare: tutti i limiti
+> "Free" descritti in questo documento e le funzionalità Pro (AI mixing, scan
+> AI potenziato) sono disattivati via il flag `kPremiumFeaturesEnabled = false`
+> in `app/lib/shared/pro/pro_gate.dart`. Ogni utente ha quindi accesso
+> illimitato come se fosse Standard. La logica ProGate/RevenueCat resta intatta
+> e le sezioni sotto restano come riferimento per quando la monetizzazione
+> sarà riattivata (basta riportare il flag a `true`).
+
 ## Fase 1 — MVP
 
 ---
@@ -227,7 +236,7 @@ Il FAB `+` è sempre visibile anche sull'empty state.
 #### 1.1 Archivio Progetti (`/projects`)
 Schermata principale dell'app. Mostra tutti i modelli con una panoramica visiva.
 
-> **Limite Free:** max **2 progetti attivi** (stati `Da iniziare` o `In corso`). I progetti `Completato` non contano ai fini del limite. Superato il limite, il FAB mostra il paywall per l'upgrade a Standard.
+> **Limite Free:** max **2 progetti attivi** (stati `Da iniziare` o `In corso`). I progetti `Completato` non contano ai fini del limite. Superato il limite, il FAB mostra il paywall per l'upgrade a Standard. *(Temporaneamente disattivato — vedi nota in cima al documento.)*
 
 **Contenuto di ogni card progetto:**
 - Miniatura 80×80 della foto di copertina (placeholder con icona se assente)
@@ -283,7 +292,7 @@ Pagina con `CustomScrollView` + `SliverAppBar` collassabile. Scorrendo verso il 
 
 ##### Sezione 2 — Galleria Foto
 
-> **Limite Free:** max **5 foto** per progetto. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard.
+> **Limite Free:** max **5 foto** per progetto. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard. *(Mai applicato a runtime; e comunque temporaneamente fuori scope — vedi nota in cima al documento.)*
 
 Griglia orizzontale scorrevole di miniature 80×80dp con angoli arrotondati.
 Prima cella è il bottone `+` con icona `add_photo_alternate`.
@@ -377,7 +386,7 @@ Creato il 01 giu 2026  ·  Modificato 3 giorni fa
 #### 2.1 Inventario Personale (`/paints`)
 Raccoglie tutte le vernici che l'utente possiede fisicamente.
 
-> **Limite Free:** max **20 vernici** nell'inventario personale. Il catalogo offline rimane sempre consultabile senza limiti. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard.
+> **Limite Free:** max **20 vernici** nell'inventario personale. Il catalogo offline rimane sempre consultabile senza limiti. Raggiunto il limite, il bottone `+` mostra il paywall per l'upgrade a Standard. *(Temporaneamente disattivato — vedi nota in cima al documento.)*
 
 **Dati di ogni vernice:**
 - Marca (Vallejo / Citadel / Tamiya — Fase 1)
@@ -427,7 +436,7 @@ perché referenziano `brand+code` e non l'ID interno del catalogo.
 #### 2.3 Gestione Ricette (`/recipes`)
 Miscele personalizzate salvate con proporzioni esatte.
 
-> **Limite Free:** max **5 ricette** salvate. Raggiunto il limite, la creazione di una nuova ricetta mostra il paywall per l'upgrade a Standard.
+> **Limite Free:** max **5 ricette** salvate. Raggiunto il limite, la creazione di una nuova ricetta mostra il paywall per l'upgrade a Standard. *(Temporaneamente disattivato — vedi nota in cima al documento.)*
 
 **Dati di ogni ricetta:**
 - Nome (es. "Grigio Panzer invecchiato")
@@ -815,6 +824,10 @@ Ogni codice riconosciuto riceve:
 
 ## Fase 3 — AI Pro (pianificata)
 
+> ⏸️ **In pausa (2026-08)** — progetto congelato, monetizzazione sospesa per motivi
+> fiscali. Le voci Pro già implementate (3.2, 3.3, 3.4) restano nel codice ma i
+> loro entry point sono nascosti finché `kPremiumFeaturesEnabled` non torna `true`.
+>
 > Tutte le funzionalità richiedono abbonamento **Pro** (gate `ProGate.isProUser(ref)`).
 > Backend: **Firebase Functions** come proxy sicuro verso Claude API — la chiave API non lascia mai il server.
 > Verifica doppia: lato app (UX) + lato Function (sicurezza server-side).

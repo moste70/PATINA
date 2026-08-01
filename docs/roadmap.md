@@ -1,5 +1,13 @@
 # Patina — Roadmap di Sviluppo
 
+> **⏸️ Progetto congelato (2026-08).** Per motivi fiscali l'app non può
+> momentaneamente monetizzare: tutte le funzionalità Premium/Pro sono state
+> nascoste (flag `kPremiumFeaturesEnabled = false` in
+> `app/lib/shared/pro/pro_gate.dart`) e ogni utente ha accesso illimitato come
+> se fosse Standard. Lo sviluppo è in pausa da questo punto — la logica
+> ProGate/RevenueCat resta intatta e pronta per essere riattivata (basta
+> riportare il flag a `true`) quando la monetizzazione sarà di nuovo possibile.
+
 ## Fase 0 — Fondamenta
 
 **Obiettivo:** struttura del progetto, dipendenze, database, cataloghi, design system, navigazione.
@@ -319,6 +327,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 
 ## Fase 3 — Funzionalità AI Pro e Cloud
 
+> ⏸️ **In pausa (2026-08)** — vedi nota di congelamento in cima al documento.
 > Da pianificare in dettaglio al completamento della Fase 2.
 > Tutte le funzionalità di questa fase sono **riservate agli utenti Pro** (abbonamento in-app).
 > Vedere `docs/vision.md` per il modello di business completo.
@@ -331,7 +340,7 @@ Il marchio **"PATINA"** è registrato in Italia (UIBM, reg. 362015000027630, cl.
 - **Gate nel codice**: `ProGate.isProUser(ref)` — `false` mostra paywall, `true` esegue la funzione
 
 ### Predisposizioni già nel codice
-- `app/lib/shared/pro/pro_gate.dart` — `ProGate` helper + `proStatusProvider` (stub `false`, da collegare a billing)
+- `app/lib/shared/pro/pro_gate.dart` — `ProGate` helper + `proStatusProvider` (stub `false`, da collegare a billing) + flag `kPremiumFeaturesEnabled` (attualmente `false`) che nasconde tutti gli entry point Premium/Pro finché il progetto resta congelato
 - `app/lib/shared/pro/paywall_sheet.dart` — bottom sheet paywall placeholder da sostituire con UI definitiva in Fase 3
 
 | Milestone | Descrizione |
@@ -525,6 +534,8 @@ Debito Tecnico ██████████ 100% — DT.1÷14 tutti risolti
 - v10 → indici su `pins(photo_id)`, `project_photos(project_id)`, `project_logs(project_id)`, `project_paints(project_id)`
 
 ### Prossimi step immediati (ordine esecuzione)
+
+> ⏸️ Progetto congelato (2026-08) — nessuno step attivo per ora, vedi nota in cima al documento. Alla ripresa, ordine previsto:
 
 1. 🟡 `1F.4/1F.6-1F.8` — Layout adattivi per feature (archivio maestro-dettaglio, wizard, inventario, pin) — fondamenta già pronte
 2. 🟡 `1E.7/1E.8` — Store listing Google Play + release beta (richiede Play Console)
